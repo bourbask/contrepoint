@@ -5,3 +5,7 @@ dist/
 *.log
 data/cache/
 .DS_Store
+
+# Methodologie de travail et definitions d'agents: local uniquement.
+# Contient la facon de travailler et peut porter de l'information sensible.
+.claude/
