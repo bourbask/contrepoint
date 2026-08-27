@@ -10,7 +10,7 @@ Aucun fichier de ce répertoire n'est écrit à la main. Tout est reconstruit pa
 
 | Archive | URL | Taille | SHA-256 | MD5 publié par l'AN | `last-modified` |
 |---|---|---|---|---|---|
-| `Scrutins.json.zip` | `https://data.assemblee-nationale.fr/static/openData/repository/17/loi/scrutins/Scrutins.json.zip` | 26 317 479 o | `c5e405f1a715086b9325a585db80362e8e7e03b9d4178ea4e35b9009bdfcf59f` | `1f951dea5675556c5b675e5bdfeddba5` ✅ concorde | 2026-08-27 04:25:40 GMT |
+| `Scrutins.json.zip` | `https://data.assemblee-nationale.fr/static/openData/repository/17/loi/scrutins/Scrutins.json.zip` | 26 317 479 o | empreinte de **contenu** `c8457f346220b5b7fb673bd1f273ef8c3296b7ff2769524bf5024c9d95c7e65c` (méthode : [contrats.md](../contrats.md) §2.8) — l'empreinte d'archive varie selon la construction servie, `aa767a2a…` ou `c5e405f1…`, pour un contenu identique | MD5 documentaire, `910e6022…` ou `1f951dea…` selon la construction | 2026-08-27 |
 | `AMO30_tous_acteurs_tous_mandats_tous_organes_historique.json.zip` | `https://data.assemblee-nationale.fr/static/openData/repository/17/amo/tous_acteurs_mandats_organes_xi_legislature/AMO30_tous_acteurs_tous_mandats_tous_organes_historique.json.zip` | 13 600 736 o | `bbecd01274d2bc9f46fcaa276b06868862ae7680131da3162e35b5cbef663061` | non publié sur la fiche | 2026-08-27 00:34:47 GMT |
 
 Reconstruction :

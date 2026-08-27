@@ -135,12 +135,12 @@ un axe à pôle dépréciatif, puis l'attribue à Contrepoint.
 
 - **Code : AGPL-3.0-only.** Aucune licence n'interdit un usage ; l'AGPL force le fork déployé comme service à publier son code, donc rend la déviation **visible** au lieu de silencieuse. C'est la seule protection réaliste de l'actif du projet, qui est sa méthode.
 - **Données dérivées, registres et documentation : Licence Ouverte / Open Licence (Etalab).** Alignée sur l'amont AN, donc aucun débat de compatibilité. ODbL 1.0 est écartée : son partage à l'identique sur toute base dérivée décourage exactement les réutilisateurs dont le projet a besoin (chercheurs, rédactions).
-- **Aucune redistribution de fichier tiers.** CHES, nuancier et tout jeu futur sont téléchargés par script à l'exécution ; le dépôt contient l'URL, la date de récupération, l'empreinte, jamais la copie. *A VERIFIER* : les conditions de redistribution de CHES 2024 ne sont pas documentées publiquement — vérifiable en lisant le codebook et les *terms of use* sur chesdata.eu. Cette décision rend la vérification non bloquante.
+- **Aucune redistribution de fichier tiers.** CHES, nuancier et tout jeu futur sont téléchargés par script à l'exécution ; le dépôt contient l'URL, le nom du producteur, la date de dernière mise à jour de la source, la citation qu'elle exige, les deux empreintes et la date de récupération — jamais la copie. Le *A VERIFIER* sur les conditions de CHES 2024 est **tranché le 2026-08-27** : aucune licence n'est publiée, et la condition obtenue par échange écrit est une **réutilisation soumise à citation**, ni autorisation de republication ni cession de droits. Elle est portée par `entrees[].citation` de chaque ligne de preuve (contrats.md §2.1) et consignée dans LICENSE-DONNEES. La décision de ne rien redistribuer est inchangée : elle rend l'absence de licence non bloquante, et elle n'est pas assouplie par cette condition.
 
 ### Conséquences
 
 - Deux fichiers de licence à la racine, et un en-tête de licence par répertoire de données. Coût accepté.
-- Les fixtures de test sont des extraits de sources publiques en Licence Ouverte uniquement. Aucune fixture CHES commitée : le test qui en dépend est marqué et sauté hors réseau.
+- Les fixtures de test sont des extraits de sources publiques en Licence Ouverte uniquement. Aucune fixture CHES commitée : le test qui en dépend est marqué et sauté hors réseau. La condition de citation obtenue le 2026-08-27 ne change rien à ce point — elle n'autorise aucune copie.
 - Un contributeur ne peut pas relicencier le code en permissif. C'est voulu.
 
 ---

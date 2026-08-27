@@ -442,7 +442,7 @@ acté par l'ADR 0003 §1, et `ING-16` n'attend plus rien.
 | Point | Comment le vérifier |
 |---|---|
 | Le contrat d'export front n'est spécifié par aucun document : ni noms de champs, ni forme du schéma publié, ni emplacement | Écrire la spec d'export avant le cycle 13. Les tests EXP-01 à EXP-08 portent sur des règles, pas sur des champs, précisément pour ne pas inventer un schéma |
-| Total réel des scrutins à `organeRef: "PO0"` et leurs dates | Recompter sur `Scrutins.json.zip` (SHA-256 `c5e405f1…`), au cycle 4 |
+| Total réel des scrutins à `organeRef: "PO0"` et leurs dates | Recompter sur `Scrutins.json.zip`, identifiée par son empreinte de **contenu** `c8457f34…` — l'empreinte d'archive varie selon la construction servie (contrats.md §2.8) —, au cycle 4 |
 | Valeurs de référence à l'échelle des fixtures (nombre de triplets par scrutin, décomptes par motif, positions de la matrice synthétique) | Aucune n'est écrite ici : elles sont **produites par la première implémentation verte**, lues, et alors seulement figées comme instantané. Les inventer maintenant serait fabriquer une référence |
 | Faisabilité de la porte 2 à 90 % de branches | Mesurer avec `cargo llvm-cov` au cycle 5, quand `matrice` existe. Si le chiffre est inatteignable pour une raison structurelle, c'est le chiffre qui change, avec son motif écrit — pas la porte qui disparaît |
 | Fonctionnement de `insta` sur une cible unique pour les tests T1 | Vérifier au cycle 5 que l'instantané peut être conditionné à la cible de compilation sans drapeau d'environnement lu à l'exécution |

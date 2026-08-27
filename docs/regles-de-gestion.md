@@ -33,7 +33,7 @@ Abréviations des sources : **ADR0** = [adr/0000-perimetre-brique0.md](adr/0000-
 | RG-05 | Trois familles de mesure existent — `votes`, `experts`, `administratif` — et aucune sortie ne contient de valeur agrégeant deux familles. | MET §3, CON §1 |
 | RG-06 | Aucune valeur n'est projetée, recalibrée ou convertie d'une échelle de famille vers celle d'une autre. | POS §8 |
 | RG-07 | Aucune source exigeant une inscription, une connexion ou une étape manuelle récurrente n'entre dans le pipeline. | ADR0 §8 |
-| RG-08 | Aucun fichier de données tiers n'est redistribué par le dépôt ; seuls l'URL, la date de récupération et l'empreinte le sont. | ADR0 §4 |
+| RG-08 | Aucun fichier de données tiers n'est redistribué par le dépôt ; seuls le sont ce que porte `entrees[]` d'une ligne de preuve — URL, producteur, date de dernière mise à jour de la source, citation exigée, empreinte d'archive, empreinte de contenu, date de récupération. | ADR0 §4, CON §2.1 |
 
 ## B. Ingestion des scrutins
 
@@ -110,6 +110,10 @@ Abréviations des sources : **ADR0** = [adr/0000-perimetre-brique0.md](adr/0000-
 | RG-71 | Le front ne code en dur ni la liste des familles, ni celle des échelles, ni celle des motifs — consommateur tolérant. | CON §5.1 |
 | RG-72 | Devant un schéma majeur inconnu, le front ne rend aucun marqueur de cet artefact et ne l'annonce jamais comme « non mesuré ». | CON §5.2 |
 | RG-73 | La date d'arrêt affichée se dérive de la date de calcul maximale du registre, sans saisie manuelle. | ADR0 §6, CON §4.2 |
+| RG-76 | Chaque entrée d'une ligne de preuve porte le nom du producteur de sa source, tel que cette source le publie, et la date de dernière mise à jour **de cette source**. `producteur` est le nom d'une **organisation** : une source dont le producteur déclaré est une personne physique n'entre pas dans le pipeline sous son nom — elle porte celui de son institution, ou elle est écartée. La mention de paternité exigée par la Licence Ouverte est portée par l'entrée ; elle n'est jamais un texte global à maintenir, et `source`, qui est un code interne, n'en tient pas lieu. | LICENSE-DONNEES, ING §1, CON §2.1, CON §6 I21 |
+| RG-77 | Chaque entrée porte deux empreintes : celle de l'archive téléchargée, qui atteste du téléchargement et sert le contrôle contre l'empreinte publiée par la source, et celle de son contenu, qui atteste de la donnée. Seule l'empreinte de contenu entre dans la clé de déduplication ; une republication à contenu identique ne ré-émet donc aucune ligne. | CON §2.8, CON §3, CON §6 I22, verification-2026-08-27 §0 |
+| RG-78 | L'empreinte de contenu d'une archive est le SHA-256 de la concaténation des contenus de tous ses fichiers réguliers, triés par chemin relatif en **ordre d'octets** — jamais selon la collation d'une locale, qui donne une autre valeur sur la même archive. Pour une source d'un seul fichier, c'est le SHA-256 de ce fichier. | CON §2.8, verification-2026-08-27 §0 |
+| RG-79 | Une entrée dont la source exige une citation la porte mot pour mot dans `citation` ; une source qui n'en exige pas porte `null`. Aucune citation n'est reformulée, abrégée, ni remplacée par une mention globale du projet : la liste opposable des sources à citation est celle de [sources.md](sources.md). | LICENSE-DONNEES, CON §2.1, CON §6 I23, sources.md |
 
 ## G. Déterminisme
 
@@ -157,9 +161,9 @@ Ajoutées à la suite des relectures juridique et qualité du 2026-08-27.
 
 | # | Règle | Fondement |
 |---|---|---|
-| RG-74 | Aucun champ d'un artefact publié ni d'un fichier de `data/` ne stocke un texte de tiers de plus de 200 caractères. Le corps d'un article, d'une transcription ou d'un document source n'est jamais persisté : il est traité en mémoire puis écarté. | JUR, MET, L.122-5-3 CPI |
+| RG-74 | Aucun champ d'un artefact publié ni d'un fichier de `data/` ne stocke un texte de tiers de plus de 200 caractères. Le corps d'un article, d'une transcription ou d'un document source n'est jamais persisté : il est traité en mémoire puis écarté. **Exception unique, ouverte le 2026-08-27 avec le contrat 0.2.0** : `entrees[].citation`, plafonnée à 400 caractères, qui porte la mention légale exigée par une source. Une référence bibliographique n'est pas un texte de tiers republié, et le champ n'accepte rien d'autre. | JUR, MET, L.122-5-3 CPI, CON §6 I20 et I23 |
 | RG-75 | Un titre, un chapô ou une citation courte de tiers s'affiche avec le lien vers la source et n'est jamais stocké au-delà de la fenêtre de calcul déclarée. | JUR, MET |
-| RG-110 | Aucun identifiant de personne, aucun nom de personne physique et aucune coordonnée individuelle n'apparaît dans un artefact de `public/api/` ni dans `data/`. Les fixtures de test en contiennent et sont signalées comme telles. | JUR, ADR0 §2 |
+| RG-110 | Aucun identifiant de personne, aucun nom de personne physique et aucune coordonnée individuelle n'apparaît dans un artefact de `public/api/` ni dans `data/`. Les fixtures de test en contiennent et sont signalées comme telles. **Exception unique, ouverte le 2026-08-27 avec le contrat 0.2.0** : les noms d'auteurs contenus dans `entrees[].citation`, lorsque la source exige la reproduction mot pour mot de sa référence bibliographique (I23). Ce ne sont ni des identifiants, ni des coordonnées, ni des personnes mesurées : aucune valeur du projet ne leur est rattachée, et la mention est une obligation de licence, pas une donnée collectée. Aucun autre champ n'admet un nom de personne physique. | JUR, ADR0 §2, CON §6 I23 |
 | RG-111 | Aucune colonne nominative d'un fichier de résultats électoraux n'est ingérée. Une nuance administrative n'est jamais rattachée à une personne physique, dans aucun fichier du projet, y compris intermédiaire ou de cache. | JUR, ADR0 §2 |
 | RG-112 | Aucun identifiant de schéma, d'échelle, de famille, de méthode ou de motif ne contient le nom, le sigle ou l'identifiant d'une entité mesurée. | JUR règle 1, ADR0 §6 |
 | RG-113 | Toute étiquette reproduisant une classification de tiers porte le nom de son auteur en tête. Contrepoint n'affiche jamais une catégorie de tiers sous une forme qui pourrait être lue comme sienne. | JUR règle 1 |

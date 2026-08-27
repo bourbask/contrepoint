@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "preuve-1.schema.json",
   "title": "Ligne du registre de preuves",
-  "description": "Une ligne = une position mesurée. Contrat : docs/brique0/contrats.md §2. Ce schéma ne peut pas exprimer l'ordre des clés (§7), le calcul de `id` (§3) ni les invariants I1 à I18 (§6) : le validateur du pipeline les vérifie en plus.",
+  "description": "Une ligne = une position mesurée. Contrat : docs/brique0/contrats.md §2. Ce schéma ne peut pas exprimer l'ordre des clés (§7), le calcul de `id` (§3) ni les invariants I1 à I23 (§6) : le validateur du pipeline les vérifie en plus.",
   "type": "object",
   "additionalProperties": false,
   "required": ["schema", "id", "contrat", "famille", "entite", "valeur", "valeur_code", "echelle", "motif_code", "motif", "dispersion", "observation", "date_source", "date_calcul", "methode", "epingles", "entrees", "logiciel"],
@@ -88,17 +88,40 @@
     "entrees": {
       "type": "array",
       "minItems": 1,
-      "description": "Triée par `empreinte_sha256`. Aucune position sans source empreintée et datée.",
+      "description": "Triée par `empreinte_sha256`. Aucune position sans source empreintée, datée, attribuée à son producteur et portant la citation que cette source exige. Chaque entrée porte la mention de paternité de sa propre source : c'est une propriété de l'entrée, jamais un texte global du projet (§2.1).",
       "items": {
         "type": "object",
         "additionalProperties": false,
-        "required": ["source", "url", "empreinte_sha256", "recupere_le"],
+        "required": ["source", "url", "producteur", "derniere_mise_a_jour", "citation", "empreinte_sha256", "empreinte_contenu_sha256", "recupere_le"],
         "properties": {
           "source": {
             "enum": ["an_scrutins_17", "an_organe", "an_parpol_mandats", "ches_2024", "ches_trend", "manifesto", "nuance_leg2024", "parlgov", "wikidata", "declaration_publique", "registre_partis"]
           },
           "url": { "type": "string", "format": "uri" },
-          "empreinte_sha256": { "$ref": "#/$defs/sha256" },
+          "producteur": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200,
+            "description": "Nom du Producteur au sens de la Licence Ouverte, tel que la source le publie. Jamais un code interne : `source` est un code, `producteur` est un nom. Voir I21."
+          },
+          "derniere_mise_a_jour": {
+            "$ref": "#/$defs/date",
+            "description": "Date de dernière mise à jour de la donnée réutilisée, déclarée par la source (`last-modified`, date de publication ou date de dépôt de la ressource). Ce n'est pas `recupere_le`, qui est la date de récupération par Contrepoint. Hors de la clé de déduplication (§3). Voir I21."
+          },
+          "citation": {
+            "type": ["string", "null"],
+            "minLength": 1,
+            "maxLength": 400,
+            "description": "Citation académique exigée par la source, reproduite mot pour mot, ou `null` pour une source qui n'en exige pas. Seule valeur de chaîne d'un artefact publié autorisée à dépasser 200 caractères (I20) : une référence bibliographique n'est pas un texte de tiers republié. Voir I23."
+          },
+          "empreinte_sha256": {
+            "$ref": "#/$defs/sha256",
+            "description": "Empreinte de l'archive telle qu'elle a été téléchargée. Atteste du téléchargement et sert le contrôle contre l'empreinte publiée par la source. **Hors de la clé de déduplication** : une republication à contenu identique change les octets d'un ZIP sans que la donnée ait bougé (§2.6). Voir I22."
+          },
+          "empreinte_contenu_sha256": {
+            "$ref": "#/$defs/sha256",
+            "description": "Empreinte du contenu, méthode du §2.6 : SHA-256 de la concaténation des fichiers réguliers de l'archive, triés par chemin relatif en ordre d'octets. Pour une source d'un seul fichier, égale à `empreinte_sha256`. C'est **elle** qui entre dans la clé de déduplication (§3) et qui décide d'une ré-émission. Voir I22."
+          },
           "recupere_le": { "$ref": "#/$defs/date" }
         }
       }

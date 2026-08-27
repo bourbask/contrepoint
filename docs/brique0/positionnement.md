@@ -29,7 +29,10 @@ reproductibles par les commandes du §1.
 ```sh
 curl -C - -O https://data.assemblee-nationale.fr/static/openData/repository/17/loi/scrutins/Scrutins.json.zip
 sha256sum Scrutins.json.zip
-# c5e405f1a715086b9325a585db80362e8e7e03b9d4178ea4e35b9009bdfcf59f  (2026-08-27, 26 317 479 octets)
+# empreinte d'ARCHIVE, variable selon la construction servie : aa767a2a… ou c5e405f1…
+# l'empreinte de CONTENU, seule stable, s'obtient par la méthode de contrats.md §2.8 :
+#   c8457f346220b5b7fb673bd1f273ef8c3296b7ff2769524bf5024c9d95c7e65c
+# (2026-08-27, 26 317 479 octets)
 curl -C - -O https://data.assemblee-nationale.fr/static/openData/repository/16/loi/scrutins/Scrutins.json.zip  # 10 107 912 octets
 ```
 

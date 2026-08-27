@@ -27,8 +27,11 @@ c'est la date de dernière mise à jour au sens de la licence.
 
 Aucun fichier de données tiers n'est redistribué (ADR 0000 §4). Les archives de
 l'Assemblée nationale, CHES et le nuancier sont téléchargés par script à
-l'exécution ; le dépôt ne conserve que l'URL, la date de récupération et
-l'empreinte SHA-256.
+l'exécution ; le dépôt ne conserve que ce que porte `entrees[]` d'une ligne de
+preuve : l'URL, le nom du producteur, la date de dernière mise à jour de la
+source, la citation qu'elle exige, l'empreinte SHA-256 de l'archive téléchargée
+et l'empreinte SHA-256 de son contenu, plus la date de récupération. Une
+empreinte n'est pas une copie : elle ne permet pas de reconstituer la donnée.
 
 Exception unique : les échantillons de test de `docs/brique0/echantillons/`, qui
 sont des extraits de l'open data de l'Assemblée nationale, sous Licence Ouverte.
@@ -49,25 +52,58 @@ pas de droits de propriété intellectuelle appartenant à des tiers. Cette gara
 ne peut être donnée que sur des valeurs dérivées de sources elles-mêmes sous
 licence explicite.
 
-**Une valeur dérivée d'une source sans licence publiée n'est donc pas publiée.**
-CHES est dans ce cas : vérifié le 2026-08-27, aucune licence n'est publiée, la
-seule condition énoncée étant une citation académique. Tant qu'une autorisation
-écrite n'est pas obtenue, la famille de mesure `experts` n'est pas publiée et
-porte un motif d'absence.
+**Une valeur dérivée d'une source sans licence publiée n'est donc pas publiée**,
+sauf condition de réutilisation obtenue par écrit auprès de la source.
+
+CHES était dans ce cas : vérifié le 2026-08-27, aucune licence n'est publiée. La
+condition de réutilisation a été obtenue le **2026-08-27 par échange écrit** avec
+CHES, et elle est de nature étroite : **réutilisation soumise à citation,
+condition obtenue par échange écrit le 2026-08-27**. Échange archivé hors dépôt — le dépôt ne porte ni le nom ni l'adresse du correspondant. Il n'est pas produit ici, et sa portée est celle du texte ci-dessus, pas davantage. Ce n'est **pas** une
+autorisation de republication et ce n'est **pas** une cession de droits : aucun
+fichier CHES n'est redistribué, ce que la décision d'ADR 0000 §4 interdit par
+ailleurs. La famille de mesure `experts` n'est donc plus suspendue, et la
+condition est portée par la donnée : chaque entrée d'une ligne de preuve tirée de
+CHES porte la citation exigée dans `entrees[].citation`
+(`docs/brique0/contrats.md` §2.1, invariant I23).
+
+**La citation est par jeu de données, pas par projet.** Chaque jeu CHES publie sa
+propre ligne de citation. Pour l'enquête 2024 et pour le fichier de tendance
+1999-2024, vérifié sur `chesdata.eu` le 2026-08-27, elle est identique et se
+reproduit mot pour mot :
+
+    Rovny, Jan, Jonathan Polk, Ryan Bakker, Liesbet Hooghe, Seth Jolly, Gary
+    Marks, Marco Steenbergen, and Milada Anna Vachudova. 2025. "The 2024 Chapel
+    Hill Expert Survey on political party positioning in Europe: Twenty-five
+    years of party positional data." Electoral Studies 97 (October).
+    doi:10.1016/j.electstud.2025.102981
+
+La forme opposable de cette citation est la valeur du champ, pas ce paragraphe :
+le champ est requis, il n'admet pas la chaîne vide, et une source qui n'exige
+aucune citation y porte `null`. Un jeu CHES futur porterait sa propre ligne, et
+rien ne garantit qu'elle soit celle-ci.
 
 ## Sources amont et leur propre licence
 
 | Source | Licence amont | Vérifié le |
 |---|---|---|
 | Assemblée nationale, open data | **Licence Ouverte / Open Licence 1.0** — le fichier servi par `data.assemblee-nationale.fr` porte « Cette licence est une version 1.0 de la Licence Ouverte » | 2026-08-27 |
-| CHES (chesdata.eu) | `A VERIFIER` : lire le codebook et les *terms of use* sur chesdata.eu. Non bloquant, aucun fichier CHES n'est redistribué | — |
+| CHES (chesdata.eu) | Aucune licence publiée. **Réutilisation soumise à citation, condition obtenue par échange écrit le 2026-08-27.** Aucun droit de republication n'a été accordé et aucun n'est exercé : aucun fichier CHES n'est redistribué | 2026-08-27 |
 | Nuancier, ministère de l'Intérieur | Circulaires publiées, résultats sur data.gouv.fr en Licence Ouverte | 2026-08-27 |
 
 Mention de paternité due à l'amont AN, telle que la licence 1.0 la formule
 (« sa source, a minima le nom du Producteur, et la date de sa dernière mise à
 jour ») : elle est portée par le champ `entrees[]` de chaque ligne du registre de
-preuves — `source`, `url`, `recupere_le` — donc par construction et non par un
-texte à maintenir.
+preuves — `url`, **`producteur`** et **`derniere_mise_a_jour`** — donc par
+construction et non par un texte à maintenir.
+
+Les deux champs qui portent l'obligation sont **requis** depuis le contrat 0.2.0
+(`docs/brique0/contrats.md` §2.1, invariant I21). Avant cette version le contrat
+ne les avait pas : `source` est un code interne — `an_scrutins_17` n'est le nom
+d'aucun producteur — et `recupere_le` est la date de récupération par
+Contrepoint, pas la date de dernière mise à jour de la source. La mention était
+donc due sans être portée. `date_source`, au niveau de la ligne, ne pouvait pas y
+suppléer : une ligne cite plusieurs entrées mises à jour à des moments
+différents, et une date unique en écrase toutes sauf une.
 
 La Licence Ouverte 2.0 retenue ici est déclarée par Etalab compatible avec sa
 version antérieure : la réutilisation de l'amont 1.0 dans une sortie publiée en
