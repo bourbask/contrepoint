@@ -121,11 +121,21 @@ un second chemin d'ingestion (archives) et n'est pas planifiée.
 
 ### Contexte
 
-L'amont est en Licence Ouverte / Open Licence (Etalab), imposant l'attribution.
-*A VERIFIER* : la page `https://data.assemblee-nationale.fr/licence-ouverte-open-licence`
-n'affiche pas le numéro de version dans son corps ; il faut ouvrir le PDF ou le
-RTF qu'elle lie pour lire « 2.0 » et la mention de paternité exacte exigée. À
-faire avant publication, la mention exacte étant une obligation de licence.
+L'amont est en **Licence Ouverte / Open Licence version 1.0**, imposant
+l'attribution. Le `A VERIFIER` qui figurait ici est **refermé** : la page
+`https://data.assemblee-nationale.fr/licence-ouverte-open-licence` n'affiche pas
+le numéro de version dans son corps, mais le PDF qu'elle lie
+(`content/download/28755/file/Licence_Ouverte.pdf`) porte « Cette licence est une
+version 1.0 de la Licence Ouverte ». La mention exigée y est énoncée mot pour
+mot : « Mentionner la paternité de l'Information : sa source (a minima le nom du
+Producteur) et la date de sa dernière mise à jour. » Détail dans
+[../brique0/ingestion-votes.md](../brique0/ingestion-votes.md) §1, et §8 du
+présent ADR en tire la mention retenue.
+
+Ce document annonçait « 2.0 » à vérifier ; c'était faux, et son propre §8 disait
+déjà v1.0. Les sorties du projet sont en Licence Ouverte 2.0, qui se déclare
+compatible avec sa version antérieure : deux versions, deux rôles, pas une
+contradiction.
 
 Le projet a deux natures d'actif : du code, et des fichiers de données dérivés.
 Le risque spécifique du projet est le fork silencieux qui greffe sur la méthode

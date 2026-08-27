@@ -29,7 +29,7 @@
 | [regles-de-gestion.md](regles-de-gestion.md) | Les règles métier numérotées et testables, avec leur fondement. Tranche en cas de conflit entre un test et une intention |
 | [architecture.md](architecture.md) | Composants, frontières, flux de données, et ce que chaque composant ne fait pas |
 | [methode.md](methode.md) | La chaîne de traitement maillon par maillon, briques 0 à 1, et ce que « déterministe » exclut |
-| [sources.md](sources.md) | Les sources de données, leur format, leur licence, leur état vérifié ; celles écartées et pourquoi |
+| [sources.md](sources.md) | Le registre des sources (RG-104) : producteur, URL, format, licence, fréquence, date de vérification et statut v0 de chaque source ; les cinq pièges de récupération, les citations exigées, et les sources écartées avec leur motif |
 | [juridique.md](juridique.md) | Le précédent Décodex, les cinq règles de publication, le lexique contraint, fouille de textes, données personnelles |
 | [ton.md](ton.md) | Le registre de rédaction, le lexique contraint étendu, les termes canoniques imposés à tous les documents, les tournures bannies et les contrôles sur le diff |
 | [tdd.md](tdd.md) | Le cycle rouge / vert / refactor, ce qui est interdit, et la procédure quand un test doit changer |

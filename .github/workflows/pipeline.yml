@@ -41,7 +41,10 @@ jobs:
 
       - if: steps.exists.outputs.yes != 'true'
         run: |
-          echo "::notice::pipeline pas encore implémenté — rien à exécuter"
+          echo "::notice::binaire de calcul pas encore implémenté."
+          echo "La récupération et le dépôt des archives tournent quand même :"
+          echo "ils n'en dépendent pas, et c'est ce qui permet d'éprouver la"
+          echo "chaîne — jeton, release, index — avant la première ligne de Rust"
 
       - if: steps.exists.outputs.yes == 'true'
         uses: dtolnay/rust-toolchain@stable
@@ -64,7 +67,6 @@ jobs:
       # de source change » n'est pas détectable. Il vit comme asset de la
       # release d'archives, le cache d'Actions évinçant à sept jours.
       - name: récupérer l'index des empreintes
-        if: steps.exists.outputs.yes == 'true'
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
@@ -72,7 +74,6 @@ jobs:
           ./scripts/archives.sh retrouver-index data/cache/index.txt
 
       - name: récupérer les archives
-        if: steps.exists.outputs.yes == 'true'
         run: ./scripts/recuperer-sources.sh
 
       # Rejouer en 2027 le calcul de 2026 exige l'archive de 2026 : les
@@ -80,7 +81,6 @@ jobs:
       # rétroactivement modifiables (brique0/ingestion-votes.md §9e). Leur
       # redistribution est autorisée par la Licence Ouverte v1.0 (ADR 0000 §8).
       - name: déposer les archives
-        if: steps.exists.outputs.yes == 'true'
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
