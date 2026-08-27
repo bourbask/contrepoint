@@ -1,0 +1,174 @@
+name: ci
+
+on:
+  pull_request:
+    branches: [develop, main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  pipeline:
+    name: pipeline (rust)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - id: exists
+        run: echo "yes=${{ hashFiles('pipeline/Cargo.toml') != '' }}" >> "$GITHUB_OUTPUT"
+      - if: steps.exists.outputs.yes == 'true'
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+      - if: steps.exists.outputs.yes == 'true'
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: pipeline
+      - name: format
+        if: steps.exists.outputs.yes == 'true'
+        working-directory: pipeline
+        run: cargo fmt --check
+      - name: clippy
+        if: steps.exists.outputs.yes == 'true'
+        working-directory: pipeline
+        run: cargo clippy --locked --all-targets -- -D warnings
+      # Hors ligne et sans jeton, conformément à docs/tdd.md.
+      - name: tests
+        if: steps.exists.outputs.yes == 'true'
+        working-directory: pipeline
+        run: cargo test --locked
+      # rayon est exclu du chemin déterministe par l'ADR 0001 (§1.6).
+      # ndarray-linalg est exclu nommément (§1.8).
+      - name: dépendances interdites
+        if: steps.exists.outputs.yes == 'true'
+        working-directory: pipeline
+        run: |
+          if grep -qE '^(rayon|ndarray-linalg)\b' Cargo.lock; then
+            echo "::error::dépendance exclue par docs/adr/0001-stack.md présente dans Cargo.lock"
+            grep -nE '^(rayon|ndarray-linalg)\b' Cargo.lock
+            exit 1
+          fi
+
+  web:
+    name: front (react/ts)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - id: exists
+        run: echo "yes=${{ hashFiles('web/package.json') != '' }}" >> "$GITHUB_OUTPUT"
+      - if: steps.exists.outputs.yes == 'true'
+        uses: actions/setup-node@v6
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+      - if: steps.exists.outputs.yes == 'true'
+        working-directory: web
+        run: npm ci
+      - name: types
+        if: steps.exists.outputs.yes == 'true'
+        working-directory: web
+        run: npx tsc --noEmit
+      - name: tests
+        if: steps.exists.outputs.yes == 'true'
+        working-directory: web
+        run: npm test --if-present
+      - name: build
+        if: steps.exists.outputs.yes == 'true'
+        working-directory: web
+        run: npm run build
+
+  artefacts:
+    name: artefacts et schémas
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '22'
+      # Le contrat pipeline <-> front est vérifié en CI et non à la compilation
+      # (ADR 0001, §6 « ce que cette recommandation concède »).
+      - name: valider les artefacts contre schemas/
+        run: |
+          shopt -s globstar nullglob
+          echec=0
+          associer() {
+            case "$1" in
+              public/api/index.json)          echo schemas/manifeste-1.schema.json ;;
+              public/api/instantanes/*.json)  echo schemas/instantane-1.schema.json ;;
+              public/api/preuves/*.json)      echo schemas/eclat-preuves-1.schema.json ;;
+              data/registre/partis.json)      echo schemas/registre-partis-1.schema.json ;;
+              *) echo "" ;;
+            esac
+          }
+          # nullglob n'élimine que les motifs à joker : un chemin littéral
+          # absent resterait dans la liste. On filtre sur l'existence.
+          candidats=(public/api/**/*.json data/registre/partis.json)
+          artefacts=()
+          for c in "${candidats[@]}"; do
+            [ -f "$c" ] && artefacts+=("$c")
+          done
+          if [ ${#artefacts[@]} -eq 0 ]; then
+            echo "aucun artefact produit pour l'instant"
+          fi
+          for a in "${artefacts[@]}"; do
+            s=$(associer "$a")
+            if [ -z "$s" ]; then
+              echo "::error file=$a::artefact sans schéma associé — ajouter le schéma ou la correspondance dans ci.yml"
+              echec=1; continue
+            fi
+            if [ ! -f "$s" ]; then
+              echo "::error file=$a::schéma $s absent"
+              echec=1; continue
+            fi
+            echo "::group::$a contre $s"
+            npx --yes ajv-cli@5.0.0 validate --spec=draft2020 --strict=true -s "$s" -d "$a" || echec=1
+            echo "::endgroup::"
+          done
+          # Le registre de preuves est du JSONL : une ligne, un document.
+          if [ -f data/preuves/positions.jsonl ] && [ -f schemas/preuve-1.schema.json ]; then
+            n=0
+            while IFS= read -r ligne; do
+              n=$((n+1))
+              printf '%s' "$ligne" > /tmp/ligne.json
+              npx --yes ajv-cli@5.0.0 validate --spec=draft2020 --strict=true \
+                -s schemas/preuve-1.schema.json -d /tmp/ligne.json >/dev/null \
+                || { echo "::error file=data/preuves/positions.jsonl,line=$n::ligne invalide"; echec=1; }
+            done < data/preuves/positions.jsonl
+            echo "$n lignes de preuve validées"
+          fi
+          exit $echec
+
+  garde-fous:
+    name: garde-fous méthode
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      # Liste canonique dans scripts/lexique.sh — jamais recopiée ailleurs.
+      # docs/juridique.md interdit tout axe à pôle dépréciatif, y compris en
+      # interne : un simple nom de champ suffirait à créer la métrique.
+      - name: lexique (code et données)
+        run: ./scripts/lexique.sh code
+      - name: lexique (documentation)
+        run: ./scripts/lexique.sh docs
+
+  ci-ok:
+    name: ci-ok
+    if: always()
+    needs: [pipeline, web, artefacts, garde-fous]
+    runs-on: ubuntu-latest
+    steps:
+      - name: verdict
+        run: |
+          echo "pipeline=${{ needs.pipeline.result }}"
+          echo "web=${{ needs.web.result }}"
+          echo "artefacts=${{ needs.artefacts.result }}"
+          echo "garde-fous=${{ needs.garde-fous.result }}"
+          for r in "${{ needs.pipeline.result }}" "${{ needs.web.result }}" \
+                   "${{ needs.artefacts.result }}" "${{ needs.garde-fous.result }}"; do
+            [ "$r" = "success" ] || [ "$r" = "skipped" ] || exit 1
+          done

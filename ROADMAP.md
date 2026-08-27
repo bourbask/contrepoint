@@ -137,7 +137,7 @@ et que rien d'existant ne couvre.**
 - Résumer un article. L'outil montre les titres et les écarts, le lecteur lit.
 - Comptes utilisateurs, commentaires, modération. Chacun impose une charge récurrente.
 - Réseaux sociaux. Pas d'accès gratuit stable.
-- Prédire ou détecter la désinformation.
+- Aucune détection ni prédiction de désinformation, jamais.
 
 ---
 
@@ -152,7 +152,7 @@ et que rien d'existant ne couvre.**
 | Flux RSS tronqués | Beaucoup de rédactions ne servent que titre et chapô. Les divergences chiffrées ont besoin du corps de texte. |
 | Parsers HTML | La ligne de maintenance qui tue les projets solo. Raison de l'ordre des briques. |
 | Attaque juridique | La méthode publique et les preuves traçables sont la défense. Une attaque fondée est une correction à faire ; une attaque de principe se répond par les sources. |
-| Crédibilité de l'auteur | L'unique actif du projet. Un outil qui prétend mesurer objectivement ne survit pas à un auteur soupçonné de s'en servir contre des personnes. |
+| Réputation de l'auteur | L'unique actif du projet. Un outil qui prétend mesurer objectivement ne survit pas à un auteur soupçonné de s'en servir contre des personnes. |
 
 ---
 

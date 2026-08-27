@@ -1,0 +1,106 @@
+name: release
+
+# Prépare une montée de version. Ne pousse jamais sur develop ni main :
+# ouvre une PR, conformément aux règles du dépôt (CONTRIBUTING.md).
+on:
+  workflow_dispatch:
+    inputs:
+      bump:
+        description: "Nature de la montée (voir docs/adr/0000-perimetre-brique0.md §6)"
+        required: true
+        type: choice
+        options: [patch, minor, major]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  preparer:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: develop
+          fetch-depth: 0
+
+      - name: identité
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git config commit.gpgsign false
+
+      - id: version
+        name: calculer le numéro
+        run: |
+          actuelle=$(git describe --tags --abbrev=0 2>/dev/null | sed 's/^v//' || echo "0.0.0")
+          IFS=. read -r ma mi pa <<< "$actuelle"
+          case "${{ inputs.bump }}" in
+            major) ma=$((ma+1)); mi=0; pa=0 ;;
+            minor) mi=$((mi+1)); pa=0 ;;
+            patch) pa=$((pa+1)) ;;
+          esac
+          nouvelle="$ma.$mi.$pa"
+          echo "actuelle=$actuelle" >> "$GITHUB_OUTPUT"
+          echo "nouvelle=$nouvelle" >> "$GITHUB_OUTPUT"
+          echo "Montée $actuelle -> $nouvelle (${{ inputs.bump }})"
+
+      - name: écrire le numéro
+        env:
+          V: ${{ steps.version.outputs.nouvelle }}
+        run: |
+          if [ -f pipeline/Cargo.toml ]; then
+            sed -i "0,/^version = /s/^version = .*/version = \"$V\"/" pipeline/Cargo.toml
+            [ -f pipeline/Cargo.lock ] && (cd pipeline && cargo update --workspace --offline 2>/dev/null || true)
+          fi
+          if [ -f web/package.json ]; then
+            (cd web && npm version "$V" --no-git-tag-version --allow-same-version)
+          fi
+
+      - name: journal des changements
+        env:
+          V: ${{ steps.version.outputs.nouvelle }}
+          PRECEDENTE: ${{ steps.version.outputs.actuelle }}
+        run: |
+          plage="v$PRECEDENTE..HEAD"
+          git rev-parse "v$PRECEDENTE" >/dev/null 2>&1 || plage="HEAD"
+          {
+            echo "## $V — $(git log -1 --format=%cd --date=short)"
+            echo
+            for t in "feat:Fonctionnalités" "fix:Correctifs" "docs:Documentation" \
+                     "test:Tests" "perf:Performance" "refactor:Remaniements"; do
+              prefixe="${t%%:*}"; titre="${t##*:}"
+              lignes=$(git log "$plage" --no-merges --format='%s' | grep -E "^$prefixe(\(.+\))?!?: " || true)
+              if [ -n "$lignes" ]; then
+                echo "### $titre"
+                echo "$lignes" | sed -E "s/^$prefixe(\(.+\))?!?: /- /"
+                echo
+              fi
+            done
+            rupture=$(git log "$plage" --no-merges --format='%s%n%b' | grep -E '^BREAKING CHANGE|!:' || true)
+            if [ -n "$rupture" ]; then
+              echo "### Ruptures"
+              echo "$rupture" | sed 's/^/- /'
+              echo
+            fi
+            echo
+            [ -f CHANGELOG.md ] && cat CHANGELOG.md
+          } > CHANGELOG.nouveau
+          printf '# Journal des changements\n\n' > CHANGELOG.md
+          grep -v '^# Journal des changements$' CHANGELOG.nouveau | sed '/^$/{x;/./d;x;h};/./{x;s/.*//;x}' >> CHANGELOG.md
+          rm -f CHANGELOG.nouveau
+          head -30 CHANGELOG.md
+
+      - name: ouvrir la PR
+        env:
+          GH_TOKEN: ${{ github.token }}
+          V: ${{ steps.version.outputs.nouvelle }}
+        run: |
+          branche="chore/version-$V"
+          git checkout -b "$branche"
+          git add -A
+          git commit --no-gpg-sign -m "chore(release): $V"
+          git push origin "$branche"
+          gh pr create --base develop --head "$branche" \
+            --title "chore(release): $V" \
+            --body-file .github/corps/release.md

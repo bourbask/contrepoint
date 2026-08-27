@@ -1,0 +1,49 @@
+name: tag
+
+# Une poussée sur main est une publication : tag et release, une seule fois.
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  etiqueter:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - id: v
+        name: lire le numéro
+        run: |
+          if [ -f pipeline/Cargo.toml ]; then
+            v=$(sed -n '0,/^version = /s/^version = "\(.*\)"/\1/p' pipeline/Cargo.toml | head -1)
+          elif [ -f web/package.json ]; then
+            v=$(node -p "require('./web/package.json').version")
+          else
+            echo "aucun fichier de version — rien à étiqueter"; echo "skip=1" >> "$GITHUB_OUTPUT"; exit 0
+          fi
+          if [ -z "$v" ] || [ "$v" = "0.0.0" ]; then
+            echo "version absente ou nulle — rien à étiqueter"; echo "skip=1" >> "$GITHUB_OUTPUT"; exit 0
+          fi
+          echo "version=$v" >> "$GITHUB_OUTPUT"
+
+      - name: tag et publication
+        if: steps.v.outputs.skip != '1'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          V: ${{ steps.v.outputs.version }}
+        run: |
+          if git rev-parse "v$V" >/dev/null 2>&1; then
+            echo "v$V existe déjà — rien à faire"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git tag -a "v$V" -m "v$V"
+          git push origin "v$V"
+          notes=$(awk '/^## /{n++} n==1' CHANGELOG.md 2>/dev/null | head -60)
+          gh release create "v$V" --title "v$V" --notes "${notes:-Publication v$V}"
