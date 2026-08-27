@@ -86,9 +86,16 @@ somme rien en parallèle, ne tire aucune graine aléatoire.
 
 ### [4] Agrégation
 
-Médiane par groupe, dispersion (IQR, étendue, écart-type de rééchantillonnage),
-application des trois conditions de publication. Produit soit une valeur, soit un
-motif de non-mesure.
+Médiane par groupe, dispersion (**écart interquartile et écart-type de
+rééchantillonnage — jamais l'étendue**, dont les deux bornes sont les coordonnées
+de deux membres identifiables du groupe : RG-42, ADR 0003 §3), application des
+trois conditions de publication. Produit soit une valeur, soit un motif de
+non-mesure.
+
+**Ne fait pas :** ni minimum, ni maximum, ni rang, ni quantile d'ordre autre que
+Q1, Q2, Q3 sur une distribution de positions individuelles. Ces valeurs ne sont
+pas seulement non publiées, elles ne sont pas calculées — il n'existe donc aucun
+emplacement d'où elles pourraient fuir.
 
 **Ne fait pas :** ne conserve aucune coordonnée individuelle dans sa sortie, ne
 moyenne jamais deux familles, ne comble jamais une absence.

@@ -131,7 +131,7 @@ Concrètement, et sans exception : pas de dossier sur un individu, pas de
 compilation d'éléments à charge, pas de donnée non publique, pas de mise en
 relation destinée à nuire à quelqu'un. Un outil de mesure dont l'auteur serait
 soupçonné de s'en servir contre des personnes perd le seul actif qu'il possède —
-sa crédibilité — et offre à ses adversaires l'unique argument capable de le faire
+sa réputation — et offre à ses adversaires l'unique argument capable de le faire
 tomber sans avoir à discuter sa méthode.
 
 Cette limite est une contrainte de conception, au même titre que l'absence d'axe

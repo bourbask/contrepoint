@@ -1,0 +1,39 @@
+#!/usr/bin/env bash
+# Verrou avant commit. Rend les contrôles bloquants plutôt que consultatifs.
+#
+# Activation, une fois par clone :
+#   git config core.hooksPath .githooks
+#
+# Ce crochet existe parce que lancer un contrôle et ne pas s'arrêter sur son
+# échec revient à ne pas l'avoir lancé. C'est arrivé.
+set -uo pipefail
+
+echec=0
+lancer() {
+  printf '\n── %s\n' "$1"
+  shift
+  "$@" || echec=1
+}
+
+lancer "lexique (code et données)"   ./scripts/lexique.sh code
+lancer "lexique (documentation)"     ./scripts/lexique.sh docs
+lancer "sécurité"                    ./scripts/securite.sh
+
+# La relecture par l'agent sécurité est exigée en plus quand le diff touche les
+# données, les schémas ou les artefacts publiés. Le crochet ne peut pas la
+# lancer : il la rappelle.
+sensibles=$(git diff --cached --name-only --diff-filter=ACMR \
+            | grep -E '^(data/|schemas/|public/api/|docs/brique0/echantillons/)' || true)
+if [ -n "$sensibles" ]; then
+  printf '\n── revue sécurité exigée\n'
+  echo "Le diff touche des chemins sensibles :"
+  echo "$sensibles" | sed 's/^/    /'
+  echo "La revue par l'agent sécurité est exigée en plus du contrôle déterministe."
+  echo "Elle n'est pas vérifiable par ce crochet — ne pas la sauter."
+fi
+
+if [ "$echec" -ne 0 ]; then
+  printf '\nCommit refusé. Corriger, ou justifier explicitement un contournement.\n'
+  exit 1
+fi
+printf '\nContrôles passés.\n'
