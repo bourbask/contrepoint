@@ -13,6 +13,12 @@ Créée le 2026-08-27.
 **But : un graphe des partis français où chaque position est datée, sourcée, et
 affichée simultanément selon trois méthodes indépendantes.**
 
+> **Cette liste est cochée à chaque PR.** Une feuille de route qui ne l'est pas
+> n'est ni un tableau de bord ni un périmètre : elle a dérivé une fois, quatre
+> lignes contredisant l'ADR 0003 pendant plusieurs jours. Ce qui est barré est
+> hors périmètre, avec le motif ; ce qui est coché est fait et vérifiable.
+> Le suivi fin des tâches vit sur le tableau du dépôt, pas ici.
+
 Aucun média n'intervient. Aucun risque juridique : personnalités publiques,
 votes publics, jeux de données académiques cités. Utile seule.
 
@@ -45,16 +51,16 @@ sera pas affiché comme tel.
 ### v0.3 — les autres familles de mesure
 
 - [ ] CHES, toutes les vagues 1999 → 2024 (axes gauche-droite, économique, sociétal, UE)
-- [ ] Manifesto Project — score RILE issu des programmes
+- ~~Manifesto Project — score RILE issu des programmes~~ — **hors v0** ([ADR 0000](docs/adr/0000-perimetre-brique0.md) §1) : l'accès exige une inscription manuelle, ce qui viole la contrainte « rien qui exige une action manuelle récurrente ». Reste une source d'identifiants dans le registre, établie à la main et datée
 - [ ] Nuancier du ministère de l'Intérieur, avec la date de la circulaire et l'issue des recours
-- [ ] ParlGov pour les résultats électoraux et les compositions gouvernementales
+- ~~ParlGov pour les résultats électoraux et les compositions gouvernementales~~ — **hors v0** : aucun écran ne les consomme. Reste une table de correspondance employée hors pipeline
 
 ### v0.4 — le registre d'entités *(le vrai travail, et le contrat des briques suivantes)*
 
-- [ ] Identifiants stables de partis, réconciliant : groupe parlementaire AN, `party_id` CHES, code Manifesto, code nuance Intérieur
-- [ ] **Groupe parlementaire ≠ parti.** La distinction est explicite dans le modèle, pas contournée
-- [ ] Périodes de validité : fusions, scissions, changements de nom
-- [ ] Registre versionné, lisible à la main, corrigeable par pull request
+- [x] Identifiants stables de partis, réconciliant : groupe parlementaire AN, `party_id` CHES, code Manifesto, code nuance Intérieur
+- [x] **Groupe parlementaire ≠ parti.** La distinction est explicite dans le modèle, pas contournée
+- [x] Périodes de validité : fusions, scissions, changements de nom
+- [x] Registre versionné, lisible à la main, corrigeable par pull request
 
 C'est la brique que les briques 1 à 3 consommeront. Se tromper ici se paie
 partout ensuite.
@@ -72,17 +78,17 @@ possibilité de reconstituer l'historique par minage des révisions git.
 ### v0.6 — le graphe
 
 - [ ] Une bande par parti, trois marqueurs — votes, experts, administration — jamais moyennés
-- [ ] Curseur temporel : l'état du paysage à une date donnée
+- ~~Curseur temporel~~ — **hors v0** : une seule législature. Le manifeste porte déjà une liste d'instantanés, aucun champ ne changera le jour où le curseur arrivera
 - [ ] Clic sur une position → les preuves, la méthode, le lien vers la source brute
-- [ ] Vue des dérives : déplacements significatifs dans le temps
+- ~~Vue des dérives~~ — **hors périmètre, pas seulement hors v0** : aucun artefact ne porte d'écart entre deux dates (invariant I18). Deux législatures s'affichent côte à côte, jamais superposées
 
 ### v0.7 — publication
 
-- [ ] Dépôt public, GitHub Pages, cron hebdomadaire
-- [ ] Suite de tests hors ligne, zéro token, zéro réseau
+- [x] Dépôt public, cron hebdomadaire — **exécuté le 2026-08-27**, archives déposées en release. GitHub Pages : reste à basculer la source sur Actions
+- [x] Suite de tests hors ligne, zéro jeton, zéro réseau
 - [ ] Page de méthode et procédure de correction accessibles depuis chaque écran
 - [ ] Entrée « Contrepoint » dans la navbar du site personnel, en redirection
-- [ ] Aucune promotion
+- [x] Aucune promotion
 
 ---
 
