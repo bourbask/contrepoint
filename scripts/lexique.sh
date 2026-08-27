@@ -23,7 +23,11 @@ case "$cible" in
   docs)
     # juridique.md et ton.md définissent le lexique : ils citent les termes interdits.
     fichiers=$(git ls-files '*.md' | grep -vE '^(docs/juridique\.md|docs/ton\.md|CHANGELOG\.md)$' || true)
-    motifs="$AGREG"
+    # RG-91 interdit les axes dépréciatifs dans la documentation aussi.
+    # QUALIF reste hors du mode docs : la documentation discute légitimement
+    # de la partialité comme concept, et « biais de sélection » est un terme
+    # retenu du projet.
+    motifs="$AXES|$AGREG"
     ;;
   *) echo "usage: $0 [code|docs]" >&2; exit 2 ;;
 esac
@@ -33,8 +37,16 @@ if [ -z "$fichiers" ]; then
   exit 0
 fi
 
-if echo "$fichiers" | xargs -r grep -inE "$motifs"; then
+# Une ligne qui ÉNONCE l'interdiction n'est pas une violation : la
+# documentation doit pouvoir dire « aucun axe de fiabilité ». On ne retient
+# donc que les occurrences dépourvues de marqueur de prohibition.
+PROHIBITION='aucun|jamais|interdit|proscrit|ne (le |la |les )?(sert|fait|fera|produit|publie)|pas de|ni de|hors périmètre|sans axe'
+
+violations=$(echo "$fichiers" | xargs -r grep -inE "$motifs" | grep -ivE "$PROHIBITION" || true)
+if [ -n "$violations" ]; then
+  echo "$violations"
   echo "::error::terme interdit par docs/juridique.md — voir scripts/lexique.sh"
+  echo "Si l'occurrence énonce l'interdiction, formuler la ligne avec « aucun » ou « jamais »."
   exit 1
 fi
 echo "lexique ($cible) : aucun terme interdit sur $(echo "$fichiers" | grep -c .) fichiers"

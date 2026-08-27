@@ -50,6 +50,18 @@ jobs:
       # calcul est dérivée du `last-modified` de la source la plus récente,
       # écrit par le script de récupération. Son absence est une erreur, pas
       # un défaut à combler par `date -u`.
+      # data/cache/ est ignoré par git : le descripteur n'existe dans aucun
+      # checkout, il doit être produit par cette exécution.
+      - name: récupérer les archives
+        if: steps.exists.outputs.yes == 'true'
+        run: |
+          if [ ! -x scripts/recuperer-sources.sh ]; then
+            echo "::error::scripts/recuperer-sources.sh absent — voir l'issue « écrire scripts/recuperer-sources.sh »."
+            echo "Le pipeline ne peut pas s'exécuter sans l'étape de récupération."
+            exit 1
+          fi
+          ./scripts/recuperer-sources.sh
+
       - id: date_calcul
         name: date de calcul
         if: steps.exists.outputs.yes == 'true'
@@ -60,12 +72,15 @@ jobs:
             echo "La date de calcul se dérive des sources, jamais de l'horloge (contrats.md §8.1)."
             exit 1
           fi
-          d=$(tr -d '[:space:]' < "$f")
-          case "$d" in
-            [0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]*) ;;
-            *) echo "::error::date de source illisible : '$d'"; exit 1 ;;
-          esac
+          brut=$(tr -d '\r' < "$f" | head -1)
+          # Le schéma preuve-1 impose ^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$.
+          # Un last-modified HTTP réduit à une date produirait une ligne invalide.
+          if ! d=$(date -u -d "$brut" +%Y-%m-%dT%H:%M:%SZ 2>/dev/null); then
+            echo "::error::date de source illisible : '$brut'"
+            exit 1
+          fi
           echo "valeur=$d" >> "$GITHUB_OUTPUT"
+          echo "date de calcul : $d (dérivée de la source, jamais de l'horloge)"
 
       - name: exécuter
         if: steps.exists.outputs.yes == 'true'

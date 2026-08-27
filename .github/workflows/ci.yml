@@ -126,7 +126,7 @@ jobs:
               echec=1; continue
             fi
             echo "::group::$a contre $s"
-            npx --yes ajv-cli@5 validate --spec=draft2020 --strict=true -s "$s" -d "$a" || echec=1
+            npx --yes ajv-cli@5.0.0 validate --spec=draft2020 --strict=true -s "$s" -d "$a" || echec=1
             echo "::endgroup::"
           done
           # Le registre de preuves est du JSONL : une ligne, un document.
@@ -135,7 +135,7 @@ jobs:
             while IFS= read -r ligne; do
               n=$((n+1))
               printf '%s' "$ligne" > /tmp/ligne.json
-              npx --yes ajv-cli@5 validate --spec=draft2020 --strict=true \
+              npx --yes ajv-cli@5.0.0 validate --spec=draft2020 --strict=true \
                 -s schemas/preuve-1.schema.json -d /tmp/ligne.json >/dev/null \
                 || { echo "::error file=data/preuves/positions.jsonl,line=$n::ligne invalide"; echec=1; }
             done < data/preuves/positions.jsonl
