@@ -1,0 +1,77 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "manifeste-1.schema.json",
+  "title": "Manifeste des instantanés publiés",
+  "description": "public/api/index.json. Contrat : docs/brique0/contrats.md §4.1. Ne porte aucune valeur mesurée : de quoi choisir un fichier, la légende des familles, et la date d'arrêt des données dérivée des lignes de preuve.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "contrat", "schemas", "date_arretee", "licence", "mention_paternite", "familles", "instantanes", "preuves"],
+  "properties": {
+    "schema": { "const": "contrepoint/manifeste/1" },
+    "contrat": { "$ref": "preuve-1.schema.json#/$defs/semver" },
+    "schemas": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "description": "Schémas présents dans les artefacts publiés. Un majeur inconnu du front l'oblige à refuser cet artefact et à le dire, jamais à afficher « non mesuré » (§5.2).",
+      "items": { "type": "string", "pattern": "^contrepoint/[a-z-]+/[0-9]+$" }
+    },
+    "date_arretee": {
+      "type": "string",
+      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z$",
+      "description": "Maximum des date_calcul des lignes référencées. Dérivé, jamais saisi (I17)."
+    },
+    "licence": { "const": "Licence Ouverte / Open Licence (Etalab)" },
+    "mention_paternite": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Obligation de la Licence Ouverte v1.0 : nom du Producteur et date de dernière mise à jour (ingestion-votes.md §1)."
+    },
+    "familles": {
+      "type": "array",
+      "minItems": 1,
+      "description": "Légende et ordre d'affichage des marqueurs. Le front lit cette liste au lieu de coder les familles en dur : c'est ce qui rend l'ajout d'une famille une mineure.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "libelle", "echelle"],
+        "properties": {
+          "id": { "type": "string", "pattern": "^[a-z_]+$" },
+          "libelle": { "type": "string", "minLength": 1, "maxLength": 40 },
+          "echelle": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
+    "instantanes": {
+      "type": "array",
+      "minItems": 1,
+      "description": "Une entrée en v0. Le curseur temporel, hors v0, est « plus d'une entrée » : aucun champ à ajouter. Aucune entrée ne porte d'écart avec une autre (I18).",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "chambre", "legislature", "date", "url", "empreinte_sha256", "octets", "bandes"],
+        "properties": {
+          "id": { "type": "string", "pattern": "^[a-z0-9-]+$" },
+          "chambre": { "enum": ["AN"] },
+          "legislature": { "type": "string", "pattern": "^[0-9]{1,2}$" },
+          "date": { "$ref": "preuve-1.schema.json#/$defs/date" },
+          "url": { "type": "string", "minLength": 1 },
+          "empreinte_sha256": { "$ref": "preuve-1.schema.json#/$defs/sha256" },
+          "octets": { "type": "integer", "minimum": 1 },
+          "bandes": { "type": "integer", "minimum": 0 }
+        }
+      }
+    },
+    "preuves": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["racine", "eclats", "fonction"],
+      "description": "Le chemin d'un éclat se dérive de l'id du marqueur : aucun index à télécharger.",
+      "properties": {
+        "racine": { "type": "string", "minLength": 1 },
+        "eclats": { "const": 256 },
+        "fonction": { "const": "deux premiers caractères hexadécimaux de l'id" }
+      }
+    }
+  }
+}
