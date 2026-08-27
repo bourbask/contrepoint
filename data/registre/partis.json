@@ -1,0 +1,1406 @@
+{
+  "schema": "contrepoint/registre-partis/1",
+  "version": "0.3.0",
+  "date_registre": "2026-08-27",
+  "licence": "Licence Ouverte / Open Licence (Etalab)",
+  "legislatures": [
+    {
+      "numero": "17",
+      "chambre": "AN",
+      "debut": "2024-07-18",
+      "fin": null,
+      "source": "declaration_publique",
+      "url": "https://www.assemblee-nationale.fr/dyn/17/comptes-rendus/seance/session-de-droit-de-2024/seance-du-jeudi-18-juillet-2024",
+      "etabli_le": "2026-08-27",
+      "remarque": "Ouverture de la législature : première séance du 2024-07-18, article 12 de la Constitution."
+    }
+  ],
+  "sources": [
+    {
+      "id": "an_organe",
+      "libelle": "Assemblée nationale — référentiel AMO30, objets organe (codeType GP et PARPOL)",
+      "url": "https://data.assemblee-nationale.fr/static/openData/repository/17/amo/tous_acteurs_mandats_organes_xi_legislature/AMO30_tous_acteurs_tous_mandats_tous_organes_historique.json.zip",
+      "recupere_le": "2026-08-27",
+      "empreinte_sha256": "bbecd01274d2bc9f46fcaa276b06868862ae7680131da3162e35b5cbef663061",
+      "cardinalite": "un_par_date",
+      "licence": "Licence Ouverte / Open Licence (Etalab)",
+      "remarque": "organePrecedentRef est nul sur les 63 GP et les 58 PARPOL : la source ne déclare aucune succession."
+    },
+    {
+      "id": "an_parpol_mandats",
+      "libelle": "Assemblée nationale — mandats de typeOrgane PARPOL des acteurs (AMO30)",
+      "url": "https://data.assemblee-nationale.fr/static/openData/repository/17/amo/tous_acteurs_mandats_organes_xi_legislature/AMO30_tous_acteurs_tous_mandats_tous_organes_historique.json.zip",
+      "recupere_le": "2026-08-27",
+      "empreinte_sha256": "bbecd01274d2bc9f46fcaa276b06868862ae7680131da3162e35b5cbef663061",
+      "cardinalite": "plusieurs",
+      "licence": "Licence Ouverte / Open Licence (Etalab)",
+      "remarque": "Rattachement déclaratif annuel, non adhésion : 111 députés EPR et DEM déclarent ESBMP, aucun Renaissance."
+    },
+    {
+      "id": "ches_2024",
+      "libelle": "Chapel Hill Expert Survey 2024 — colonne party_id, country = 6",
+      "url": "https://github.com/chesdata/chesdata.github.io/releases/download/ches-europe/CHES_2024_final_v2.csv",
+      "recupere_le": "2026-08-27",
+      "empreinte_sha256": "1c1ec0532afa2a0a13317122cbbe40eb9ff35425191892d1fff24fbef6acc6a8",
+      "cardinalite": "un_par_date",
+      "licence": "non redistribué — téléchargé par script",
+      "remarque": "10 partis français dans la vague 2024. Fichier jamais commité (ADR 0000 §4)."
+    },
+    {
+      "id": "ches_trend",
+      "libelle": "CHES trend file 1999-2024 — colonnes party_id et cmp_id, country = 6",
+      "url": "https://github.com/chesdata/chesdata.github.io/releases/download/ches-trend/1999-2024_CHES_dataset_meansV2.csv",
+      "recupere_le": "2026-08-27",
+      "empreinte_sha256": "254384ab9f542bbaa62ec7e0dc36f2d0cc0471629c2c9587d0ecaed34914a033",
+      "cardinalite": "un_par_date",
+      "licence": "non redistribué — téléchargé par script",
+      "remarque": "party_id est stable à travers les changements de nom : 610 = FN puis RN, 609 = RPR/UMP/LR."
+    },
+    {
+      "id": "declaration_publique",
+      "libelle": "Déclaration publique citée ligne par ligne (champ url obligatoire)",
+      "url": null,
+      "recupere_le": "2026-08-27",
+      "empreinte_sha256": null,
+      "cardinalite": "plusieurs",
+      "licence": "s.o.",
+      "remarque": "Seule source admise pour ce qu'aucun jeu de données ne publie. Exige une relecture humaine."
+    },
+    {
+      "id": "manifesto",
+      "libelle": "Manifesto Project (MARPOR) — code parti CMP",
+      "url": "https://manifesto-project.wzb.eu/",
+      "recupere_le": "2026-08-27",
+      "empreinte_sha256": null,
+      "cardinalite": "un_par_date",
+      "licence": "conditions non vérifiées — clé d'API requise",
+      "remarque": "Valeurs reprises de la colonne cmp_id de ches_trend, non confrontées a la source : A VERIFIER."
+    },
+    {
+      "id": "nuance_leg2024",
+      "libelle": "Ministere de l'Interieur — codes de nuance constatés dans les resultats definitifs des legislatives 2024",
+      "url": "https://static.data.gouv.fr/resources/elections-legislatives-des-30-juin-et-7-juillet-2024-resultats-definitifs-du-2nd-tour/20240710-170728/resultats-definitifs-par-circonscription.csv",
+      "recupere_le": "2026-08-27",
+      "empreinte_sha256": "bcc062b9264dcf3dc1eac5463acf1e8743171b86385923e7f770fd9028271083",
+      "cardinalite": "plusieurs",
+      "licence": "Licence Ouverte v2.0 (champ license = lov2 sur data.gouv.fr)",
+      "remarque": "22 codes constatés au 1er tour. Grille officielle : annexe de l'instruction IOMA2415630C du 2024-06-11."
+    },
+    {
+      "id": "parlgov",
+      "libelle": "ParlGov development — party.csv, country_id 43 (France)",
+      "url": "https://parlgov.org/data/parlgov-development_csv-utf-8/party.csv",
+      "recupere_le": "2026-08-27",
+      "empreinte_sha256": "b8c6006c0a30e8830e13f1a9834e138722fe0de0761ddc44cf9b1667bbcad8ba",
+      "cardinalite": "un_par_date",
+      "licence": "conditions non vérifiées",
+      "remarque": "80 partis français. name_short fusionne les dénominations successives : 'UMP|LR', 'REM|R', 'FN'."
+    },
+    {
+      "id": "wikidata",
+      "libelle": "Wikidata — QID d'entite, P31/P279* = Q7278, P17 = Q142",
+      "url": "https://query.wikidata.org/sparql",
+      "recupere_le": "2026-08-27",
+      "empreinte_sha256": null,
+      "cardinalite": "un_par_date",
+      "licence": "CC0",
+      "remarque": "Pivot d'identité seulement. P571 est multivalué (UDR : 2012-07-17 et 2024-08-31) : jamais source de date."
+    }
+  ],
+  "entites": [
+    {
+      "id": "coalition.ensemble",
+      "nature": "coalition",
+      "nom": "Ensemble",
+      "sigle": "ENS",
+      "debut": null,
+      "fin": null,
+      "identifiants": [
+        {
+          "source": "wikidata",
+          "valeur": null,
+          "libelle_source": null,
+          "debut": null,
+          "fin": null,
+          "etabli_le": "2026-08-27",
+          "motif": "Aucune entite univoque : la recherche renvoie une page d'homonymie (Q112895317).",
+          "remarque": null
+        },
+        {
+          "source": "nuance_leg2024",
+          "valeur": "ENS",
+          "libelle_source": null,
+          "debut": null,
+          "fin": null,
+          "etabli_le": "2026-08-27",
+          "motif": null,
+          "remarque": "Code de coalition : il ne distingue pas RE, MoDem et Horizons."
+        },
+        {
+          "source": "an_organe",
+          "valeur": null,
+          "libelle_source": null,
+          "debut": null,
+          "fin": null,
+          "etabli_le": "2026-08-27",
+          "motif": "Le référentiel ne modélise pas les coalitions electorales.",
+          "remarque": null
+        }
+      ],
+      "composition": [],
+      "remarque": "Conservée pour porter le code ENS. Aucun pivot d'identité disponible."
+    },
+    {
+      "id": "coalition.nfp",
+      "nature": "coalition",
+      "nom": "Nouveau Front populaire",
+      "sigle": "NFP",
+      "debut": "2024-06-10",
+      "fin": null,
+      "identifiants": [
+        {
+          "source": "wikidata",
+          "valeur": "Q126487286",
+          "libelle_source": "Nouveau Front populaire",
+          "debut": null,
+          "fin": null,
+          "etabli_le": "2026-08-27",
+          "motif": null,
+          "remarque": "P31 = coalition politique. P571 unique."
+        },
+        {
+          "source": "nuance_leg2024",
+          "valeur": "UG",
+          "libelle_source": null,
+          "debut": null,
+          "fin": null,
+          "etabli_le": "2026-08-27",
+          "motif": null,
+          "remarque": "Code de coalition : il ne distingue pas LFI, PS, ECO et COM."
+        },
+        {
+          "source": "an_organe",
+          "valeur": null,
+          "libelle_source": null,
+          "debut": null,
+          "fin": null,
+          "etabli_le": "2026-08-27",
+          "motif": "Le référentiel ne modélise pas les coalitions electorales.",
+          "remarque": null
+        }
+      ],
+      "composition": [
+        {
+          "entite": "parti.lfi",
+          "debut": "2024-06-10",
+          "fin": null,
+          "source": "declaration_publique",
+          "url": "https://www.assemblee-nationale.fr/dyn/17/organes/groupes-politiques",
+          "etabli_le": "2026-08-27",
+          "remarque": null
+        },
+        {
+          "entite": "parti.ps",
+          "debut": "2024-06-10",
+          "fin": null,
+          "source": "declaration_publique",
+          "url": "https://www.assemblee-nationale.fr/dyn/17/organes/groupes-politiques",
+          "etabli_le": "2026-08-27",
+          "remarque": null
+        },
+        {
+          "entite": "parti.ecologistes",
+          "debut": "2024-06-10",
+          "fin": null,
+          "source": "declaration_publique",
+          "url": "https://www.assemblee-nationale.fr/dyn/17/organes/groupes-politiques",
+          "etabli_le": "2026-08-27",
+          "remarque": null
+        },
+        {
+          "entite": "parti.pcf",
+          "debut": "2024-06-10",
+          "fin": null,
+          "source": "declaration_publique",
+          "url": "https://www.assemblee-nationale.fr/dyn/17/organes/groupes-politiques",
+          "etabli_le": "2026-08-27",
+          "remarque": null
+        },
+        {
+          "entite": "parti.place-publique",
+          "debut": "2024-06-10",
+          "fin": null,
+          "source": "declaration_publique",
+          "url": "https://www.assemblee-nationale.fr/dyn/17/organes/groupes-politiques",
+          "etabli_le": "2026-08-27",
+          "remarque": null
+        }
+      ],
+      "remarque": "Composition à relire ligne par ligne : aucune source de données ne la publie."
+    },
+    {
+      "id": "parti.ecologistes",
+      "nature": "parti",
+      "nom": "Les Écologistes – Europe Écologie Les Verts",
+      "sigle": "Les Écologistes",
+      "debut": "2010-11-13",
+      "fin": null,
+      "identifiants": [
+        {
+          "source": "an_organe",
+          "valeur": "PO684936",
+          "libelle_source": "Europe Écologie Les Verts",
+          "debut": null,
+          "fin": "2025-12-03",
+          "etabli_le": "2026-08-27",
+          "motif": null,
+          "remarque": "dateFin de masse dans la source : maintenance du référentiel, pas une dissolution."
+        },
+        {
+          "source": "an_organe",
+          "valeur": "PO852530",
+          "libelle_source": "Les Écologistes - EELV",
+          "debut": "2025-12-04",
+          "fin": null,
+          "etabli_le": "2026-08-27",
+          "motif": null,
+          "remarque": null
+        },
+        {
+          "source": "ches_2024",
+          "valeur": "605",
+          "libelle_source": "LE/EELV",
+          "debut": null,
+          "fin": null,
+          "etabli_le": "2026-08-27",
+          "motif": null,
+          "remarque": null
+        },
+        {
+          "source": "ches_trend",
+          "valeur": "605",
+          "libelle_source": "VERTS puis EELV puis LE/EELV",
+          "debut": null,
+          "fin": null,
+          "etabli_le": "2026-08-27",
+          "motif": null,
+          "remarque": "Même party_id sur 1999-2024 malgre deux changements de nom."
+        },
+        {
+          "source": "manifesto",
+          "valeur": "31110",
+          "libelle_source": null,
+          "debut": null,
+          "fin": null,
+          "etabli_le": "2026-08-27",
+          "motif": null,
+          "remarque": "Concordant entre cmp_id (ches_trend) et cmp de parlgov."
+        },
+        {
+          "source": "parlgov",
+          "valeur": "873",
+          "libelle_source": "V",
+          "debut": null,
+          "fin": null,
+          "etabli_le": "2026-08-27",
+          "motif": null,
+          "remarque": null
+        },
+        {
+          "source": "wikidata",
+          "valeur": "Q613786",
+          "libelle_source": "Les Écologistes – Europe Écologie Les Verts",
+          "debut": null,
+          "fin": null,
+          "etabli_le": "2026-08-27",
+          "motif": null,
+          "remarque": null
+        },
+        {
+          "source": "nuance_leg2024",
+          "valeur": null,
+          "libelle_source": null,
+          "debut": null,
+          "fin": null,
+          "etabli_le": "2026-08-27",
+          "motif": "Deux codes écologistes constatés en 2024 (ECO, VEC) ; l'annexe de IOMA2415630C n'est pas téléchargeable en automatisé. A VERIFIER.",
+          "remarque": null
+        }
+      ],
+      "composition": [],
+      "remarque": null
+    },
+    {
+      "id": "parti.horizons",
+      "nature": "parti",
+      "nom": "Horizons",
+      "sigle": "HOR",
+      "debut": "2021-10-09",
+      "fin": null,
+      "identifiants": [
+        {
+          "source": "an_organe",
+          "valeur": "PO852528",
+          "libelle_source": "Horizons",
+          "debut": null,
+          "fin": null,
+          "etabli_le": "2026-08-27",
+          "motif": null,
+          "remarque": null
+        },
+        {
+          "source": "ches_2024",
+          "valeur": "631",
+          "libelle_source": "Horizons",
+          "debut": null,
+          "fin": null,
+          "etabli_le": "2026-08-27",
+          "motif": null,
+          "remarque": null
+        },
+        {
+          "source": "ches_trend",
+          "valeur": "631",
+          "libelle_source": "Horizons",
+          "debut": "2024-01-01",
+          "fin": null,
+          "etabli_le": "2026-08-27",
+          "motif": null,
+          "remarque": "Présent dans la seule vague 2024."
+        },
+        {
+          "source": "manifesto",
+          "valeur": null,
+          "libelle_source": null,
+          "debut": null,
+          "fin": null,
+          "etabli_le": "2026-08-27",
+          "motif": "cmp_id vide dans ches_trend ; colonne cmp vide dans parlgov.",
+          "remarque": null
+        },
+        {
+          "source": "parlgov",
+          "valeur": "2857",
+          "libelle_source": "H",
+          "debut": null,
+          "fin": null,
+          "etabli_le": "2026-08-27",
+          "motif": null,
+          "remarque": null
+        },
+        {
+          "source": "wikidata",
+          "valeur": "Q108846587",
+          "libelle_source": "Horizons",
+          "debut": null,
+          "fin": null,
+          "etabli_le": "2026-08-27",
+          "motif": null,
+          "remarque": null
+        },
+        {
+          "source": "nuance_leg2024",
+          "valeur": "HOR",
+          "libelle_source": null,
+          "debut": null,
+          "fin": null,
+          "etabli_le": "2026-08-27",
+          "motif": null,
+          "remarque": null
+        }
+      ],
+      "composition": [],
+      "remarque": null
+    },
+    {
+      "id": "parti.lfi",
+      "nature": "parti",
+      "nom": "La France insoumise",
+      "sigle": "LFI",
+      "debut": "2016-02-10",
+      "fin": null,
+      "identifiants": [
+        {
+          "source": "an_organe",
+          "valeur": "PO744856",
+          "libelle_source": "La France Insoumise",
+          "debut": null,
+          "fin": null,
+          "etabli_le": "2026-08-27",
+          "motif": null,
+          "remarque": null
+        },
+        {
+          "source": "ches_2024",
+          "valeur": "627",
+          "libelle_source": "FI",
+          "debut": null,
+          "fin": null,
+          "etabli_le": "2026-08-27",
+          "motif": null,
+          "remarque": null
+        },
+        {
+          "source": "ches_trend",
+          "valeur": "627",
+          "libelle_source": "FI",
+          "debut": "2019-01-01",
+          "fin": null,
+          "etabli_le": "2026-08-27",
+          "motif": null,
+          "remarque": "Absent des vagues 1999-2014 : le parti n'existait pas."
+        },
+        {
+          "source": "manifesto",
+          "valeur": null,
+          "libelle_source": null,
+          "debut": null,
+          "fin": null,
+          "etabli_le": "2026-08-27",
+          "motif": "cmp_id vide dans ches_trend pour ce parti ; code CMP non vérifié a la source.",
+          "remarque": null
+        },
+        {
+          "source": "parlgov",
+          "valeur": "2644",
+          "libelle_source": "FI",
+          "debut": null,
+          "fin": null,
+          "etabli_le": "2026-08-27",
+          "motif": null,
+          "remarque": null
+        },
+        {
+          "source": "wikidata",
+          "valeur": "Q27978402",
+          "libelle_source": "La France insoumise",
+          "debut": null,
+          "fin": null,
+          "etabli_le": "2026-08-27",
+          "motif": null,
+          "remarque": null
+        },
+        {
+          "source": "nuance_leg2024",
+          "valeur": "FI",
+          "libelle_source": null,
+          "debut": null,
+          "fin": null,
+          "etabli_le": "2026-08-27",
+          "motif": null,
+          "remarque": "Code propre au parti. Les candidats NFP ont aussi été nuancés UG."
+        }
+      ],
+      "composition": [],
+      "remarque": "Date de début : P571 Wikidata, valeur unique."
+    },
+    {
+      "id": "parti.lr",
+      "nature": "parti",
+      "nom": "Les Républicains",
+      "sigle": "LR",
+      "debut": "2015-05-30",
+      "fin": null,
+      "identifiants": [
+        {
+          "source": "an_organe",
+          "valeur": "PO684942",
+          "libelle_source": "Union pour un Mouvement Populaire",
+          "debut": null,
+          "fin": "2015-11-30",
+          "etabli_le": "2026-08-27",
+          "motif": null,
+          "remarque": "Identifiant du même parti sous sa dénomination antérieure, fermé par la source."
+        },
+        {
+          "source": "an_organe",
+          "valeur": "PO710396",
+          "libelle_source": "Les Républicains",
+          "debut": "2015-12-01",
+          "fin": null,
+          "etabli_le": "2026-08-27",
+          "motif": null,
+          "remarque": null
+        },
+        {
+          "source": "ches_2024",
+          "valeur": "609",
+          "libelle_source": "LR",
+          "debut": null,
+          "fin": null,
+          "etabli_le": "2026-08-27",
+          "motif": null,
+          "remarque": null
+        },
+        {
+          "source": "ches_trend",
+          "valeur": "609",
+          "libelle_source": "RPR puis UMP puis LR",
+          "debut": null,
+          "fin": null,
+          "etabli_le": "2026-08-27",
+          "motif": null,
+          "remarque": null
+        },
+        {
+          "source": "manifesto",
+          "valeur": "31626",
+          "libelle_source": null,
+          "debut": null,
+          "fin": null,
+          "etabli_le": "2026-08-27",
+          "motif": null,
+          "remarque": "Concordant entre cmp_id (ches_trend) et cmp de parlgov."
+        },
+        {
+          "source": "parlgov",
+          "valeur": "658",
+          "libelle_source": "UMP|LR",
+          "debut": null,
+          "fin": null,
+          "etabli_le": "2026-08-27",
+          "motif": null,
+          "remarque": null
+        },
+        {
+          "source": "wikidata",
+          "valeur": "Q20012759",
+          "libelle_source": "Les Républicains",
+          "debut": null,
+          "fin": null,
+          "etabli_le": "2026-08-27",
+          "motif": null,
+          "remarque": null
+        },
+        {
+          "source": "nuance_leg2024",
+          "valeur": "LR",
+          "libelle_source": null,
+          "debut": null,
+          "fin": null,
+          "etabli_le": "2026-08-27",
+          "motif": null,
+          "remarque": null
+        }
+      ],
+      "composition": [],
+      "remarque": "Scission de 2024 : voir relation scission vers parti.udr."
+    },
+    {
+      "id": "parti.pcf",
+      "nature": "parti",
+      "nom": "Parti communiste français",
+      "sigle": "PCF",
+      "debut": "1920-12-01",
+      "fin": null,
+      "identifiants": [
+        {
+          "source": "an_organe",
+          "valeur": "PO684926",
+          "libelle_source": "Parti communiste français",
+          "debut": null,
+          "fin": null,
+          "etabli_le": "2026-08-27",
+          "motif": null,
+          "remarque": null
+        },
+        {
+          "source": "ches_2024",
+          "valeur": "601",
+          "libelle_source": "PCF",
+          "debut": null,
+          "fin": null,
+          "etabli_le": "2026-08-27",
+          "motif": null,
+          "remarque": null
+        },
+        {
+          "source": "ches_trend",
+          "valeur": "601",
+          "libelle_source": "PCF",
+          "debut": null,
+          "fin": null,
+          "etabli_le": "2026-08-27",
+          "motif": null,
+          "remarque": null
+        },
+        {
+          "source": "manifesto",
+          "valeur": "31220",
+          "libelle_source": null,
+          "debut": null,
+          "fin": null,
+          "etabli_le": "2026-08-27",
+          "motif": null,
+          "remarque": "Concordant entre cmp_id (ches_trend) et cmp de parlgov."
+        },
+        {
+          "source": "parlgov",
+          "valeur": "686",
+          "libelle_source": "PCF",
+          "debut": null,
+          "fin": null,
+          "etabli_le": "2026-08-27",
+          "motif": null,
+          "remarque": null
+        },
+        {
+          "source": "wikidata",
+          "valeur": "Q192821",
+          "libelle_source": "Parti communiste français",
+          "debut": null,
+          "fin": null,
+          "etabli_le": "2026-08-27",
+          "motif": null,
+          "remarque": null
+        },
+        {
+          "source": "nuance_leg2024",
+          "valeur": "COM",
+          "libelle_source": null,
+          "debut": null,
+          "fin": null,
+          "etabli_le": "2026-08-27",
+          "motif": null,
+          "remarque": "Seul code communiste de la grille constatée ; libellé de l'annexe non lu."
+        }
+      ],
+      "composition": [],
+      "remarque": "Députés repartis sur deux groupes en XVIIe : GDR et ECOS."
+    },
+    {
+      "id": "parti.place-publique",
+      "nature": "parti",
+      "nom": "Place publique",
+      "sigle": "PP",
+      "debut": "2018-11-06",
+      "fin": null,
+      "identifiants": [
+        {
+          "source": "an_organe",
+          "valeur": null,
+          "libelle_source": null,
+          "debut": null,
+          "fin": null,
+          "etabli_le": "2026-08-27",
+          "motif": "Absent des 58 organes PARPOL du référentiel au 2026-08-27.",
+          "remarque": null
+        },
+        {
+          "source": "ches_2024",
+          "valeur": null,
+          "libelle_source": null,
+          "debut": null,
+          "fin": null,
+          "etabli_le": "2026-08-27",
+          "motif": "Absent des 10 partis français de la vague 2024.",
+          "remarque": null
+        },
+        {
+          "source": "ches_trend",
+          "valeur": null,
+          "libelle_source": null,
+          "debut": null,
+          "fin": null,
+          "etabli_le": "2026-08-27",
+          "motif": "Absent de toutes les vagues.",
+          "remarque": null
+        },
+        {
+          "source": "manifesto",
+          "valeur": null,
+          "libelle_source": null,
+          "debut": null,
+          "fin": null,
+          "etabli_le": "2026-08-27",
+          "motif": "Aucun code connu ; source non interrogeable sans clé.",
+          "remarque": null
+        },
+        {
+          "source": "parlgov",
+          "valeur": null,
+          "libelle_source": null,
+          "debut": null,
+          "fin": null,
+          "etabli_le": "2026-08-27",
+          "motif": "Absent des 80 partis français de party.csv.",
+          "remarque": null
+        },
+        {
+          "source": "wikidata",
+          "valeur": "Q58366009",
+          "libelle_source": "Place publique",
+          "debut": null,
+          "fin": null,
+          "etabli_le": "2026-08-27",
+          "motif": null,
+          "remarque": null
+        },
+        {
+          "source": "nuance_leg2024",
+          "valeur": null,
+          "libelle_source": null,
+          "debut": null,
+          "fin": null,
+          "etabli_le": "2026-08-27",
+          "motif": "Aucun code propre dans la grille constatée.",
+          "remarque": null
+        }
+      ],
+      "composition": [],
+      "remarque": "Un seul identifiant sur sept sources : cas limite conservé, jamais comblé."
+    },
+    {
+      "id": "parti.ps",
+      "nature": "parti",
+      "nom": "Parti socialiste",
+      "sigle": "PS",
+      "debut": "1969-05-04",
+      "fin": null,
+      "identifiants": [
+        {
+          "source": "an_organe",
+          "valeur": "PO684932",
+          "libelle_source": "Parti socialiste",
+          "debut": null,
+          "fin": null,
+          "etabli_le": "2026-08-27",
+          "motif": null,
+          "remarque": null
+        },
+        {
+          "source": "ches_2024",
+          "valeur": "602",
+          "libelle_source": "PS",
+          "debut": null,
+          "fin": null,
+          "etabli_le": "2026-08-27",
+          "motif": null,
+          "remarque": null
+        },
+        {
+          "source": "ches_trend",
+          "valeur": "602",
+          "libelle_source": "PS",
+          "debut": null,
+          "fin": null,
+          "etabli_le": "2026-08-27",
+          "motif": null,
+          "remarque": null
+        },
+        {
+          "source": "manifesto",
+          "valeur": "31320",
+          "libelle_source": null,
+          "debut": null,
+          "fin": null,
+          "etabli_le": "2026-08-27",
+          "motif": null,
+          "remarque": "Repris de cmp_id (ches_trend) et de la colonne cmp de parlgov : concordant."
+        },
+        {
+          "source": "parlgov",
+          "valeur": "1539",
+          "libelle_source": "PS",
+          "debut": null,
+          "fin": null,
+          "etabli_le": "2026-08-27",
+          "motif": null,
+          "remarque": null
+        },
+        {
+          "source": "wikidata",
+          "valeur": "Q170972",
+          "libelle_source": "Parti socialiste",
+          "debut": null,
+          "fin": null,
+          "etabli_le": "2026-08-27",
+          "motif": null,
+          "remarque": null
+        },
+        {
+          "source": "nuance_leg2024",
+          "valeur": "SOC",
+          "libelle_source": null,
+          "debut": null,
+          "fin": null,
+          "etabli_le": "2026-08-27",
+          "motif": null,
+          "remarque": null
+        }
+      ],
+      "composition": [],
+      "remarque": null
+    },
+    {
+      "id": "parti.renaissance",
+      "nature": "parti",
+      "nom": "Renaissance",
+      "sigle": "RE",
+      "debut": "2016-04-06",
+      "fin": null,
+      "identifiants": [
+        {
+          "source": "an_organe",
+          "valeur": "PO761294",
+          "libelle_source": "La République en Marche",
+          "debut": null,
+          "fin": "2025-12-03",
+          "etabli_le": "2026-08-27",
+          "motif": null,
+          "remarque": "Aucun organe PARPOL au nom de Renaissance dans le référentiel au 2026-08-27."
+        },
+        {
+          "source": "ches_2024",
+          "valeur": "626",
+          "libelle_source": "RE",
+          "debut": null,
+          "fin": null,
+          "etabli_le": "2026-08-27",
+          "motif": null,
+          "remarque": null
+        },
+        {
+          "source": "ches_trend",
+          "valeur": "626",
+          "libelle_source": "LREM puis RE",
+          "debut": null,
+          "fin": null,
+          "etabli_le": "2026-08-27",
+          "motif": null,
+          "remarque": null
+        },
+        {
+          "source": "manifesto",
+          "valeur": null,
+          "libelle_source": null,
+          "debut": null,
+          "fin": null,
+          "etabli_le": "2026-08-27",
+          "motif": "cmp_id vide dans ches_trend ; colonne cmp vide dans parlgov.",
+          "remarque": null
+        },
+        {
+          "source": "parlgov",
+          "valeur": "2643",
+          "libelle_source": "REM|R",
+          "debut": null,
+          "fin": null,
+          "etabli_le": "2026-08-27",
+          "motif": null,
+          "remarque": null
+        },
+        {
+          "source": "wikidata",
+          "valeur": "Q23731823",
+          "libelle_source": "Renaissance",
+          "debut": null,
+          "fin": null,
+          "etabli_le": "2026-08-27",
+          "motif": null,
+          "remarque": null
+        },
+        {
+          "source": "nuance_leg2024",
+          "valeur": null,
+          "libelle_source": null,
+          "debut": null,
+          "fin": null,
+          "etabli_le": "2026-08-27",
+          "motif": "Aucun code propre dans la grille 2024 ; les candidats ont été nuancés ENS, code de coalition.",
+          "remarque": null
+        }
+      ],
+      "composition": [],
+      "remarque": null
+    },
+    {
+      "id": "parti.rn",
+      "nature": "parti",
+      "nom": "Rassemblement national",
+      "sigle": "RN",
+      "debut": "1972-10-27",
+      "fin": null,
+      "identifiants": [
+        {
+          "source": "an_organe",
+          "valeur": "PO684946",
+          "libelle_source": "Front National",
+          "debut": null,
+          "fin": "2018-11-30",
+          "etabli_le": "2026-08-27",
+          "motif": null,
+          "remarque": "Même parti, dénomination antérieure. Bornes reprises de viMoDe de la source."
+        },
+        {
+          "source": "an_organe",
+          "valeur": "PO761239",
+          "libelle_source": "Rassemblement national",
+          "debut": "2018-12-01",
+          "fin": null,
+          "etabli_le": "2026-08-27",
+          "motif": null,
+          "remarque": null
+        },
+        {
+          "source": "ches_2024",
+          "valeur": "610",
+          "libelle_source": "RN",
+          "debut": null,
+          "fin": null,
+          "etabli_le": "2026-08-27",
+          "motif": null,
+          "remarque": null
+        },
+        {
+          "source": "ches_trend",
+          "valeur": "610",
+          "libelle_source": "FN puis RN",
+          "debut": null,
+          "fin": null,
+          "etabli_le": "2026-08-27",
+          "motif": null,
+          "remarque": null
+        },
+        {
+          "source": "manifesto",
+          "valeur": "31720",
+          "libelle_source": null,
+          "debut": null,
+          "fin": null,
+          "etabli_le": "2026-08-27",
+          "motif": null,
+          "remarque": "Concordant entre cmp_id (ches_trend) et cmp de parlgov."
+        },
+        {
+          "source": "parlgov",
+          "valeur": "270",
+          "libelle_source": "FN",
+          "debut": null,
+          "fin": null,
+          "etabli_le": "2026-08-27",
+          "motif": null,
+          "remarque": "name_short reste FN alors que name vaut déjà Rassemblement National."
+        },
+        {
+          "source": "wikidata",
+          "valeur": "Q205150",
+          "libelle_source": "Rassemblement national",
+          "debut": null,
+          "fin": null,
+          "etabli_le": "2026-08-27",
+          "motif": null,
+          "remarque": null
+        },
+        {
+          "source": "nuance_leg2024",
+          "valeur": "RN",
+          "libelle_source": null,
+          "debut": null,
+          "fin": null,
+          "etabli_le": "2026-08-27",
+          "motif": null,
+          "remarque": null
+        }
+      ],
+      "composition": [],
+      "remarque": null
+    },
+    {
+      "id": "parti.udr",
+      "nature": "parti",
+      "nom": "Union des droites pour la République",
+      "sigle": "UDR",
+      "debut": null,
+      "fin": null,
+      "identifiants": [
+        {
+          "source": "an_organe",
+          "valeur": "PO852532",
+          "libelle_source": "UDR - Union des Droites pour la République",
+          "debut": null,
+          "fin": null,
+          "etabli_le": "2026-08-27",
+          "motif": null,
+          "remarque": null
+        },
+        {
+          "source": "ches_2024",
+          "valeur": null,
+          "libelle_source": null,
+          "debut": null,
+          "fin": null,
+          "etabli_le": "2026-08-27",
+          "motif": "Parti créé après le terrain de la vague 2024 : absent des 10 partis français.",
+          "remarque": null
+        },
+        {
+          "source": "ches_trend",
+          "valeur": null,
+          "libelle_source": null,
+          "debut": null,
+          "fin": null,
+          "etabli_le": "2026-08-27",
+          "motif": "Absent de toutes les vagues.",
+          "remarque": null
+        },
+        {
+          "source": "manifesto",
+          "valeur": null,
+          "libelle_source": null,
+          "debut": null,
+          "fin": null,
+          "etabli_le": "2026-08-27",
+          "motif": "Aucun code connu ; source non interrogeable sans clé.",
+          "remarque": null
+        },
+        {
+          "source": "parlgov",
+          "valeur": null,
+          "libelle_source": null,
+          "debut": null,
+          "fin": null,
+          "etabli_le": "2026-08-27",
+          "motif": "Absent des 80 partis français de party.csv au 2026-08-27.",
+          "remarque": null
+        },
+        {
+          "source": "wikidata",
+          "valeur": "Q127038760",
+          "libelle_source": "Union des droites pour la République",
+          "debut": null,
+          "fin": null,
+          "etabli_le": "2026-08-27",
+          "motif": null,
+          "remarque": null
+        },
+        {
+          "source": "nuance_leg2024",
+          "valeur": null,
+          "libelle_source": null,
+          "debut": null,
+          "fin": null,
+          "etabli_le": "2026-08-27",
+          "motif": "Parti créé après le scrutin ; aucun code attribuable.",
+          "remarque": null
+        }
+      ],
+      "composition": [],
+      "remarque": "debut nul : P571 Wikidata porte deux valeurs (2012-07-17, 2024-08-31). Non tranché."
+    }
+  ],
+  "groupes": [
+    {
+      "id": "groupe.an17.ad",
+      "chambre": "AN",
+      "legislature": "17",
+      "uid_an": "PO845520",
+      "nom": "À Droite",
+      "sigle": "AD",
+      "debut": "2024-07-18",
+      "fin": "2024-09-11",
+      "ancre_axe": null,
+      "composition": [],
+      "remarque": "Groupe dissous. Composition non établie a l'époque de son existence."
+    },
+    {
+      "id": "groupe.an17.dem",
+      "chambre": "AN",
+      "legislature": "17",
+      "uid_an": "PO845454",
+      "nom": "Les Démocrates",
+      "sigle": "DEM",
+      "debut": "2024-07-18",
+      "fin": null,
+      "ancre_axe": null,
+      "composition": [],
+      "remarque": "Composition non établie : 34 membres déclarent ESBMP, comme EPR. La source ne sépare pas les deux."
+    },
+    {
+      "id": "groupe.an17.dr",
+      "chambre": "AN",
+      "legislature": "17",
+      "uid_an": "PO845425",
+      "nom": "Droite Républicaine",
+      "sigle": "DR",
+      "debut": "2024-07-18",
+      "fin": null,
+      "ancre_axe": null,
+      "composition": [
+        {
+          "entite": "parti.lr",
+          "debut": "2024-07-18",
+          "fin": null,
+          "source": "an_parpol_mandats",
+          "url": null,
+          "etabli_le": "2026-08-27",
+          "remarque": "40 membres en cours déclarent REP au 2026-08-27."
+        }
+      ],
+      "remarque": "Le groupe LR de la XVIe portait un autre uid (PO800508) : un groupe est propre à sa législature."
+    },
+    {
+      "id": "groupe.an17.ecos",
+      "chambre": "AN",
+      "legislature": "17",
+      "uid_an": "PO845439",
+      "nom": "Écologiste et Social",
+      "sigle": "ECOS",
+      "debut": "2024-07-18",
+      "fin": null,
+      "ancre_axe": null,
+      "composition": [
+        {
+          "entite": "parti.ecologistes",
+          "debut": "2024-07-18",
+          "fin": null,
+          "source": "an_parpol_mandats",
+          "url": null,
+          "etabli_le": "2026-08-27",
+          "remarque": "33 membres en cours déclarent ECOLO au 2026-08-27."
+        },
+        {
+          "entite": "parti.pcf",
+          "debut": "2024-07-18",
+          "fin": null,
+          "source": "an_parpol_mandats",
+          "url": null,
+          "etabli_le": "2026-08-27",
+          "remarque": "5 membres en cours déclarent PCF au 2026-08-27."
+        }
+      ],
+      "remarque": "Un groupe agrège plusieurs partis, et le PCF relève aussi du groupe GDR."
+    },
+    {
+      "id": "groupe.an17.epr",
+      "chambre": "AN",
+      "legislature": "17",
+      "uid_an": "PO845407",
+      "nom": "Ensemble pour la République",
+      "sigle": "EPR",
+      "debut": "2024-07-18",
+      "fin": null,
+      "ancre_axe": null,
+      "composition": [],
+      "remarque": "Composition non établie : 77 membres déclarent ESBMP, rattachement financier, aucun Renaissance."
+    },
+    {
+      "id": "groupe.an17.gdr",
+      "chambre": "AN",
+      "legislature": "17",
+      "uid_an": "PO845514",
+      "nom": "Gauche Démocrate et Républicaine",
+      "sigle": "GDR",
+      "debut": "2024-07-18",
+      "fin": null,
+      "ancre_axe": null,
+      "composition": [
+        {
+          "entite": "parti.pcf",
+          "debut": "2024-07-18",
+          "fin": null,
+          "source": "an_parpol_mandats",
+          "url": null,
+          "etabli_le": "2026-08-27",
+          "remarque": "9 membres en cours déclarent PCF au 2026-08-27."
+        }
+      ],
+      "remarque": "7 autres partis ultramarins déclares par ses membres, hors périmètre de cet extrait."
+    },
+    {
+      "id": "groupe.an17.hor",
+      "chambre": "AN",
+      "legislature": "17",
+      "uid_an": "PO845470",
+      "nom": "Horizons & Indépendants",
+      "sigle": "HOR",
+      "debut": "2024-07-18",
+      "fin": null,
+      "ancre_axe": null,
+      "composition": [
+        {
+          "entite": "parti.horizons",
+          "debut": "2024-07-18",
+          "fin": null,
+          "source": "an_parpol_mandats",
+          "url": null,
+          "etabli_le": "2026-08-27",
+          "remarque": "30 membres en cours déclarent HOR au 2026-08-27."
+        }
+      ],
+      "remarque": null
+    },
+    {
+      "id": "groupe.an17.lfi-nfp",
+      "chambre": "AN",
+      "legislature": "17",
+      "uid_an": "PO845413",
+      "nom": "La France insoumise - Nouveau Front Populaire",
+      "sigle": "LFI-NFP",
+      "debut": "2024-07-18",
+      "fin": null,
+      "ancre_axe": {
+        "pole": "gauche",
+        "debut": "2024-07-18",
+        "fin": null,
+        "etabli_le": "2026-08-27",
+        "remarque": "Ancre gauche : groupe le plus nombreux du pôle, IQR 0,047 en unités ancrées (positionnement.md §5)."
+      },
+      "composition": [
+        {
+          "entite": "parti.lfi",
+          "debut": "2024-07-18",
+          "fin": null,
+          "source": "an_parpol_mandats",
+          "url": null,
+          "etabli_le": "2026-08-27",
+          "remarque": "67 membres en cours déclarent FI au 2026-08-27."
+        }
+      ],
+      "remarque": null
+    },
+    {
+      "id": "groupe.an17.liot",
+      "chambre": "AN",
+      "legislature": "17",
+      "uid_an": "PO845485",
+      "nom": "Libertés, Indépendants, Outre-mer et Territoires",
+      "sigle": "LIOT",
+      "debut": "2024-07-18",
+      "fin": null,
+      "ancre_axe": null,
+      "composition": [],
+      "remarque": "Groupe sans parti dominant : 12 membres déclarent RPS, 6 UDIE, 3 autres partis."
+    },
+    {
+      "id": "groupe.an17.ni",
+      "chambre": "AN",
+      "legislature": "17",
+      "uid_an": "PO840056",
+      "nom": "Non inscrit",
+      "sigle": "NI",
+      "debut": "2024-07-01",
+      "fin": null,
+      "ancre_axe": null,
+      "composition": [],
+      "remarque": "Pas un groupe : agrégat administratif des députés sans groupe. Jamais agrège comme un parti."
+    },
+    {
+      "id": "groupe.an17.rn",
+      "chambre": "AN",
+      "legislature": "17",
+      "uid_an": "PO845401",
+      "nom": "Rassemblement National",
+      "sigle": "RN",
+      "debut": "2024-07-18",
+      "fin": null,
+      "ancre_axe": {
+        "pole": "droite",
+        "debut": "2024-07-18",
+        "fin": null,
+        "etabli_le": "2026-08-27",
+        "remarque": "Ancre droite : groupe le plus nombreux du pôle, IQR 0,052 en unités ancrées (positionnement.md §5)."
+      },
+      "composition": [
+        {
+          "entite": "parti.rn",
+          "debut": "2024-07-18",
+          "fin": null,
+          "source": "an_parpol_mandats",
+          "url": null,
+          "etabli_le": "2026-08-27",
+          "remarque": "117 membres en cours déclarent RN au 2026-08-27."
+        }
+      ],
+      "remarque": "Absent de AMO50, instantané figé au 2024-07-11 : ne jamais résoudre les groupes sur AMO50."
+    },
+    {
+      "id": "groupe.an17.soc",
+      "chambre": "AN",
+      "legislature": "17",
+      "uid_an": "PO845419",
+      "nom": "Socialistes et apparentés",
+      "sigle": "SOC",
+      "debut": "2024-07-18",
+      "fin": null,
+      "ancre_axe": null,
+      "composition": [
+        {
+          "entite": "parti.ps",
+          "debut": "2024-07-18",
+          "fin": null,
+          "source": "an_parpol_mandats",
+          "url": null,
+          "etabli_le": "2026-08-27",
+          "remarque": "62 membres en cours déclarent PS au 2026-08-27."
+        }
+      ],
+      "remarque": null
+    },
+    {
+      "id": "groupe.an17.uddplr",
+      "chambre": "AN",
+      "legislature": "17",
+      "uid_an": "PO872880",
+      "nom": "Union des droites pour la République",
+      "sigle": "UDDPLR",
+      "debut": "2025-09-05",
+      "fin": null,
+      "ancre_axe": null,
+      "composition": [
+        {
+          "entite": "parti.udr",
+          "debut": "2025-09-05",
+          "fin": null,
+          "source": "an_parpol_mandats",
+          "url": null,
+          "etabli_le": "2026-08-27",
+          "remarque": "16 membres en cours déclarent UDR au 2026-08-27."
+        }
+      ],
+      "remarque": "libelleAbrev UDDPLR mais libelleAbrege UDR : ne jamais s'appuyer sur l'abréviation."
+    },
+    {
+      "id": "groupe.an17.udr",
+      "chambre": "AN",
+      "legislature": "17",
+      "uid_an": "PO847173",
+      "nom": "UDR",
+      "sigle": "UDR",
+      "debut": "2024-09-12",
+      "fin": "2025-09-04",
+      "ancre_axe": null,
+      "composition": [],
+      "remarque": "Succede a AD sans que la source le déclare : organePrecedentRef est nul."
+    }
+  ],
+  "relations": [
+    {
+      "type": "scission",
+      "de": "parti.lr",
+      "vers": "parti.udr",
+      "date": "2024-08-31",
+      "source": "wikidata",
+      "url": null,
+      "remarque": "Seconde valeur P571 de Q127038760. La première (2012-07-17) désigne une structure antérieure."
+    },
+    {
+      "type": "succession_groupe",
+      "de": "groupe.an17.ad",
+      "vers": "groupe.an17.udr",
+      "date": "2024-09-12",
+      "source": "an_organe",
+      "url": null,
+      "remarque": "Déduit des bornes viMoDe contiguës : AD fin 2024-09-11, UDR debut 2024-09-12."
+    },
+    {
+      "type": "renommage",
+      "de": "groupe.an17.udr",
+      "vers": "groupe.an17.uddplr",
+      "date": "2025-09-05",
+      "source": "an_organe",
+      "url": null,
+      "remarque": "Bornes contiguës et effectif reconduit. La source ne déclare pas le lien."
+    }
+  ]
+}

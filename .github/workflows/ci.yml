@@ -126,7 +126,10 @@ jobs:
               echec=1; continue
             fi
             echo "::group::$a contre $s"
-            npx --yes ajv-cli@5.0.0 validate --spec=draft2020 --strict=true -s "$s" -d "$a" || echec=1
+            # -r resout les $ref inter-fichiers : manifeste-1 et instantane-1
+            # referencent des $defs de preuve-1. Sans lui la validation echoue.
+            npx --yes ajv-cli@5.0.0 validate --spec=draft2020 --strict=true \
+              -r schemas/preuve-1.schema.json -s "$s" -d "$a" || echec=1
             echo "::endgroup::"
           done
           # Le registre de preuves est du JSONL : une ligne, un document.

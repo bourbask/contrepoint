@@ -205,13 +205,13 @@ sont au niveau 2.
 
 ## 9. Module `registre` — registre d'entités
 
-Fixtures : `data/registre/partis.exemple.json`, plus des variantes **fautives**
+Fixtures : `docs/brique0/echantillons/registre-l17.json`, plus des variantes **fautives**
 minimales construites dans le test. Une variante fautive par règle, pas un
 fichier fautif universel : un test qui échoue pour deux raisons ne dit laquelle.
 
 | ID | Test | Entrée | Sortie attendue | Ce qui casse si le test disparaît |
 |---|---|---|---|---|
-| REG-01 | `extrait_de_reference_valide` | `partis.exemple.json` | Valide selon les 23 règles | Sans un cas vert, la suite de refus passerait aussi sur un validateur qui refuse tout |
+| REG-01 | `extrait_de_reference_valide` | `echantillons/registre-l17.json`, et le registre réel `data/registre/partis.json` | Valide selon les 25 règles, et valide contre `schemas/registre-partis-1.schema.json` | Sans un cas vert, la suite de refus passerait aussi sur un validateur qui refuse tout |
 | REG-02 [C] | `cle_inconnue_refusee` (V1) | ligne portant `score: 0.42` | Refus | C'est ce qui empêche l'apparition silencieuse d'un champ de valorisation dans le fichier que trois briques consomment |
 | REG-03 | `schema_litteral` (V2) | `schema` modifié | Refus | Un registre d'un autre schéma lu par le validateur courant produit des vérifications vides |
 | REG-04 | `date_reelle` (V3) | `2026-02-30` | Refus | Une date impossible passe tous les contrôles de motif et casse toute comparaison de période en aval |
@@ -222,6 +222,7 @@ fichier fautif universel : un test qui échoue pour deux raisons ne dit laquelle
 | REG-09 [C] | `valeur_nulle_exige_un_motif` (V9) | `valeur: null` sans motif ; `valeur` non nulle avec motif | Refus dans les deux sens | « Absence de donnée dite, jamais comblée » (ADR 0000 §5) au niveau du registre. Le motif est ce qui distingue une absence constatée d'un oubli |
 | REG-10 | `etabli_le_present_et_pas_dans_le_futur` (V10) | `etabli_le` > `date_registre` | Refus | Un appariement est une déclaration humaine datée ; sans date d'établissement, la relecture ligne par ligne exigée n'a pas de point de reprise |
 | REG-11 | `bornes_ordonnees_et_incluses` (V11, V12, V13) | `debut > fin` ; identifiant hors période du porteur ; groupe hors période de législature | Refus | Une période d'appariement plus large que celle de l'entité fait dater une mesure d'avant l'existence de son objet |
+| REG-11b | `exception_v13_nommee_sur_uid` (V13) | `PO840056`, `debut` 2024-07-01, législature ouverte le 2024-07-18 ; puis le **même** écart sur `PO845401` | Le premier passe, le second est refusé | V13 et V16 sont insatisfiables ensemble sur l'organe des non-inscrits (registre-entites.md §4.2). Sans le second cas, l'exception se généralise et V13 ne dit plus rien ; sans le premier, aucun registre conforme n'est constructible |
 | REG-12 [C] | `aucun_chevauchement` (V14) | deux périodes du même couple (porteur, source, valeur) qui se chevauchent | Refus | Deux périodes qui se chevauchent rendent la jointure par date non déterministe : deux exécutions peuvent choisir deux lignes |
 | REG-13 [C] | `groupe_egal_a_la_source` (V15, V16) | `nom`, `sigle`, `debut`, `fin` divergents de `libelle`, `libelleAbrev`, `viMoDe` de `organes-groupes-l17.json` | Refus | **C'est ce qui rend le registre falsifiable contre sa source.** Sans lui, le registre devient une opinion sur les groupes ; avec lui, une divergence est soit une source qui a bougé, soit une main qui a édité — les deux exigent un humain |
 | REG-14 | `sigle_nest_pas_une_cle` | `PO872880` : `libelleAbrev` `UDDPLR` ≠ `libelleAbrege` `UDR` | Aucune jointure ne se fait sur une abréviation | Deux entités distinctes portent la même abréviation dans la source ; une clé sur l'abréviation les fusionne |
@@ -231,6 +232,14 @@ fichier fautif universel : un test qui échoue pour deux raisons ne dit laquelle
 | REG-18 [C] | `aucun_champ_de_valorisation_ni_nom_de_personne` (V22) | ligne portant une coordonnée ; ligne portant un nom de député | Refus | Découle de V1, testé séparément parce que c'est l'invariant qu'un contributeur pressé cassera en premier — et parce que le registre ne doit contenir aucune personne |
 | REG-19 [P] | `forme_canonique_idempotente` (V23) | fichier réordonné, indenté à 4 espaces, avec CRLF, avec BOM | Refus ; et `format(format(x)) == format(x)` sur l'extrait | Une main qui édite sans passer par le formateur rend le diff illisible, ce qui tue la relecture ligne par ligne — le seul contrôle obligatoire du projet |
 | REG-20 [C] | `famille_absente_jamais_remplie_par_une_autre` | entité sans identifiant CHES et sans code de nuance | Deux lignes `null` avec motifs distincts ; aucune valeur reprise de l'autre famille | C'est la règle des trois familles appliquée un étage plus bas. La violer ici est indétectable en aval : la valeur arrive dans le graphe comme une mesure |
+| REG-21 [C] | `au_plus_une_ancre_par_pole_et_par_date` (V24) | deux groupes portant `ancre_axe.pole = "gauche"` sur des périodes qui se chevauchent ; les deux mêmes sur périodes disjointes | Refus, puis acceptation | Deux ancres du même pôle à la même date rendent la transformation d'ancrage non définie : le pipeline choisirait selon l'ordre de lecture du fichier, et deux exécutions donneraient deux axes. Test **inécrivable avant** le contrat `0.3.0`, le registre n'ayant pas le champ |
+| REG-22 [C] | `ancre_manquante_arrete_le_pipeline` (V25) | registre sans ancre `droite` valide à la date d'agrégation | Échec bruyant ; aucune ligne `votes` émise, aucune ancre de remplacement choisie | RG-31. Une substitution silencieuse d'ancre change l'échelle de toutes les positions publiées sans changer leur identifiant d'échelle — le défaut exact que le découplage de contrats.md §2.3 rend visible. Test **inécrivable avant** le contrat `0.3.0` |
+
+REG-21 et REG-22 sont les deux tests que le blocage 3 de positionnement.md §11
+laissait inécrivables : sans le champ `ancre_axe`, il n'existait rien à déclarer,
+donc rien à contredire. REG-11b est le test de l'exception nommée à V13, qui n'a
+pu s'écrire qu'une fois la date d'ouverture de la législature sourcée
+(registre-entites.md §4.1).
 
 V17 (existence de l'identifiant dans le fichier CHES / ParlGov téléchargé) est un
 test de **niveau 2** : aucune fixture CHES n'entre dans le dépôt (ADR 0000 §4).
@@ -314,6 +323,8 @@ lui-même, parce qu'elle ne correspond à aucun bug observé.
 | Aucune position sans date | PRE-01, PRE-02, PRE-03, AGR-06, AGR-07 | Un champ de date rendu optionnel pour faire passer un cas limite |
 | Aucune coordonnée individuelle publiée | AGR-01, REG-18 | Un champ de débogage laissé dans l'export |
 | Aucun axe ni champ à pôle dépréciatif | REG-02, REG-16, REG-18, EXP-05, PRE-10 | Un nom technique anodin portant une valorisation |
+| Aucun identifiant technique ne nomme une entité mesurée | REG-21, EXP-05 | Un `echelle.id` ou un `methode.id` construit sur le sigle des deux groupes ancres, gravé dans chaque ligne par la règle d'ajout seul (RG-112) |
+| L'ancrage de l'axe est de la donnée, jamais du code | REG-21, REG-22 | Deux ancres en dur dans le pipeline, ou une ancre de remplacement choisie en silence quand la déclarée manque |
 | Aucune horloge dans une valeur calculée | PRE-08, AGR-06, EST-03, MAT-08 | Une date par défaut prise sur l'horloge quand l'entrée n'en fournit pas |
 | Déterminisme du signe et de l'échelle | EST-02, EST-07, EST-11, EST-12 | Une ancre de remplacement choisie automatiquement quand l'ancre déclarée manque |
 | Aucune réduction flottante parallèle | EST-14 | Une ligne de `Cargo.toml` |
@@ -343,7 +354,7 @@ première ligne d'implémentation.
 | **8** | L'ancrage | EST-08, EST-09, EST-10, EST-11, EST-12 | Un axe où LFI-NFP vaut −1 et RN +1, ancres lues dans le registre, pipeline qui s'arrête si l'ancre manque |
 | **9** | L'agrégation et la règle de non-publication | AGR-01 → AGR-09 | Les bandes de partis avec médiane, IQR, étendue, effectif, date — et NI et LIOT en « non mesuré » avec leur raison. La première sortie qui ressemble au produit |
 | **10** | Les alarmes | EST-15, EST-16 | Deux corpus synthétiques dégradés qui font passer la famille « votes » en « non mesuré ». Le risque accepté de l'ADR 0000 §8 devient un comportement observable |
-| **11** | Le registre d'entités | REG-01 → REG-20 | Un validateur qui refuse vingt fichiers fautifs et accepte l'extrait. Une PR de correction du registre devient possible |
+| **11** | Le registre d'entités | REG-01 → REG-22 | Un validateur qui refuse vingt-deux fichiers fautifs et accepte l'extrait. Une PR de correction du registre devient possible |
 | **12** | Le registre de preuves | PRE-01 → PRE-13 | Le JSONL en ajout seul, rejouable, idempotent. Le contrat des briques 1-3 existe |
 | **13** | L'export et le front | EXP-01 → EXP-08 | Le graphe de la roadmap v0.6, sur fixtures |
 | **14** | Le niveau 2 | Contrôles 8, 9, 10, 11 de positionnement.md §9, sur archive en cache | Les chiffres du corpus réel retrouvés par l'implémentation Rust, aux tolérances du §4. C'est ici, et seulement ici, que 0,591 et 0,652 sont vérifiés |
@@ -373,7 +384,7 @@ code, l'un cite l'autre.
 l'exécution, pas l'assertion : un test qui appelle tout le pipeline et n'affirme
 rien couvre 100 % des lignes. Ce que le projet doit garantir n'est pas un taux,
 c'est une liste — celle de definition-of-done.md §9, de positionnement.md §9 et
-des 23 règles du registre. Une liste se vérifie exactement ; un taux s'approche.
+des 25 règles du registre. Une liste se vérifie exactement ; un taux s'approche.
 
 ### Porte 2 — couverture de branches ≥ 90 % sur deux modules
 

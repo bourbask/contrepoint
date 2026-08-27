@@ -1,0 +1,259 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "registre-partis-1.schema.json",
+  "title": "Registre d'entités — partis, coalitions, groupes parlementaires",
+  "description": "data/registre/partis.json. Contrat : docs/brique0/registre-entites.md §3. Transcription de la règle V1 : la liste blanche des clés des §3.1 à 3.7, `additionalProperties: false` partout. Une clé inconnue est un refus, et c'est ce qui empêche l'apparition silencieuse d'un champ de valorisation dans le seul fichier du projet édité à la main. Ce schéma ne peut pas exprimer l'unicité des `id` (V4), l'injectivité par source et par date (V7), la cardinalité (V8), l'inclusion des périodes (V12, V13), l'absence de chevauchement (V14), la confrontation à AMO30 (V15 à V19), l'unicité d'une ancre par pôle (V24), la présence des deux ancres à la date d'agrégation (V25), le lexique (V20) ni la forme canonique (V23) : le validateur du registre les vérifie en plus.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "version", "date_registre", "licence", "legislatures", "sources", "entites", "groupes", "relations"],
+  "properties": {
+    "schema": { "const": "contrepoint/registre-partis/1" },
+    "version": {
+      "$ref": "#/$defs/semver",
+      "description": "Version du contrat de sortie qui décrit ce registre (ADR 0000 §6)."
+    },
+    "date_registre": {
+      "$ref": "#/$defs/date",
+      "description": "Date de la dernière modification du fichier. Majore tout `etabli_le` (V10)."
+    },
+    "licence": { "const": "Licence Ouverte / Open Licence (Etalab)" },
+    "legislatures": {
+      "type": "array",
+      "minItems": 1,
+      "description": "Bornes d'une législature d'une chambre. `debut` est la date d'**ouverture** de la législature — la première séance —, jamais la date de proclamation des résultats ni la date de début des mandats : trois faits distincts, trois dates distinctes (registre-entites.md §4).",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["numero", "chambre", "debut", "fin", "source", "url", "etabli_le", "remarque"],
+        "properties": {
+          "numero": { "type": "string", "pattern": "^[0-9]{1,2}$" },
+          "chambre": { "enum": ["AN"] },
+          "debut": { "$ref": "#/$defs/date" },
+          "fin": { "$ref": "#/$defs/date_ou_null" },
+          "source": { "$ref": "#/$defs/id_source" },
+          "url": { "$ref": "#/$defs/url_ou_null" },
+          "etabli_le": { "$ref": "#/$defs/date" },
+          "remarque": { "$ref": "#/$defs/phrase" }
+        }
+      }
+    },
+    "sources": {
+      "type": "array",
+      "minItems": 1,
+      "description": "Triée par `id` (V23). Toute source déclarée est citée au moins une fois (V6).",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "libelle", "url", "recupere_le", "empreinte_sha256", "cardinalite", "licence", "remarque"],
+        "properties": {
+          "id": { "$ref": "#/$defs/id_source" },
+          "libelle": { "type": "string", "minLength": 1 },
+          "url": { "$ref": "#/$defs/url_ou_null" },
+          "recupere_le": { "$ref": "#/$defs/date" },
+          "empreinte_sha256": {
+            "type": ["string", "null"],
+            "pattern": "^[0-9a-f]{64}$",
+            "description": "`null` si la source est une requête et non un fichier."
+          },
+          "cardinalite": {
+            "enum": ["un_par_date", "plusieurs"],
+            "description": "`un_par_date` : à une date donnée, une entité a au plus un identifiant de cette source (V8). `plusieurs` est réservé aux sources dont la clé est intrinsèquement multiple."
+          },
+          "licence": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Énoncée, y compris « conditions non vérifiées »."
+          },
+          "remarque": { "$ref": "#/$defs/phrase" }
+        }
+      }
+    },
+    "entites": {
+      "type": "array",
+      "description": "Partis et coalitions. Triée par `id` (V23). `id` est immuable : rien n'est renommé ni supprimé (V4, §7 règle 5).",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "nature", "nom", "sigle", "debut", "fin", "identifiants", "composition", "remarque"],
+        "properties": {
+          "id": { "type": "string", "pattern": "^(parti|coalition)\\.[a-z0-9-]+$" },
+          "nature": { "enum": ["parti", "coalition"] },
+          "nom": { "type": "string", "minLength": 1 },
+          "sigle": { "type": "string", "minLength": 1, "maxLength": 40 },
+          "debut": { "$ref": "#/$defs/date_ou_null" },
+          "fin": { "$ref": "#/$defs/date_ou_null" },
+          "identifiants": { "type": "array", "items": { "$ref": "#/$defs/identifiant" } },
+          "composition": {
+            "type": "array",
+            "description": "Non vide seulement si `nature = coalition`. Une composition vide est une absence documentée par `remarque` sur le porteur, jamais un oubli.",
+            "items": { "$ref": "#/$defs/composition" }
+          },
+          "remarque": { "$ref": "#/$defs/phrase" }
+        },
+        "anyOf": [
+          {
+            "description": "V4 — `nature` s'accorde avec le préfixe de `id`.",
+            "properties": { "id": { "type": "string", "pattern": "^parti\\." }, "nature": { "const": "parti" } },
+            "required": ["id", "nature"]
+          },
+          {
+            "properties": { "id": { "type": "string", "pattern": "^coalition\\." }, "nature": { "const": "coalition" } },
+            "required": ["id", "nature"]
+          }
+        ]
+      }
+    },
+    "groupes": {
+      "type": "array",
+      "description": "Groupes parlementaires. Triée par `id` (V23). Un groupe n'a pas de bloc `identifiants` : son identifiant externe est `uid_an`, et aucune autre source ne référence les groupes parlementaires.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "chambre", "legislature", "uid_an", "nom", "sigle", "debut", "fin", "ancre_axe", "composition", "remarque"],
+        "properties": {
+          "id": { "type": "string", "pattern": "^groupe\\.an[0-9]{2}\\.[a-z0-9-]+$" },
+          "chambre": { "enum": ["AN"] },
+          "legislature": { "type": "string", "pattern": "^[0-9]{1,2}$" },
+          "uid_an": { "type": "string", "pattern": "^PO[0-9]+$" },
+          "nom": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Recopié de `libelle` de la source. Une divergence est un refus (V16)."
+          },
+          "sigle": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 40,
+            "description": "Recopié de `libelleAbrev` de la source. Jamais une clé de jointure : `libelleAbrev` et `libelleAbrege` divergent sur `PO872880`."
+          },
+          "debut": { "$ref": "#/$defs/date" },
+          "fin": { "$ref": "#/$defs/date_ou_null" },
+          "ancre_axe": { "$ref": "#/$defs/ancre_axe" },
+          "composition": { "type": "array", "items": { "$ref": "#/$defs/composition" } },
+          "remarque": { "$ref": "#/$defs/phrase" }
+        }
+      }
+    },
+    "relations": {
+      "type": "array",
+      "description": "Événements ponctuels, triés par (`date`, `de`) (V23). Une relation ne crée ni ne clôt une période : elle explique la contiguïté de deux périodes déjà écrites.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["type", "de", "vers", "date", "source", "url", "remarque"],
+        "properties": {
+          "type": { "enum": ["renommage", "succession_groupe", "fusion", "scission", "dissolution"] },
+          "de": { "$ref": "#/$defs/id_entite_ou_groupe" },
+          "vers": { "$ref": "#/$defs/id_entite_ou_groupe" },
+          "date": { "$ref": "#/$defs/date" },
+          "source": { "$ref": "#/$defs/id_source" },
+          "url": { "$ref": "#/$defs/url_ou_null" },
+          "remarque": { "$ref": "#/$defs/phrase" }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "semver": { "type": "string", "pattern": "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)$" },
+    "date": {
+      "type": "string",
+      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$",
+      "description": "Granularité au jour, bornes incluses. La réalité de la date est vérifiée par V3, hors de portée d'une expression rationnelle."
+    },
+    "date_ou_null": {
+      "type": ["string", "null"],
+      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$",
+      "description": "`debut: null` = antérieur à la couverture du registre. `fin: null` = en cours au `date_registre`. Jamais « inconnu comblé »."
+    },
+    "url_ou_null": {
+      "type": ["string", "null"],
+      "pattern": "^https://",
+      "description": "URL absolue en https, ou `null`."
+    },
+    "phrase": {
+      "type": ["string", "null"],
+      "minLength": 1,
+      "maxLength": 140,
+      "description": "Une phrase, 140 caractères au plus (ADR 0000 §5, V21)."
+    },
+    "id_source": {
+      "type": "string",
+      "pattern": "^[a-z0-9_]+$",
+      "description": "`id` déclaré dans `sources` (V6)."
+    },
+    "id_entite_ou_groupe": {
+      "type": "string",
+      "pattern": "^(parti|coalition)\\.[a-z0-9-]+$|^groupe\\.an[0-9]{2}\\.[a-z0-9-]+$",
+      "description": "`id` existant du fichier (V5). Aucun identifiant de personne : le registre ne contient aucune personne physique (V22, RG-110)."
+    },
+    "identifiant": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["source", "valeur", "libelle_source", "debut", "fin", "etabli_le", "motif", "remarque"],
+      "description": "Appariement d'une entité à une source externe. `debut` et `fin` sont la période de validité de **l'appariement**, pas de l'entité.",
+      "properties": {
+        "source": { "$ref": "#/$defs/id_source" },
+        "valeur": { "type": ["string", "null"], "minLength": 1 },
+        "libelle_source": {
+          "type": ["string", "null"],
+          "minLength": 1,
+          "description": "Libellé lu dans la source, trace uniquement, jamais clé de jointure."
+        },
+        "debut": { "$ref": "#/$defs/date_ou_null" },
+        "fin": { "$ref": "#/$defs/date_ou_null" },
+        "etabli_le": { "$ref": "#/$defs/date" },
+        "motif": { "$ref": "#/$defs/phrase" },
+        "remarque": { "$ref": "#/$defs/phrase" }
+      },
+      "if": { "properties": { "valeur": { "type": "null" } }, "required": ["valeur"] },
+      "then": {
+        "description": "V9 — `valeur: null` exige un `motif`. L'absence est dite, jamais comblée.",
+        "properties": { "motif": { "type": "string", "minLength": 1 } }
+      },
+      "else": {
+        "description": "V9 — une `valeur` non nulle interdit le `motif`.",
+        "properties": { "motif": { "type": "null" } }
+      }
+    },
+    "composition": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["entite", "debut", "fin", "source", "url", "etabli_le", "remarque"],
+      "description": "Partis représentés par le porteur. Une coalition n'apparaît jamais dans la `composition` d'un groupe : les groupes sont composés de partis.",
+      "properties": {
+        "entite": {
+          "type": "string",
+          "pattern": "^parti\\.[a-z0-9-]+$",
+          "description": "`id` d'une entité de `nature = parti` (V5)."
+        },
+        "debut": { "$ref": "#/$defs/date_ou_null" },
+        "fin": { "$ref": "#/$defs/date_ou_null" },
+        "source": { "$ref": "#/$defs/id_source" },
+        "url": {
+          "$ref": "#/$defs/url_ou_null",
+          "description": "Obligatoire si `source = declaration_publique` : une déclaration publique se cite ligne par ligne. `null` pour une source de données déjà empreintée dans `sources`."
+        },
+        "etabli_le": { "$ref": "#/$defs/date" },
+        "remarque": { "$ref": "#/$defs/phrase" }
+      },
+      "if": { "properties": { "source": { "const": "declaration_publique" } }, "required": ["source"] },
+      "then": { "properties": { "url": { "type": "string", "minLength": 1 } } }
+    },
+    "ancre_axe": {
+      "type": ["object", "null"],
+      "additionalProperties": false,
+      "required": ["pole", "debut", "fin", "etabli_le", "remarque"],
+      "description": "Déclaration du groupe comme point d'ancrage de l'axe des votes, avec période de validité. `null` pour un groupe qui n'ancre rien — le cas de tous sauf deux. L'identifiant d'échelle encode la **convention** d'ancrage ; les deux ancres sont de la donnée, et elles sont ici (contrats.md §2.3, positionnement.md §5). Au plus une ancre par pôle à une date donnée (V24) ; le pipeline échoue si l'un des deux pôles manque à la date d'agrégation, et ne choisit jamais une ancre de remplacement (V25, RG-31).",
+      "properties": {
+        "pole": {
+          "enum": ["gauche", "droite"],
+          "description": "Pôle que ce groupe fixe : la médiane de l'ancre `gauche` vaut −1, celle de l'ancre `droite` vaut +1. Deux pôles descriptifs, aucun dépréciatif (JUR règle 2)."
+        },
+        "debut": { "$ref": "#/$defs/date" },
+        "fin": { "$ref": "#/$defs/date_ou_null" },
+        "etabli_le": { "$ref": "#/$defs/date" },
+        "remarque": { "$ref": "#/$defs/phrase" }
+      }
+    }
+  }
+}

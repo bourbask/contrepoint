@@ -5,8 +5,19 @@ propage dans toutes les mesures : c'est le seul fichier du projet où la
 relecture humaine ligne par ligne est obligatoire (docs/definition-of-done.md,
 point 17).
 
-Sources vérifiées le **2026-08-27**. Extrait rempli :
-[`data/registre/partis.exemple.json`](../../data/registre/partis.exemple.json).
+Sources vérifiées le **2026-08-27**. Schéma formel :
+[`schemas/registre-partis-1.schema.json`](../../schemas/registre-partis-1.schema.json)
+— transcription de la liste blanche du §3, c'est-à-dire de la règle V1. Fichier
+réel lu par le pipeline :
+[`data/registre/partis.json`](../../data/registre/partis.json). Extrait de
+référence, fixture du test REG-01 :
+[`data/registre/partis.json`](../../data/registre/partis.json). La fixture de test qui lui correspond vit avec les autres, dans [`echantillons/registre-l17.json`](echantillons/registre-l17.json).
+
+**Les deux fichiers sont identiques octet pour octet au 2026-08-27**, et
+`186fc8195d357d08c65ba0bceb45da90a0132df3bd859e039e7303eee96a9680` est leur
+empreinte commune, pour 42 970 octets. L'extrait couvre la XVIIe législature en
+entier — 14 groupes, 12 entités, 9 sources — il n'y avait donc rien à ajouter
+Le fichier réel est `data/registre/partis.json`. Il n'existe qu'un seul registre sous `data/` : la fixture de test est un fichier distinct, sous `echantillons/`, et rien ne se recopie à la main.
 
 ---
 
@@ -311,11 +322,34 @@ faux par construction.
 | `version` | chaîne | version du contrat de sortie (ADR 0000 §6) |
 | `date_registre` | date | date de la dernière modification du fichier |
 | `licence` | chaîne | Licence Ouverte / Open Licence (Etalab) |
-| `legislatures` | tableau | `numero`, `chambre`, `debut`, `fin` |
+| `legislatures` | tableau | voir 3.1.1 |
 | `sources` | tableau | voir 3.2 |
 | `entites` | tableau | partis et coalitions, voir 3.3 |
 | `groupes` | tableau | groupes parlementaires, voir 3.4 |
 | `relations` | tableau | événements, voir 3.5 |
+
+Aucune autre clé racine. En particulier, **rien ne distingue l'extrait du fichier
+réel dans le fichier** : une clé `statut` a existé dans l'extrait et a été
+retirée, parce que V1 la refuse et qu'une fixture qui ne valide pas contre le
+schéma qu'elle est censée démontrer ne démontre rien. Ce qu'un fichier est se lit
+à son nom, pas à un champ.
+
+### 3.1.1 `legislatures[]`
+
+| Champ | Contrainte |
+|---|---|
+| `numero` | `^[0-9]{1,2}$` |
+| `chambre` | `AN` |
+| `debut` | date d'**ouverture** de la législature, jamais dérivée d'un autre fait (§4) |
+| `fin` | date ou `null` |
+| `source` | `id` déclaré dans `sources` |
+| `url` | URL de la source qui atteste `debut` ; obligatoire pour `declaration_publique` |
+| `etabli_le` | date d'établissement humain |
+| `remarque` | ≤ 140 caractères |
+
+`source`, `url` et `etabli_le` sont là parce qu'ils manquaient : `debut` a circulé
+sans source déclarée, et deux dates candidates ont été confondues. Le §4 dit
+laquelle est laquelle.
 
 ### 3.2 `sources[]`
 
@@ -358,10 +392,51 @@ rattachements financiers annuels.
 | `uid_an` | `^PO[0-9]+$`, unique dans le fichier |
 | `nom`, `sigle` | recopiés de `libelle` / `libelleAbrev` de la source |
 | `debut`, `fin` | **égaux** à `viMoDe.dateDebut` / `viMoDe.dateFin` |
+| `ancre_axe` | objet ou `null`, voir 3.4.1 |
 | `composition` | tableau, voir 3.7 |
+| `remarque` | ≤ 140 caractères |
 
 Un groupe n'a pas de bloc `identifiants` : son identifiant externe est
 `uid_an`, et aucune autre source ne référence les groupes parlementaires.
+
+`remarque` figure ici parce que le §3.7 l'exige déjà : « une composition vide
+n'est pas un oubli, c'est une absence documentée par `remarque` sur le porteur ».
+Elle était employée par onze groupes sur quatorze et absente du tableau, donc
+refusée par V1.
+
+### 3.4.1 `ancre_axe`
+
+| Champ | Contrainte |
+|---|---|
+| `pole` | `gauche` \| `droite` |
+| `debut` | date, incluse dans la période du groupe |
+| `fin` | date ou `null` |
+| `etabli_le` | date d'établissement humain |
+| `remarque` | ≤ 140 caractères |
+
+`null` pour un groupe qui n'ancre rien, c'est-à-dire pour douze des quatorze.
+
+C'est le champ que positionnement.md §5 exigeait et que son blocage 3 signalait
+sans qu'il existe. Ce qu'il porte : **quels groupes fixent les deux pôles de
+l'axe des votes, et sur quelle période**. La médiane de l'ancre `gauche` vaut
+−1,0000, celle de l'ancre `droite` vaut +1,0000 ; la transformation affine qui le
+réalise est la convention, et elle est nommée par l'identifiant d'échelle
+`votes_an17_ancre_v1` (contrats.md §2.3). Les deux ne se confondent pas :
+**l'identifiant nomme la convention, ce champ nomme les ancres.**
+
+Renseigné au 2026-08-27 pour `groupe.an17.lfi-nfp` (pôle `gauche`, IQR 0,047) et
+`groupe.an17.rn` (pôle `droite`, IQR 0,052) — les deux plus gros groupes des
+extrémités et les plus homogènes (positionnement.md §5). Les deux périodes
+débutent au 2024-07-18, `debut` de leur groupe, et ne sont pas closes.
+
+Ce champ n'a **pas** de `source` : le choix d'une ancre n'est pas la lecture d'une
+source externe, c'est une décision de méthode datée, dont le fondement est
+positionnement.md §5 et dont la trace est `etabli_le` et l'historique git. Lui
+coller un `id` de `sources` aurait déclaré une provenance qui n'existe pas.
+
+Les deux pôles sont **descriptifs** : aucune extrémité d'un axe gauche-droite
+n'est une insulte, et le champ ne porte aucune valeur mesurée
+(docs/juridique.md règle 2).
 
 ### 3.5 `relations[]`
 
@@ -392,7 +467,8 @@ la ligne et son motif, elle ne porte pas un identifiant approchant.
 |---|---|
 | `entite` | `id` d'une entité de `nature = parti` |
 | `debut`, `fin` | inclus dans la période du porteur |
-| `source` | `id` déclaré ; `url` obligatoire si `source = declaration_publique` |
+| `source` | `id` déclaré dans `sources` |
+| `url` | URL de la déclaration citée, ou `null` ; **obligatoire** si `source = declaration_publique` |
 | `etabli_le` | date d'établissement humain |
 | `remarque` | ≤ 140 caractères |
 
@@ -420,6 +496,57 @@ Convention unique, appliquée partout :
 - Une période n'est jamais dérivée d'un libellé. La fiche du jeu 17 est
   intitulée « XV législature » sur data.assemblee-nationale.fr : le libellé est
   faux, le chemin `/repository/17/` est autoritatif (ADR 0000 §3).
+
+### 4.1 La date d'ouverture d'une législature, et les deux dates qu'on lui prête
+
+`legislatures[0].debut` a circulé à **2024-07-08** sans source déclarée. C'est
+faux au sens où c'était écrit : trois faits distincts portent trois dates, et
+`debut` désigne le troisième.
+
+| Fait | Date | Où elle se lit |
+|---|---|---|
+| Début du mandat des députés élus | **2024-07-07** | AMO30, `mandatsAssemblee[].dateDebut` des acteurs de la XVIIe — 2024-07-07 sur les six mandats de la fixture `mandats-gp-l17.json`, le jour du second tour |
+| Proclamation des résultats définitifs du second tour par les commissions de recensement | **2024-07-08** | communiqués préfectoraux du 2024-07-08 ; les résultats définitifs de data.gouv.fr sont déposés le 2024-07-10 |
+| **Ouverture de la XVIIe législature — première séance** | **2024-07-18** | compte rendu de la séance du jeudi 18 juillet 2024 de l'Assemblée nationale : « *Je déclare ouverte la XVIIe législature de l'Assemblée nationale et la session de droit prévue par l'article 12 de la Constitution.* », séance ouverte à quinze heures — <https://www.assemblee-nationale.fr/dyn/17/comptes-rendus/seance/session-de-droit-de-2024/seance-du-jeudi-18-juillet-2024> (consulté le 2026-08-27) |
+
+**`debut` vaut donc 2024-07-18**, et le registre le déclare avec cette source et
+son URL (§3.1.1). C'est la seule des trois dates qui soit une propriété de la
+**législature** : les deux autres sont des propriétés des mandats et du scrutin.
+Le choix découle de la source, pas d'une préférence — c'est aussi la date que
+treize des quatorze organes `GP` portent en `viMoDe.dateDebut`, ce qui est
+attendu : un groupe se constitue à l'ouverture.
+
+`A VERIFIER` : la date de proclamation du 2024-07-08 est reprise de communiqués
+préfectoraux et de la date de mise à jour de la page du ministère de l'intérieur,
+tous deux lus le 2026-08-27 ; la page du ministère répond **403** à toute requête
+non navigateur. Elle n'est employée nulle part dans le registre — elle figure ici
+pour dire ce que `debut` n'est pas. Vérification : ouvrir
+`https://www.interieur.gouv.fr/actualites/actualites-du-ministere/elections-legislatives-2024-resultats-definitifs`
+dans un navigateur, ou retrouver l'arrêté de proclamation au Journal officiel.
+
+### 4.2 L'organe des non-inscrits ouvre avant la législature — l'exception à V13
+
+Avec `debut = 2024-07-18`, treize groupes sur quatorze sont inclus dans la période
+de leur législature. Le quatorzième ne l'est pas et ne le sera jamais : `PO840056`
+« Non inscrit » porte `viMoDe.dateDebut = 2024-07-01`, dix-sept jours avant
+l'ouverture, et sept jours avant la date qui circulait. Aucun choix de `debut`
+parmi les trois dates du §4.1 ne rend ce groupe inclus.
+
+Deux règles s'affrontaient donc, et aucun registre ne pouvait les satisfaire
+toutes deux : **V13** exige l'inclusion, **V16** exige l'égalité stricte avec
+`viMoDe`. Retenir V13 obligeait à écrire une `dateDebut` fausse ; retenir V16
+obligeait à violer V13.
+
+**V13 cède, nommément, pour ce seul organe.** La raison est celle du §2.1 :
+`PO840056` **n'est pas un groupe**. C'est l'agrégat administratif des députés sans
+groupe, ouvert avec la mandature et non constitué au sein de la législature — son
+écart-type intra est de 0,649 contre 0,065 pour le RN, et le registre ne l'agrège
+jamais comme un parti. Une exception nommée à une règle de période est
+vérifiable ; une date recopiée de travers ne l'est pas. V16 ne cède pas : c'est
+elle qui rend le registre falsifiable contre sa source, et une exception y
+ouvrirait la porte à la correction à la main que le contrôle existe pour attraper.
+
+L'exception est portée par V13 au §6, sur l'`uid_an` et non sur un libellé.
 
 Un identifiant a **sa propre** période, distincte de celle de l'entité. Le RN
 existe depuis 1972-10-27 ; son identifiant `an_organe` vaut `PO684946` jusqu'au
@@ -556,6 +683,12 @@ rejeté.
 - **V12** La période d'un identifiant ou d'une composition est incluse dans
   celle de son porteur.
 - **V13** La période d'un groupe est incluse dans celle de sa législature.
+  **Exception nommée, une seule** : `uid_an = "PO840056"`, l'organe des députés
+  non inscrits, dont `viMoDe.dateDebut` (2024-07-01) précède l'ouverture de la
+  XVIIe (2024-07-18). Ce n'est pas un groupe constitué mais l'agrégat des députés
+  sans groupe (§2.1), et V16 interdit de corriger sa date. L'exception porte sur
+  l'`uid_an`, jamais sur un libellé ni sur une abréviation (V14 du même
+  raisonnement : `libelleAbrev` n'est pas une clé). Motif complet : §4.2.
 - **V14** Aucun chevauchement entre deux périodes du même couple
   (porteur, source, valeur).
 
@@ -575,6 +708,25 @@ rejeté.
 - **V19** Une composition non vide de source `an_parpol_mandats` correspond à au
   moins un mandat PARPOL actif dans AMO30. Sinon, `remarque` obligatoire.
 
+### Ancres de l'axe
+
+- **V24** *Unicité par pôle et par date.* À une date donnée, au plus **un** groupe
+  porte `ancre_axe.pole = "gauche"` et au plus **un** porte `"droite"`. Deux
+  ancres du même pôle sur des périodes qui se chevauchent sont un refus : la
+  transformation du §5 de positionnement.md n'est plus définie, et le pipeline
+  choisirait selon l'ordre de lecture. La période d'un `ancre_axe` est incluse
+  dans celle de son groupe (V12, même raisonnement).
+- **V25** *Les deux pôles existent à la date d'agrégation.* Si, à cette date, un
+  des deux pôles n'est porté par aucun groupe, le pipeline **échoue** et ne publie
+  pas la famille `votes`. Il ne choisit jamais une ancre de remplacement, ne
+  reprend pas l'ancre de la période précédente et n'ancre pas sur un seul pôle
+  (RG-31). Une ancre qui disparaît est un changement de convention à trancher par
+  un humain, pas un défaut à combler.
+
+V24 et V25 sont ce qui donne un contenu à l'invariant I5 du contrat de sortie :
+avant elles, I5 vérifiait que le groupe nommé comme ancre existait à la date, pas
+qu'il avait été **déclaré** comme ancre (contrats.md §6).
+
 ### Conformité de projet
 
 - **V20** Aucun terme du lexique interdit de docs/juridique.md dans le fichier,
@@ -585,14 +737,28 @@ rejeté.
   de personne. Découle de V1, énoncé séparément parce que c'est l'invariant
   qu'un contributeur pressé cassera en premier.
 - **V23** *Forme canonique.* Le fichier est **identique octet pour octet** à sa
-  ré-sérialisation : tableaux triés (`sources`, `entites`, `groupes` par `id` ;
+  ré-sérialisation : tableaux triés (`sources`, `entites`, `groupes` par `id` —
+  `sources` l'était par ordre d'apparition dans le §2 et non par `id`, ce qui
+  était un refus V23 non détecté ;
   `relations` par (`date`, `de`)), clés dans l'ordre déclaré aux §3, 2 espaces,
   LF, une fin de ligne finale, UTF-8 sans BOM. Une main qui édite sans passer
   par le formateur est détectée.
 
 Tests dédiés exigés par docs/definition-of-done.md : un cas qui échoue par
-règle pour V7, V8, V9, V14, V16 et V23 au minimum, sur des fixtures issues de
-sources en Licence Ouverte.
+règle pour V7, V8, V9, V14, V16, V23, V24 et V25 au minimum, sur des fixtures
+issues de sources en Licence Ouverte. Le plan de tests les porte sous
+`REG-01` à `REG-22` (plan-de-tests.md §9).
+
+Ce que le schéma formel couvre, et ce qu'il ne couvre pas.
+`schemas/registre-partis-1.schema.json` transcrit V1 — la liste blanche, avec
+`additionalProperties: false` partout —, V2, la forme des `id` (V4), les
+longueurs (V21), V9 et l'obligation de `url` sur une composition de source
+`declaration_publique`. Il ne peut pas exprimer l'unicité et l'existence des `id`
+(V4, V5, V6), l'injectivité (V7), la cardinalité (V8), la réalité d'une date
+(V3), l'inclusion et le non-chevauchement des périodes (V10 à V14), la
+confrontation à AMO30 (V15 à V19), le lexique (V20), l'absence de valorisation
+(V22), la forme canonique (V23) ni l'unicité des ancres (V24, V25) : le validateur
+du registre les vérifie en plus, et c'est lui qui bloque.
 
 ---
 
@@ -639,3 +805,5 @@ réclamation sur la méthode se répond par la source citée dans la ligne.
 | Date de création de UDR | Deux valeurs `P571` sur Wikidata. Une source primaire (Journal officiel des associations) tranche. |
 | Grille de nuances des municipales 2026 | `INTP2602966C`, quatre annexes, 26 nuances de candidat et 25 de liste selon la presse. Hors v0 : aucun écran ne consomme les municipales. |
 | Vérification de `parlgov` et `ches` en CI | Les deux sources sont hors périmètre v0 mais servent V17. Décider si la CI télécharge CHES à chaque exécution ou seulement à la modification du registre. |
+| Formateur canonique de V23 | La règle décrit la forme, aucun script ne la produit : les deux fichiers ont été écrits par un script jetable, non commité, ce que le point 18 de docs/definition-of-done.md refuse. Écrire `scripts/formater-registre.py`, ou ce que la pile choisira, et le faire tourner en CI sur le fichier commité. |
+| Date de proclamation des résultats du 2024-07-08 | Reprise de communiqués préfectoraux et d'une page ministérielle qui répond 403 hors navigateur (§4.1). Elle n'entre dans aucun champ ; la retrouver au Journal officiel pour clore la note. |
