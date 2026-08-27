@@ -162,10 +162,103 @@ jobs:
       - name: tests de la récupération
         run: ./scripts/test-recuperer-sources.sh
 
+  # Portes déclarées bloquantes par la documentation et vérifiables sans le
+  # binaire du pipeline. Recensement : docs/brique0/plan-de-tests.md §15.
+  portes:
+    name: portes déclarées
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      # plan-de-tests.md §15 porte 1 — la liste nominative des invariants.
+      - name: identifiants de test déclarés contre suites écrites
+        run: ./scripts/portes-de-ci.sh identifiants
+      # contrats.md §6 — I12 (agrégation inter-familles) et I13 (coordonnée
+      # individuelle). Les deux sont énoncés comme mécaniques dans le contrat.
+      - name: invariants mécaniques du contrat de sortie
+        run: ./scripts/portes-de-ci.sh invariants
+      # plan-de-tests.md §15, portes non chiffrées.
+      - name: tests sautés sans date de reprise
+        run: ./scripts/portes-de-ci.sh tests-ignores
+
+  # Squelettes. Ces portes sont déclarées bloquantes et ne peuvent PAS être
+  # vérifiées aujourd'hui : elles portent sur du code et des artefacts qui
+  # n'existent pas. Le travail saute tant que pipeline/Cargo.toml est absent,
+  # et il porte la commande exacte qu'il exécutera — une porte qui saute en le
+  # disant vaut mieux qu'une porte déclarée sans travail en face.
+  couverture-et-determinisme:
+    name: couverture et déterminisme (squelette)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - id: exists
+        run: echo "yes=${{ hashFiles('pipeline/Cargo.toml') != '' }}" >> "$GITHUB_OUTPUT"
+      - if: steps.exists.outputs.yes == 'true'
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: llvm-tools-preview
+      - if: steps.exists.outputs.yes == 'true'
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: pipeline
+      # cargo-llvm-cov est un outil de CI, pas une dépendance du produit : il
+      # n'entre pas dans Cargo.lock (plan-de-tests.md §3).
+      - name: outil de couverture
+        if: steps.exists.outputs.yes == 'true'
+        run: cargo install cargo-llvm-cov --locked
+      # plan-de-tests.md §15 portes 2 et 3 : branches ≥ 90 % sur `matrice` et
+      # `estimateur`, lignes ≥ 70 % sur le binaire. Le seuil de 90 % est marqué
+      # `A VERIFIER` au §17 : mesurer au cycle 5, et si le chiffre est
+      # inatteignable c'est le chiffre qui change avec son motif, pas la porte.
+      - name: couverture
+        if: steps.exists.outputs.yes == 'true'
+        working-directory: pipeline
+        run: |
+          cargo llvm-cov --locked --branch --json --output-path /tmp/couverture.json
+          python3 - <<'PY'
+          import json, sys
+          d = json.load(open("/tmp/couverture.json"))
+          echec = 0
+          for f in d["data"][0]["files"]:
+              if "/matrice" in f["filename"] or "/estimateur" in f["filename"]:
+                  b = f["summary"]["branches"]
+                  if b["count"] and b["percent"] < 90:
+                      print(f"::error::porte 2 — {f['filename']} : "
+                            f"{b['percent']:.1f} % de branches, plancher 90 %")
+                      echec = 1
+          t = d["data"][0]["totals"]["lines"]["percent"]
+          if t < 70:
+              print(f"::error::porte 3 — {t:.1f} % de lignes, plancher 70 %")
+              echec = 1
+          sys.exit(echec)
+          PY
+      # contrats.md §8.2 — les trois contrôles de non-régression du déterminisme.
+      # Repris mot pour mot du contrat : idempotence, isolement de l'horloge,
+      # ajout seul. Ils exigent le binaire `contrepoint`, qui n'existe pas.
+      - name: déterminisme — les trois contrôles du contrat
+        if: steps.exists.outputs.yes == 'true'
+        working-directory: pipeline
+        run: |
+          set -euo pipefail
+          cargo build --locked --release
+          bin=target/release/contrepoint
+          D=2026-08-27T00:00:00Z
+          # 1. Idempotence — même entrée, même date injectée, même octet.
+          CONTREPOINT_DATE_CALCUL=$D "$bin" construire --sortie /tmp/a
+          CONTREPOINT_DATE_CALCUL=$D "$bin" construire --sortie /tmp/b
+          diff -r /tmp/a /tmp/b
+          # 2. Isolement de l'horloge — seule la date de calcul bouge.
+          CONTREPOINT_DATE_CALCUL=2027-01-01T00:00:00Z "$bin" construire --sortie /tmp/c
+          "$bin" diff-hors-date_calcul /tmp/a /tmp/c
+          # 3. Ajout seul — l'existant est un préfixe octet pour octet du nouveau.
+          if [ -f ../data/preuves/positions.jsonl ]; then
+            head -c "$(stat -c%s ../data/preuves/positions.jsonl)" /tmp/a/positions.jsonl \
+              | cmp - ../data/preuves/positions.jsonl
+          fi
+
   ci-ok:
     name: ci-ok
     if: always()
-    needs: [pipeline, web, artefacts, garde-fous]
+    needs: [pipeline, web, artefacts, garde-fous, portes, couverture-et-determinisme]
     runs-on: ubuntu-latest
     steps:
       - name: verdict
@@ -174,7 +267,11 @@ jobs:
           echo "web=${{ needs.web.result }}"
           echo "artefacts=${{ needs.artefacts.result }}"
           echo "garde-fous=${{ needs.garde-fous.result }}"
+          echo "portes=${{ needs.portes.result }}"
+          echo "couverture-et-determinisme=${{ needs['couverture-et-determinisme'].result }}"
           for r in "${{ needs.pipeline.result }}" "${{ needs.web.result }}" \
-                   "${{ needs.artefacts.result }}" "${{ needs.garde-fous.result }}"; do
+                   "${{ needs.artefacts.result }}" "${{ needs.garde-fous.result }}" \
+                   "${{ needs.portes.result }}" \
+                   "${{ needs['couverture-et-determinisme'].result }}"; do
             [ "$r" = "success" ] || [ "$r" = "skipped" ] || exit 1
           done

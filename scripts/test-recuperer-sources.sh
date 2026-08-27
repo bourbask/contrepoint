@@ -7,7 +7,7 @@
 #
 #   ./scripts/test-recuperer-sources.sh
 #
-# Identifiants dans docs/brique0/plan-de-tests.md §5bis.
+# Identifiants dans docs/brique0/plan-de-tests.md §4bis.
 set -uo pipefail
 cd "$(dirname "$0")/.."
 

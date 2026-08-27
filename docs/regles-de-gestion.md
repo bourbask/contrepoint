@@ -176,3 +176,13 @@ Ajoutées à la suite des relectures juridique et qualité du 2026-08-27.
 | RG-111 | Aucune colonne nominative d'un fichier de résultats électoraux n'est ingérée. Une nuance administrative n'est jamais rattachée à une personne physique, dans aucun fichier du projet, y compris intermédiaire ou de cache. | JUR, ADR0 §2 |
 | RG-112 | Aucun identifiant de schéma, d'échelle, de famille, de méthode ou de motif ne contient le nom, le sigle ou l'identifiant d'une entité mesurée. | JUR règle 1, ADR0 §6 |
 | RG-113 | Toute étiquette reproduisant une classification de tiers porte le nom de son auteur en tête. Contrepoint n'affiche jamais une catégorie de tiers sous une forme qui pourrait être lue comme sienne. | JUR règle 1 |
+
+## K. Intégration continue et mise en route
+
+Ajoutées le 2026-08-27, après deux portes déclarées bloquantes et contournées le
+même jour faute de travail en face dans `ci.yml`.
+
+| # | Règle | Fondement |
+|---|---|---|
+| RG-108 | Toute porte qu'un document du dépôt déclare bloquante porte un travail en face dans `.github/workflows/ci.yml`, et ce travail est **prouvé capable d'échouer** : violation fabriquée, rouge constaté, violation retirée, vert constaté. Une porte qui ne peut pas encore être vérifiée faute de code porte un squelette gardé par `hashFiles`, avec la commande exacte qu'il exécutera, et annonce ce qu'elle attend. Une porte déclarée sans travail en face est réputée inexistante. | plan-de-tests.md §15.0, DOD |
+| RG-109 | `ci-ok` est la seule vérification exigée par les protections de branches. Tout nouveau travail de `ci.yml` s'y ajoute en `needs` et jamais dans `CHECKS` de `scripts/setup-github.sh` : un travail gardé par `hashFiles` ne publie aucun contexte quand il saute, et une protection qui l'attendrait bloquerait toute PR. | mise-en-route.md §1, plan-de-tests.md §15.0 |

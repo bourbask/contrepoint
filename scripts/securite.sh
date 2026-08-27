@@ -16,22 +16,50 @@ set -uo pipefail
 echec=0
 signaler() { echec=1; printf '  ✗ %s\n' "$1"; }
 
+# Les listes sont séparées par NUL et portées par des tableaux. Une liste
+# séparée par des sauts de ligne casse sur un nom contenant un espace, un
+# guillemet ou un saut de ligne — et l'erreur, avalée, transformait un contrôle
+# en succès. Défaut trouvé le 2026-08-27 dans une porte de CI, puis ici même :
+# ce script portait le défaut qu'il est chargé de détecter.
+declare -a FICHIERS=()
 if [ "${1:-}" = "--arbre" ]; then
-  fichiers=$(git ls-files)
+  mapfile -d '' -t FICHIERS < <(git ls-files -z)
   mode=arbre
 else
-  fichiers=$(git diff --cached --name-only --diff-filter=ACMR)
+  mapfile -d '' -t FICHIERS < <(git diff --cached --name-only --diff-filter=ACMR -z)
   mode=index
 fi
 
-if [ -z "$fichiers" ]; then
+if [ "${#FICHIERS[@]}" -eq 0 ]; then
   echo "sécurité ($mode) : rien à vérifier"
   exit 0
 fi
 
-contenu() { echo "$fichiers" | xargs -r -I{} sh -c '[ -f "{}" ] && grep -nHIE "$1" "{}"' _ "$1" 2>/dev/null; }
+# Ne retient que les fichiers réguliers : un lien symbolique ferait lire hors
+# du dépôt, un fichier supprimé ferait planter grep.
+declare -a LISIBLES=()
+for f in "${FICHIERS[@]}"; do
+  if [ -L "$f" ]; then
+    signaler "lien symbolique suivi : $f"
+  elif [ -f "$f" ]; then
+    LISIBLES+=("$f")
+  fi
+done
 
-echo "sécurité ($mode) : $(echo "$fichiers" | grep -c .) fichiers"
+# grep rend 0 s'il a trouvé, 1 s'il n'a rien trouvé, >1 s'il a échoué. Les trois
+# ne sont pas la même chose : un contrôle qui a échoué n'affirme rien.
+contenu() {
+  [ "${#LISIBLES[@]}" -eq 0 ] && return 0
+  local sortie code
+  sortie=$(grep -nHIE -- "$1" "${LISIBLES[@]}"); code=$?
+  if [ "$code" -gt 1 ]; then
+    signaler "grep en erreur (code $code) sur le motif « $1 » — le contrôle n'a rien pu affirmer"
+    return 0
+  fi
+  printf '%s' "$sortie"
+}
+
+echo "sécurité ($mode) : ${#FICHIERS[@]} fichiers"
 
 # ---- 1. Secrets -------------------------------------------------------------
 r=$(contenu '(BEGIN (RSA|OPENSSH|EC|PGP) PRIVATE KEY)|gh[pousr]_[A-Za-z0-9]{20,}|glpat-[A-Za-z0-9_-]{15,}|AKIA[0-9A-Z]{16}|sk-[A-Za-z0-9]{20,}|xox[baprs]-[A-Za-z0-9-]{10,}')
@@ -53,7 +81,8 @@ r=$(contenu 'find [^|]*\| *(xargs|while)' | grep -vE 'print0|-z |xargs -0[^|]* -
 # besoin. Une ligne seule ne dit pas si elle est dans un bloc `env:` : la
 # première version de ce contrôle était un grep, et elle signalait des jetons
 # correctement portés. Il faut lire le YAML.
-r=$(echo "$fichiers" | grep -E '^\.github/workflows/.*\.ya?ml$' | while read -r f; do
+r=$(for f in "${LISIBLES[@]}"; do
+  case "$f" in .github/workflows/*.yml|.github/workflows/*.yaml) ;; *) continue ;; esac
   python3 - "$f" <<'PYEOF'
 import sys, yaml
 f = sys.argv[1]
@@ -74,8 +103,19 @@ PYEOF
 done)
 [ -n "$r" ] && { signaler "jeton déclaré plus largement que l'étape qui en a besoin :"; echo "$r" | sed 's/^/      /'; }
 
+# Toute liste poussée dans xargs sans -0 : un nom avec espace, guillemet ou
+# saut de ligne casse la liste. Combiné à un `|| true` en aval, la casse devient
+# un succès. Défaut trouvé deux fois le 2026-08-27, dont une fois dans ce script.
+r=$(contenu '\|[[:space:]]*xargs' | grep -vE 'xargs +(-[a-zA-Z]+ +)*-[a-zA-Z]*0')
+[ -n "$r" ] && { signaler "xargs sans -0 — un nom de fichier hostile désarme le contrôle :"; echo "$r" | sed 's/^/      /'; }
+
+# Un contrôle dont l'échec est avalé devient vert quand il plante. « Rien
+# trouvé » et « rien lu » ne sont pas la même chose.
+r=$(contenu '(python3|jq|grep -[a-zA-Z]*r)[^#]*\|\|[[:space:]]*true')
+[ -n "$r" ] && { signaler "échec avalé par || true sur une commande de contrôle — distinguer « rien trouvé » de « rien lu » :"; echo "$r" | sed 's/^/      /'; }
+
 # ---- 2. Fichiers qui ne doivent jamais être suivis --------------------------
-r=$(echo "$fichiers" | grep -E '(^|/)\.env($|\.)|(^|/)\.netrc$|(^|/)id_(rsa|ed25519)$|\.pem$|\.p12$|(^|/)\.direnv/')
+r=$(printf '%s\n' "${FICHIERS[@]}" | grep -E '(^|/)\.env($|\.)|(^|/)\.netrc$|(^|/)id_(rsa|ed25519)$|\.pem$|\.p12$|(^|/)\.direnv/' || true)
 [ -n "$r" ] && { signaler "fichier à ne pas suivre :"; echo "$r" | sed 's/^/      /'; }
 
 # ---- 3. Empreinte de la machine et de l'auteur ------------------------------
@@ -92,14 +132,18 @@ r=$(contenu '[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}' \
 # ---- 4. Exposition de personnes physiques dans les artefacts ----------------
 # Les fixtures de docs/ en contiennent légitimement et sont signalées.
 # Les artefacts publiés et les données, jamais.
-publies=$(echo "$fichiers" | grep -E '^(public/api/|data/)' || true)
-if [ -n "$publies" ]; then
-  r=$(echo "$publies" | xargs -r grep -nHIE '\bPA[0-9]{4,}\b' 2>/dev/null)
+declare -a PUBLIES=()
+for f in "${LISIBLES[@]}"; do
+  case "$f" in public/api/*|data/*) PUBLIES+=("$f") ;; esac
+done
+if [ "${#PUBLIES[@]}" -gt 0 ]; then
+  r=$(grep -nHIE -- '\bPA[0-9]{4,}\b' "${PUBLIES[@]}"); [ $? -gt 1 ] &&
+    signaler "grep en erreur sur les artefacts publiés — le contrôle n'a rien pu affirmer"
   [ -n "$r" ] && { signaler "identifiant d'acteur dans un artefact publié ou dans data/ (RG-110) :"; echo "$r" | sed 's/^/      /'; }
   # `nom` seul est légitime : une organisation en a un. Le risque est le nom
   # d'une personne physique. Faux positif constaté le 2026-08-27 sur les noms
   # de partis du registre d'entités.
-  r=$(echo "$publies" | xargs -r grep -nHIE '"(depute|deputes|acteur|acteurs|membre|membres|personne|personnes|prenom|nom_complet|nom_depute|nom_personne|civilite|patronyme)"[[:space:]]*:' 2>/dev/null)
+  r=$(grep -nHIE -- '"(depute|deputes|acteur|acteurs|membre|membres|personne|personnes|prenom|nom_complet|nom_depute|nom_personne|civilite|patronyme)"[[:space:]]*:' "${PUBLIES[@]}" || true)
   [ -n "$r" ] && { signaler "clé nominative dans un artefact publié ou dans data/ (RG-110) :"; echo "$r" | sed 's/^/      /'; }
 fi
 
