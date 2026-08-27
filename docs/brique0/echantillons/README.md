@@ -40,3 +40,12 @@ portent un champ `_provenance` qui le dit.
 Les identifiants `acteurRef` sont conservés : ils sont publics, indispensables
 pour tester la jointure, et ne portent aucune valeur de position. Aucune
 coordonnée individuelle n'existe dans ce répertoire.
+
+## Données à caractère personnel
+
+Les identifiants d'acteurs et les mandats conservés ici sont indispensables pour
+tester la jointure et ne portent aucune valeur de position. Ce sont des **données
+à caractère personnel** au sens du RGPD et de la Licence Ouverte 2.0 ; leur
+présence est signalée dans [LICENSE-DONNEES](../../../LICENSE-DONNEES) et dans
+[docs/juridique.md](../../juridique.md). Aucune coordonnée individuelle n'existe
+dans ce répertoire.

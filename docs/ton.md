@@ -62,7 +62,8 @@ l'affichage (definition-of-done.md §12).
 | position consolidée, synthèse, moyenne des familles, position globale, consensus | *aucun objet de ce nom n'existe ; les trois familles ne sont jamais moyennées* |
 | vrai / faux positionnement, position correcte | position issue de telle famille, à telle date |
 | centre, neutre, n.d., case vide | non mesuré, avec son `motif_code` |
-| variance intra-groupe *(comme quantité publiée)* | dispersion intra-groupe : écart interquartile, étendue, écart-type de rééchantillonnage |
+| variance intra-groupe *(comme quantité publiée)* | dispersion intra-groupe : écart interquartile, écart-type de rééchantillonnage |
+| étendue, minimum, maximum d'un groupe | *(rien — une borne d'étendue est la coordonnée d'un membre identifiable)* |
 | part de variance expliquée *(comme critère de publication)* | critère de séparation des axes, `s2/s1` |
 | tests de sanité, sanity check | contrôles de garde-fou |
 | hash, checksum | empreinte SHA-256 |
@@ -92,7 +93,7 @@ Un concept, un nom, partout. La colonne de droite est la seule forme admise.
 | Échelle de cet axe | **unités ancrées**, ancre gauche = médiane LFI-NFP = −1, ancre droite = médiane RN = +1 |
 | Enquête d'experts | **CHES**, échelle 0–10, variable `lrgen`, **vague** 2024 (jamais « édition ») |
 | Classification administrative | **nuance administrative**, issue du **nuancier du ministère de l'Intérieur** |
-| Dispersion d'un groupe | **dispersion intra-groupe** = {écart interquartile (IQR), étendue, écart-type de rééchantillonnage} |
+| Dispersion d'un groupe | **dispersion intra-groupe** = {écart interquartile (IQR), écart-type de rééchantillonnage} |
 | Critère de publication de l'axe | **critère de séparation des axes** (`s2/s1`) |
 | Ce qui autorise la publication d'un groupe | **conditions de publication** — les trois de positionnement.md §6 (IQR, écart-type de rééchantillonnage, effectif). Jamais « seuil de variance expliquée » |
 | Cycle de vie d'un groupe | **créé le …**, **actif du … au …**, **dissous le …**. Jamais « naît », « vit », « meurt » |

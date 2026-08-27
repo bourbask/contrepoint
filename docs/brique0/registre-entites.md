@@ -207,8 +207,11 @@ HOR LR RDG REC REG RN SOC UDI UG UXD VEC
 ```
 
 Le fichier `resultats-definitifs-par-circonscription.csv` du 2nd tour porte en
-plus, par candidat, `Nuance candidat n`, `Nom candidat n`, `Elu n` : le lien
-nuance → député élu est donc automatisable.
+outre, par candidat, `Nuance candidat n`, `Nom candidat n` et `Elu n`. **Ces
+trois colonnes ne sont pas ingérées** : l'appariement d'une nuance administrative
+à une personne physique est hors périmètre (RG-111). Seul l'ensemble des codes
+distincts constatés est utilisé — la famille `administratif` mesure des partis et
+des coalitions, jamais des personnes.
 
 Trois faits à conserver avec la donnée :
 

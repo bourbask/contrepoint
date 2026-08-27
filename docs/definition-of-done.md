@@ -33,10 +33,14 @@ la PR**. Une case cochée sans sortie montrable ne compte pas.
 
 ## Conformité éditoriale et juridique
 
-11. **Lexique.** Zéro occurrence des termes interdits de docs/juridique.md et de docs/ton.md §2 dans le diff — code, identifiants, données, chaînes d'interface, docs — hors les tableaux de juridique.md et de ton.md eux-mêmes. Vérification à lancer sur le diff :
+11. **Lexique.** Zéro occurrence des termes interdits. La liste vit dans
+    `scripts/lexique.sh` et **nulle part ailleurs** : trois copies avaient déjà
+    divergé, et l'une d'elles refusait « biais de sélection », qui est un terme
+    retenu du projet. Vérification :
 
     ```
-    git diff origin/develop... | grep -inE 'fiabilit|crédibilit|credibilit|véracit|veracit|désinformation|desinformation|fake ?news|infox|biais d|partial|militant|classement'
+    ./scripts/lexique.sh code
+    ./scripts/lexique.sh docs
     ```
 
 12. **Aucun axe, champ ni variable interne à pôle dépréciatif.** Y compris sous un nom technique anodin. La règle vaut en interne, pas seulement à l'affichage.

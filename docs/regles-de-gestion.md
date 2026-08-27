@@ -71,7 +71,7 @@ Abréviations des sources : **ADR0** = [adr/0000-perimetre-brique0.md](adr/0000-
 |---|---|---|
 | RG-40 | La position d'un groupe est la médiane des positions de ses membres, avec choix déterministe de la valeur centrale en effectif pair. | POS §5, POS §6 |
 | RG-41 | Aucune coordonnée individuelle de député n'apparaît dans le registre de preuves, dans un artefact publié ni dans l'interface. | ADR0 §2, DOD §9 |
-| RG-42 | La dispersion publiée est l'écart interquartile, l'étendue et l'écart-type de rééchantillonnage, jamais une variance. | POS §6 |
+| RG-42 | La dispersion publiée est l'écart interquartile et l'écart-type de rééchantillonnage, jamais une variance et jamais une étendue : une borne d'étendue est la coordonnée d'un membre identifiable. | POS §6, JUR |
 | RG-43 | Toute valeur publiée est accompagnée de son effectif retenu et de sa date. | ADR0 §5 |
 | RG-44 | Un groupe n'est publié que si les trois conditions tiennent : IQR ≤ 0,25 en unités ancrées, écart-type de rééchantillonnage ≤ 0,05, et au moins 10 députés ayant exprimé au moins 200 votes. | POS §6 |
 | RG-45 | Un groupe qui échoue à RG-44 s'affiche « non mesuré » avec sa raison et ses chiffres de dispersion, jamais une valeur assortie d'un avertissement. | POS §6, ADR0 §5 |
@@ -150,3 +150,16 @@ Abréviations des sources : **ADR0** = [adr/0000-perimetre-brique0.md](adr/0000-
 | RG-105 | Une dépendance ajoutée s'accompagne d'une justification écrite répondant à « la bibliothèque standard le fait-elle ? ». | DOD §21 |
 | RG-106 | Le code est publié sous AGPL-3.0-only, les données, registres et documentation sous Licence Ouverte 2.0. | ADR0 §4 |
 | RG-107 | Une affirmation non vérifiée est marquée `A VERIFIER` avec la façon de la vérifier, ou n'est pas écrite. | DOD §23 |
+
+## J. Personnes physiques et textes de tiers
+
+Ajoutées à la suite des relectures juridique et qualité du 2026-08-27.
+
+| # | Règle | Fondement |
+|---|---|---|
+| RG-74 | Aucun champ d'un artefact publié ni d'un fichier de `data/` ne stocke un texte de tiers de plus de 200 caractères. Le corps d'un article, d'une transcription ou d'un document source n'est jamais persisté : il est traité en mémoire puis écarté. | JUR, MET, L.122-5-3 CPI |
+| RG-75 | Un titre, un chapô ou une citation courte de tiers s'affiche avec le lien vers la source et n'est jamais stocké au-delà de la fenêtre de calcul déclarée. | JUR, MET |
+| RG-110 | Aucun identifiant de personne, aucun nom de personne physique et aucune coordonnée individuelle n'apparaît dans un artefact de `public/api/` ni dans `data/`. Les fixtures de test en contiennent et sont signalées comme telles. | JUR, ADR0 §2 |
+| RG-111 | Aucune colonne nominative d'un fichier de résultats électoraux n'est ingérée. Une nuance administrative n'est jamais rattachée à une personne physique, dans aucun fichier du projet, y compris intermédiaire ou de cache. | JUR, ADR0 §2 |
+| RG-112 | Aucun identifiant de schéma, d'échelle, de famille, de méthode ou de motif ne contient le nom, le sigle ou l'identifiant d'une entité mesurée. | JUR règle 1, ADR0 §6 |
+| RG-113 | Toute étiquette reproduisant une classification de tiers porte le nom de son auteur en tête. Contrepoint n'affiche jamais une catégorie de tiers sous une forme qui pourrait être lue comme sienne. | JUR règle 1 |

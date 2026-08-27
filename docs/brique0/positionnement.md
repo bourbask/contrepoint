@@ -16,7 +16,7 @@ reproductibles par les commandes du §1.
 3. **L'estimateur retenu** est un rang 1 sur cellules observées avec une constante par scrutin, déjà écrit et mesuré dans [docs/adr/0001-stack.md](../adr/0001-stack.md) §1.3, ici spécifié complètement et corrigé sur deux points (initialisation, normalisation).
 4. **Le signe et l'échelle sont fixés par une transformation affine ancrée sur deux médianes de groupe nommées.** Après ancrage, deux initialisations qui produisent des axes exactement opposés donnent les mêmes positions à 1,6·10⁻¹⁵, et une permutation des lignes de la matrice ne les déplace pas.
 5. **La position publiée est celle d'un groupe, jamais d'un député** — et cette règle est maintenant chiffrée : la magnitude de la position individuelle croît avec la seule assiduité (|x| médian 0,0276 dans le quartile le moins présent, 0,0484 dans le plus présent).
-6. **La dispersion publiée est l'écart interquartile du groupe et son étendue**, pas une variance : l'axe n'a pas d'unité naturelle, une variance en unités arbitraires n'est pas lisible.
+6. **La dispersion publiée est l'écart interquartile du groupe et son écart-type de rééchantillonnage**, pas une variance : l'axe n'a pas d'unité naturelle, une variance en unités arbitraires n'est pas lisible. Ni étendue, ni minimum, ni maximum : une borne d'étendue est la coordonnée d'un membre identifiable du groupe.
 7. **Un deuxième axe existe et il est fort** (norme relative 0,652, il absorbe la moitié du résidu du premier). Il n'oppose pas la gauche à la droite mais la majorité relative à ses oppositions. Ne pas le mesurer, c'est laisser croire que la première dimension est tout le comportement de vote.
 8. **La comparaison entre législatures n'est pas résoluble proprement** en v0 : les deux axes ne vivent pas dans le même espace, et l'ancrage sur groupes disparus est impossible. Ce qui s'affiche à la place est énoncé au §7.
 9. **Aucune projection sur l'échelle CHES ni sur RILE.** Les trois familles ne sont pas moyennées, elles ne sont pas non plus recalibrées l'une sur l'autre : recalibrer, c'est moyenner avec une étape de plus.
@@ -382,32 +382,32 @@ insensible au retrait vers zéro d'un membre peu présent. Elle est aussi ce qui
 définit l'ancrage du §5, ce qui évite deux estimateurs concurrents dans la même
 chaîne.
 
-### Dispersion publiée : écart interquartile et étendue, pas variance
+### Dispersion publiée : écart interquartile et rééchantillonnage, pas variance ni étendue
 
 Une variance sur un axe sans unité n'est pas lisible et invite à la comparaison
 entre exécutions, qui n'a pas de sens. En unités ancrées, où l'amplitude
 publiable est 2,0 par construction :
 
-| Groupe | n | Médiane ancrée | IQR | Étendue | Écart-type de rééchantillonnage |
-|---|---|---|---|---|---|
-| LFI-NFP | 73 | **−1,0000** | 0,047 | [−1,127 ; +0,077] | 0 (ancre) |
-| ECOS | 38 | −0,9876 | 0,033 | [−1,072 ; −0,890] | 0,0061 |
-| GDR | 18 | −0,8619 | 0,083 | [−1,027 ; −0,700] | 0,0109 |
-| SOC | 70 | −0,8352 | 0,057 | [−0,959 ; −0,469] | 0,0098 |
-| LIOT | 25 | +0,1435 | **0,687** | [−0,551 ; +0,449] | 0,0176 |
-| DEM | 41 | +0,1814 | 0,205 | [−0,387 ; +0,764] | 0,0158 |
-| EPR | 115 | +0,2408 | 0,226 | [−0,621 ; +1,024] | 0,0207 |
-| NI | 9 | +0,2664 | **0,623** | [−0,406 ; +0,994] | 0,0438 |
-| HOR | 43 | +0,3837 | 0,200 | [−0,009 ; +0,729] | 0,0151 |
-| DR | 63 | +0,7013 | 0,113 | [+0,224 ; +0,935] | 0,0123 |
-| UDR | 18 | +0,9900 | 0,042 | [+0,892 ; +1,134] | 0,0060 |
-| RN | 129 | **+1,0000** | 0,052 | [+0,814 ; +1,139] | 0 (ancre) |
+| Groupe | n | Médiane ancrée | IQR | Écart-type de rééchantillonnage |
+|---|---|---|---|---|
+| LFI-NFP | 73 | **−1,0000** | 0,047 | 0 (ancre) |
+| ECOS | 38 | −0,9876 | 0,033 | 0,0061 |
+| GDR | 18 | −0,8619 | 0,083 | 0,0109 |
+| SOC | 70 | −0,8352 | 0,057 | 0,0098 |
+| LIOT | 25 | +0,1435 | **0,687** | 0,0176 |
+| DEM | 41 | +0,1814 | 0,205 | 0,0158 |
+| EPR | 115 | +0,2408 | 0,226 | 0,0207 |
+| NI | 9 | +0,2664 | **0,623** | 0,0438 |
+| HOR | 43 | +0,3837 | 0,200 | 0,0151 |
+| DR | 63 | +0,7013 | 0,113 | 0,0123 |
+| UDR | 18 | +0,9900 | 0,042 | 0,0060 |
+| RN | 129 | **+1,0000** | 0,052 | 0 (ancre) |
 
 Trois lectures à porter sur le site, chacune vérifiable dans ce tableau :
 
 - **L'ordre obtenu correspond à l'ordre gauche-droite décrit par la littérature, sans qu'aucune étiquette n'ait été fournie au calcul.** C'est un argument de validité de la méthode.
 - **L'IQR d'un groupe constitué vaut 2 à 6 % de l'amplitude** : l'axe sépare les groupes, pas les députés — affirmation de methode.md, maintenant chiffrée.
-- **L'étendue trahit l'estimation individuelle.** Un membre de LFI-NFP ressort à +0,077 quand la médiane du groupe est à −1,000. Ce n'est pas une dissidence, c'est un député peu présent ramené vers zéro (§2). L'étendue est publiée parce qu'elle rend cette limite visible ; l'identité de ce député ne l'est pas.
+- **L'étendue n'est pas publiable.** Elle rendrait visible une limite réelle — un membre peu présent est ramené vers zéro et s'écarte fortement de la médiane de son groupe (§2) — mais un minimum et un maximum **sont** les coordonnées de deux membres du groupe. Sur un groupe de neuf membres, avec un code et un appariement publics, ces deux coordonnées sont réidentifiables en une exécution. L'IQR porte la même information sans exposer personne : sur un groupe constitué il vaut 2 à 6 % de l'amplitude, ce qui suffit à établir que l'axe sépare les groupes et non les députés.
 - **L'ancrage supprime l'essentiel du bruit.** Avant ancrage, l'écart-type de rééchantillonnage était proportionnel à la valeur du groupe — c'était du flottement d'échelle, pas de l'incertitude de position. Après ancrage il tombe entre 0,006 et 0,021, soit environ 1 % de l'amplitude.
 
 ### Règle de non-publication

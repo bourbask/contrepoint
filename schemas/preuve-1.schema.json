@@ -26,12 +26,10 @@
     "dispersion": {
       "type": ["object", "null"],
       "additionalProperties": false,
-      "required": ["effectif", "iqr", "etendue_min", "etendue_max", "ecart_type_reechantillonnage"],
+      "required": ["effectif", "iqr", "ecart_type_reechantillonnage"],
       "properties": {
         "effectif": { "type": "integer", "minimum": 0 },
         "iqr": { "type": "number", "minimum": 0 },
-        "etendue_min": { "type": "number" },
-        "etendue_max": { "type": "number" },
         "ecart_type_reechantillonnage": { "type": "number", "minimum": 0 }
       }
     },

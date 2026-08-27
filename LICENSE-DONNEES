@@ -4,9 +4,14 @@ Titulaire : Kevin Bourbasquet, 2026. Identifiant SPDX : `etalab-2.0`.
 
 ## Ce que cette licence couvre
 
+- les schémas de `schemas/` — ils décrivent le contrat de sortie et doivent
+  rester réutilisables par tout validateur tiers ;
 - les fichiers de `data/` — registre d'entités, registre de preuves ;
 - les artefacts publiés de `public/api/` — manifeste, instantanés, éclats de preuves ;
-- la documentation, `README.md`, `ROADMAP.md` et `docs/`.
+- la documentation, `README.md`, `ROADMAP.md` et les fichiers Markdown et JSON
+  de `docs/`. **Tout fichier exécutable de `docs/` — à ce jour
+  `docs/brique0/echantillons/extraire-echantillons.py` — est du code et relève
+  de l'AGPL-3.0-only.**
 
 Le code source est sous AGPL-3.0-only : voir [LICENSE](LICENSE).
 
@@ -27,6 +32,28 @@ l'empreinte SHA-256.
 
 Exception unique : les échantillons de test de `docs/brique0/echantillons/`, qui
 sont des extraits de l'open data de l'Assemblée nationale, sous Licence Ouverte.
+
+## Données à caractère personnel présentes
+
+En application de la clause « Données à caractère personnel » de la Licence
+Ouverte 2.0, le réutilisateur est informé que les fichiers de
+`docs/brique0/echantillons/` contiennent des identifiants d'acteurs et des
+mandats de députés de la XVIIe législature, issus de l'open data de l'Assemblée
+nationale. Leur réutilisation est libre dans le respect du RGPD. Aucun fichier de
+`data/` et aucun artefact de `public/api/` n'en contient.
+
+## Portée de la licence sur les valeurs dérivées de tiers
+
+La Licence Ouverte 2.0 fait garantir au concédant que l'information ne contient
+pas de droits de propriété intellectuelle appartenant à des tiers. Cette garantie
+ne peut être donnée que sur des valeurs dérivées de sources elles-mêmes sous
+licence explicite.
+
+**Une valeur dérivée d'une source sans licence publiée n'est donc pas publiée.**
+CHES est dans ce cas : vérifié le 2026-08-27, aucune licence n'est publiée, la
+seule condition énoncée étant une citation académique. Tant qu'une autorisation
+écrite n'est pas obtenue, la famille de mesure `experts` n'est pas publiée et
+porte un motif d'absence.
 
 ## Sources amont et leur propre licence
 
