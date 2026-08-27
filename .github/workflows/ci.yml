@@ -158,6 +158,11 @@ jobs:
         run: ./scripts/lexique.sh code
       - name: lexique (documentation)
         run: ./scripts/lexique.sh docs
+      # securite.sh n'était lancé que par le crochet local, en mode index. Un
+      # défaut latent est donc passé sur develop, et quiconque n'a pas posé
+      # core.hooksPath committait sans aucun contrôle. En CI, sur l'arbre entier.
+      - name: sécurité (arbre entier)
+        run: ./scripts/securite.sh --arbre
       # Niveau 1 : hors ligne, sans clé, sans jeton (plan-de-tests.md §2).
       - name: tests de la récupération
         run: ./scripts/test-recuperer-sources.sh
