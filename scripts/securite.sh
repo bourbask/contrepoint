@@ -51,7 +51,8 @@ r=$(contenu '/(home|Users)/[a-zA-Z0-9._-]+/' | grep -vE '\$HOME|~/|<utilisateur>
 
 # Toute adresse de courriel autre que la forme anonyme de la plateforme.
 r=$(contenu '[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}' \
-      | grep -vE 'users\.noreply\.github\.com|@schemas\.|@xmlns|@xsi|example\.(com|org)|chesdata@|@[a-z]+\.invalid')
+      | grep -vE 'users\.noreply\.github\.com|@schemas\.|@xmlns|@xsi|example\.(com|org)|chesdata@|@[a-z]+\.invalid' \
+      | grep -vE '(^|[^a-zA-Z0-9._%+-])git@github\.com:')
 [ -n "$r" ] && { signaler "adresse de courriel — seule la forme noreply de la plateforme est admise :"; echo "$r" | sed 's/^/      /'; }
 
 # ---- 4. Exposition de personnes physiques dans les artefacts ----------------

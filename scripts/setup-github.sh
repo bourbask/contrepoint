@@ -77,6 +77,11 @@ label() {
   fi
 }
 
+echo "== crochets git locaux =="
+# Le crochet rend les contrôles bloquants. core.hooksPath est une configuration
+# locale : elle n'est pas clonée, il faut la poser sur chaque poste.
+run git -C "$(git rev-parse --show-toplevel)" config core.hooksPath .githooks
+
 echo "== dépôt $REPO =="
 run gh repo edit "$REPO" --default-branch develop
 
