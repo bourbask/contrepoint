@@ -4,7 +4,8 @@
 
 | Lecteur | Ordre |
 |---|---|
-| Curieux, non technique | [utilisation.md](utilisation.md) |
+| Curieux, non technique | [wiki-miroir.md](wiki-miroir.md) | Correspondance page de wiki ↔ fichier du dépôt, nature de chaque page, et les six règles de synchronisation |
+| [utilisation.md](utilisation.md) |
 | Qui veut juger la méthode | [methode.md](methode.md), [brique0/positionnement.md](brique0/positionnement.md), [juridique.md](juridique.md) |
 | Qui veut écrire du code | [regles-de-gestion.md](regles-de-gestion.md), [architecture.md](architecture.md), [tdd.md](tdd.md), [definition-of-done.md](definition-of-done.md) |
 | Qui veut écrire du texte | [ton.md](ton.md), [juridique.md](juridique.md) |
