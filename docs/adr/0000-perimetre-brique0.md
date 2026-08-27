@@ -128,8 +128,8 @@ RTF qu'elle lie pour lire « 2.0 » et la mention de paternité exacte exigée. 
 faire avant publication, la mention exacte étant une obligation de licence.
 
 Le projet a deux natures d'actif : du code, et des fichiers de données dérivés.
-Le risque spécifique du projet est le fork silencieux qui greffe un axe de
-fiabilité sur la méthode et l'attribue à Contrepoint.
+Le risque spécifique du projet est le fork silencieux qui greffe sur la méthode
+un axe à pôle dépréciatif, puis l'attribue à Contrepoint.
 
 ### Décision
 
