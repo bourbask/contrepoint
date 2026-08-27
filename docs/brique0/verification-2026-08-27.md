@@ -29,38 +29,51 @@ find scrutins -name '*.json' | wc -l   # 8434
 Le téléchargement a abouti du premier coup, taille exacte. La reprise reste
 obligatoire : le serveur tronque par intermittence (ADR 0001 §1.5).
 
-### Découverte : l'empreinte consignée ne se reproduit pas
+### Découverte : l'archive est servie en plusieurs constructions d'un même contenu
 
-| | Valeur |
-|---|---|
-| Empreinte obtenue, 1re récupération | `aa767a2a05f25e38badca738af3535cb9ab89b5fa95d0810a60af05eab1e4721` |
-| Empreinte obtenue, 2de récupération | `aa767a2a…` — **identique** |
-| Empreinte consignée dans `contrats.md` §2.6 | `c5e405f1a715086b9325a585db80362e8e7e03b9d4178ea4e35b9009bdfcf59f` |
+Trois récupérations le même jour ont donné **deux archives d'octets différents** :
 
-Deux récupérations indépendantes le même jour donnent le même octet, donc
-l'archive **est** stable à cet instant. La valeur consignée dans les cinq lignes
-de preuve de référence ne se reproduit pas, et rien ne permet de dire si elle
-provient d'une récupération incomplète ou d'une republication de la source dans
-la journée.
+| Récupération | Taille | SHA-256 | MD5 | `last-modified` |
+|---|---|---|---|---|
+| Première récupération, deux fois de suite | 26 317 479 | `aa767a2a…` | `910e6022…` | 04:25:40 GMT |
+| Seconde récupération, plus tard le même jour | 26 317 479 | `c5e405f1…` | `1f951dea…` | 10:25:39 GMT |
 
-**Conséquence de conception.** Une empreinte d'archive atteste du conteneur, pas
-de la donnée : une republication à contenu identique change les octets du ZIP
-(horodatages d'entrées, ordre, niveau de compression) sans que rien ait bougé.
-Un pipeline qui détecte le changement sur cette seule empreinte ré-émettrait des
-lignes de preuve sans cause.
+Taille identique à l'octet, `etag` et `last-modified` distincts, et le MD5 publié
+sur la fiche source suit celle des deux constructions que son propre serveur
+voit. Signature d'un répartiteur devant plusieurs serveurs portant deux
+constructions du même jeu.
 
-Empreinte du **contenu**, stable par construction, obtenue par concaténation des
-fichiers triés par chemin :
+**Le contenu, lui, est identique.** Les deux archives décompressées donnent
+8 434 fichiers, **zéro différence** (`diff -rq`), et la même empreinte de
+contenu :
 
 ```sh
-find scrutins -name '*.json' | sort | xargs cat | sha256sum
-# 503255ac0b39eb28ae623368c0f21f6ec30df0893d091119c7c4efbf030c2f40
+find <racine> -name '*.json' | LC_ALL=C sort | xargs cat | sha256sum
+# c8457f346220b5b7fb673bd1f273ef8c3296b7ff2769524bf5024c9d95c7e65c
 ```
 
-À consigner **en plus** de l'empreinte d'archive : la première prouve ce qui a
-été téléchargé, la seconde prouve ce qui a été calculé.
+**`LC_ALL=C` n'est pas décoratif.** Sans lui, `sort` suit la locale : sous
+`fr_FR.UTF-8` la ponctuation est ignorée dans la collation, donc
+`VTANR5L17V100.json` précède `VTANR5L17V10.json`, qui précède
+`VTANR5L17V1.json` — l'ordre inverse de l'ordre d'octets. La même archive rend
+alors `503255ac…` au lieu de `c8457f34…`. Une version antérieure de ce document
+portait la valeur dépendante de la locale : elle est corrigée, et la
+spécification impose désormais `LC_ALL=C`.
 
----
+**Conséquences de conception, toutes vérifiées ici :**
+
+1. **L'empreinte d'archive n'est pas une propriété de la donnée.** Un pipeline
+   qui détecte le changement dessus ré-émettrait l'intégralité du registre de
+   preuves à chaque exécution, au hasard du serveur qui répond. C'est le défaut
+   que le ticket #20 nommait, et il est ici démontré et non supposé.
+2. **L'empreinte de contenu est stable** à travers les constructions. C'est elle
+   qui entre dans la clé de déduplication ; l'empreinte d'archive en sort.
+3. **Le MD5 publié par la source n'est pas un contrôle d'intégrité utilisable
+   comme porte.** Il varie avec la construction servie. Il est consigné à titre
+   documentaire ; le contrôle qui décide est la taille annoncée, puis l'empreinte
+   de contenu.
+4. La reprise sur troncature reste obligatoire, pour une raison distincte : le
+   serveur ferme la connexion en cours de transfert sans erreur.
 
 ## 1. Volumétrie — confirme les documents
 

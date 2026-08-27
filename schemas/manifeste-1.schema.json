@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "manifeste-1.schema.json",
   "title": "Manifeste des instantanés publiés",
-  "description": "public/api/index.json. Contrat : docs/brique0/contrats.md §4.1. Ne porte aucune valeur mesurée : de quoi choisir un fichier, la légende des familles, et la date d'arrêt des données dérivée des lignes de preuve.",
+  "description": "public/api/index.json. Contrat : docs/brique0/contrats.md §4.1. Ne porte aucune valeur mesurée : de quoi choisir un fichier, la légende des familles, et la date d'arrêt des données dérivée des lignes de preuve. Ne porte pas non plus de mention de paternité saisie à la main : `mention_paternite` se dérive des entrées des lignes référencées.",
   "type": "object",
   "additionalProperties": false,
   "required": ["schema", "contrat", "schemas", "date_arretee", "licence", "mention_paternite", "familles", "instantanes", "preuves"],
@@ -25,7 +25,8 @@
     "mention_paternite": {
       "type": "string",
       "minLength": 1,
-      "description": "Obligation de la Licence Ouverte v1.0 : nom du Producteur et date de dernière mise à jour (ingestion-votes.md §1)."
+      "maxLength": 200,
+      "description": "Obligation de la Licence Ouverte v1.0 : nom du Producteur et date de dernière mise à jour (ingestion-votes.md §1). **Dérivée, jamais saisie** : `producteur` et `derniere_mise_a_jour` de l'entrée amont des lignes de preuve référencées (preuve-1.schema.json, `entrees[]`). Ne porte aucune citation exigée par une source : une citation est une propriété de l'entrée qui l'exige, et la recopier ici attribuerait à un jeu de données la citation d'un autre (contrats.md §2.1, §4.1)."
     },
     "familles": {
       "type": "array",

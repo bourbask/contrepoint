@@ -32,7 +32,10 @@ scrutins : `2026-08-27 04:25:40 GMT` ; le champ `date` de la fiche source dit
 deux jeux sont reconstruits chaque nuit, à des heures différentes.
 
 **La fiche source publie un MD5 par ressource.** Pour l'archive JSON :
-`1f951dea5675556c5b675e5bdfeddba5`. Le fichier téléchargé le donne exactement.
+un MD5 par ressource. Il n'est pas un contrôle utilisable comme porte : la source
+sert deux constructions du même contenu, et le MD5 publié suit celle que son
+propre serveur voit. Le contrôle qui décide est la taille annoncée, puis
+l'empreinte de contenu ([contrats.md](contrats.md) §2.8).
 C'est la réponse au piège de troncature relevé en ADR 0001 §1.5 : l'intégrité se
 vérifie contre l'empreinte du producteur, pas seulement contre `content-length`.
 AMO30 n'a pas de fiche équivalente ; pour lui, seul `content-length` et la reprise
