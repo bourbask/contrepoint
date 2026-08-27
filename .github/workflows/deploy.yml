@@ -31,7 +31,7 @@ jobs:
         working-directory: web
         run: npm ci && npm run build
       - if: steps.exists.outputs.yes == 'true'
-        uses: actions/upload-pages-artifact@v4
+        uses: actions/upload-pages-artifact@v5
         with:
           path: web/dist
 
