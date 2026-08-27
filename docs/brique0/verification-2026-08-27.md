@@ -48,9 +48,15 @@ constructions du même jeu.
 contenu :
 
 ```sh
-find <racine> -name '*.json' | LC_ALL=C sort | xargs cat | sha256sum
+find <racine> -name '*.json' -print0 | LC_ALL=C sort -z | xargs -0 cat -- | sha256sum
 # c8457f346220b5b7fb673bd1f273ef8c3296b7ff2769524bf5024c9d95c7e65c
 ```
+
+**`-print0`, `sort -z` et `--` ne sont pas décoratifs non plus.** Sans eux, un
+fichier de l'archive nommé `-n` atteint `cat` comme un drapeau et l'empreinte
+devient celle de `cat -n`, code de retour nul ; un nom contenant un saut de ligne
+est coupé en deux chemins inexistants et rend l'empreinte du vide. Les deux ont
+été démontrés le 2026-08-27 sur ce dépôt.
 
 **`LC_ALL=C` n'est pas décoratif.** Sans lui, `sort` suit la locale : sous
 `fr_FR.UTF-8` la ponctuation est ignorée dans la collation, donc

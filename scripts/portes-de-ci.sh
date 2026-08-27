@@ -92,22 +92,27 @@ identifiants() {
 # contrats.md §6 : I13 est un grep, I12 une expression rationnelle sur les clés.
 # Les deux sont vérifiables aujourd'hui : la boucle porte sur les artefacts qui
 # existent, et elle mord dès le premier artefact produit.
+# Les artefacts publiés sont ceux que git suit, pas ceux que le disque porte.
+# Un glob sur le système de fichiers ramassait `data/cache/`, ignoré par git et
+# rempli de 22 000 fichiers extraits par le pipeline : la porte dépassait la
+# limite d'arguments du noyau et se déclarait incapable d'affirmer. Constaté le
+# 2026-08-27 après la première exécution réelle du pipeline.
 artefacts_publies() {
-  shopt -s globstar nullglob
   local c
-  # RG-110 porte sur `public/api/` ET sur `data/` : une coordonnée individuelle
-  # dans un fichier de registre est aussi publiée que dans un artefact de sortie.
-  for c in public/api/**/*.json data/**/*.json data/preuves/*.jsonl; do
-    # Un lien symbolique dans un chemin publié ferait lire hors du dépôt, et son
-    # contenu se retrouverait dans la sortie de CI. C'est une faute, pas un
-    # fichier à ignorer.
+  while IFS= read -r -d '' c; do
+    case "$c" in
+      public/api/*.json|public/api/*/*.json|data/*.json|data/*/*.json|data/preuves/*.jsonl) ;;
+      *) continue ;;
+    esac
     if [ -L "$c" ]; then
       signaler "lien symbolique dans un chemin publié : $c"
     elif [ -f "$c" ]; then
       printf '%s\0' "$c"
     fi
-  done
+  done < <(git ls-files -z)
+  return 0
 }
+
 
 invariants() {
   echo "── porte 2 : invariants I12 et I13 sur les artefacts publiés"
