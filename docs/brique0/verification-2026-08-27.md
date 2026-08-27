@@ -75,6 +75,41 @@ spécification impose désormais `LC_ALL=C`.
 4. La reprise sur troncature reste obligatoire, pour une raison distincte : le
    serveur ferme la connexion en cours de transfert sans erreur.
 
+### Reprise du 2026-08-27 par `scripts/recuperer-sources.sh`
+
+Première exécution du script, sur les deux sources réelles. Les deux empreintes
+de contenu et les deux tailles du présent document sont retrouvées à
+l'identique, par un chemin de calcul indépendant.
+
+| Source | Octets annoncés et reçus | Empreinte d'archive | Empreinte de contenu | Fichiers | `last-modified` |
+|---|---|---|---|---|---|
+| Scrutins | 26 317 479 | `aa767a2a…` | `c8457f346220b5b7fb673bd1f273ef8c3296b7ff2769524bf5024c9d95c7e65c` | 8 434 | 2026-08-27T10:25:39Z |
+| AMO30 | 13 600 736 | `bbecd012…` | `0f49c00a8227d6cb8e658d374bacfec35238fe4e2dd6305f7df6ac4f515c5de6` | 13 991 | 2026-08-27T00:34:47Z |
+
+**Écart avec le tableau ci-dessus, et il compte.** Ce document appariait la
+construction `aa767a2a…` au `last-modified` 04:25:40 GMT et la construction
+`c5e405f1…` au 10:25:39 GMT. L'exécution a reçu `aa767a2a…` — MD5
+`910e6022…`, conforme à l'appariement archive/MD5 — servi avec le
+`last-modified` **10:25:39 GMT**. Le `last-modified` n'est donc pas davantage
+une propriété d'une construction que l'empreinte d'archive ne l'est du contenu :
+seul le couple archive/MD5 reste apparié, et la date annoncée flotte entre les
+serveurs du répartiteur.
+
+Conséquence sur la porte de RG-20, et elle tient : le contrôle porte sur
+l'empreinte de **contenu** à date de source constante. Un `last-modified` qui
+change sans que le contenu change ouvre une nouvelle clé et n'échoue pas ; un
+contenu qui change sous une date inchangée échoue. Le défaut symétrique — un
+contenu modifié servi sous une date elle aussi modifiée — n'est pas détectable,
+et il n'a pas à l'être : une date nouvelle est une annonce.
+
+Aucune reprise n'a été nécessaire ce jour-là : les deux archives sont arrivées
+complètes du premier coup. La boucle de reprise n'est donc pas exercée par cette
+exécution, elle l'a été par les mesures de l'ADR 0001 §1.5.
+
+MD5 relevés, à titre documentaire : scrutins `910e6022c9eba71f932df42267778c46`,
+AMO30 `4d74d2b6179eb4879d0aa31afd1b2f97`. AMO30 ne publie aucun MD5 sur sa
+fiche : celui-ci est calculé localement et ne se compare à rien.
+
 ## 1. Volumétrie — confirme les documents
 
 | Grandeur | Recompté | Documenté | |

@@ -23,7 +23,7 @@ lancer "sécurité"                    ./scripts/securite.sh
 # données, les schémas ou les artefacts publiés. Le crochet ne peut pas la
 # lancer : il la rappelle.
 sensibles=$(git diff --cached --name-only --diff-filter=ACMR \
-            | grep -E '^(data/|schemas/|public/api/|docs/brique0/echantillons/)' || true)
+            | grep -E '^(data/|schemas/|public/api/|docs/brique0/echantillons/|scripts/|\.github/|docs/adr/|docs/juridique\.md|docs/regles-de-gestion\.md|\.gitignore$)' || true)
 if [ -n "$sensibles" ]; then
   printf '\n── revue sécurité exigée\n'
   echo "Le diff touche des chemins sensibles :"

@@ -44,6 +44,10 @@ fixtures serait faux. La règle est de ne pas l'écrire.
 | **2 — corpus** | Les seuils de sanité de positionnement.md §9 (contrôles 8, 9, 10, 11) et l'instantané de sortie complète | Archives réelles, prises dans le cache par SHA-256, jamais téléchargées par le test | minutes | La publication, pas la PR |
 | **3 — récupération** | Reprise sur troncature, MD5 publié, `last-modified` d'une source censée être vivante | Réseau | — | La publication |
 
+Le niveau 1 comprend, hors `cargo test`, la suite shell du §4bis :
+`./scripts/test-recuperer-sources.sh`, exécutée par le travail `garde-fous` de
+`ci.yml`.
+
 Le niveau 1 passe **machine débranchée**, sans clé, sans jeton
 (definition-of-done.md §7). Il ne lit aucun fichier hors du dépôt. Un test de
 niveau 2 ou 3 présent dans le binaire de niveau 1 est un défaut : la séparation
@@ -92,6 +96,37 @@ Règle dure : **T1 n'est jamais appliqué à un flottant intermédiaire.** La
 promesse « bit pour bit » du README porte sur le fichier arrondi, pas sur le
 calcul. Un test qui compare deux `f64` non arrondis à l'égalité est un test qui
 sera désactivé dans six mois.
+
+---
+
+## 4bis. Script `recuperer-sources` — récupération des archives
+
+Seul module du plan écrit en shell, parce qu'il n'appartient pas au binaire
+(architecture.md §2, composant [0]). Suite :
+`scripts/test-recuperer-sources.sh`, sans cadre de test, sans dépendance —
+des assertions dans un script exécutable, à l'image du reste de l'outillage.
+
+Elle **source** le script testé et n'exerce que ses fonctions pures. L'enveloppe
+réseau (`telecharger`, `principal`) n'a pas de test hors ligne, par construction
+(ingestion-votes.md §9d, RG-119) : elle est exercée à la main et relève du
+niveau 3.
+
+Fixtures : construites dans le test, dans un répertoire temporaire. Aucun octet
+du corpus réel n'est nécessaire, aucune horloge n'est lue.
+
+| ID | Test | Entrée | Sortie attendue | Ce qui casse si le test disparaît |
+|---|---|---|---|---|
+| REC-01 | `telechargement_complet` | fichier de 100 octets, annonces de 100 et 101 octets, et fichier absent | Complet à 100/100 ; incomplet à 100/101 ; incomplet si le fichier n'existe pas | La porte de complétude est la taille annoncée (RG-114). Sans elle, une archive tronquée par la fermeture de connexion du serveur passe pour une donnée : le paysage publié est amputé sans erreur (ADR 0001 §1.5) |
+| REC-02 [C] | `empreinte_contenu_en_ordre_d_octets` | trois fichiers `V1`, `V10`, `V100` dont l'ordre de collation `fr_FR.UTF-8` est l'inverse de l'ordre d'octets ; l'attendu est écrit à la main, jamais relevé d'une exécution | L'empreinte vaut le SHA-256 de la concaténation en ordre d'octets ; elle est inchangée sous `LC_ALL=fr_FR.UTF-8` et indépendante du répertoire d'extraction | Sans `LC_ALL=C`, la même archive rend `503255ac…` au lieu de `c8457f34…` selon la locale de la machine (verification-2026-08-27.md §0). L'empreinte de contenu entre dans la clé de déduplication : dépendante de la locale, elle ré-émet le registre de preuves au changement de machine |
+| REC-03 | `contenu_modifie_sans_annonce_refuse` | index portant `(scrutins, date, aaa)` | Même date et même contenu : accepté. Même date et contenu différent : **refusé**, avec le message qui nomme les deux empreintes. Date nouvelle : accepté. Index absent : accepté | C'est l'échec bruyant de RG-20. Sans lui, une donnée modifiée en silence par le producteur entre dans le pipeline sous une date inchangée, et le registre de preuves affirme un calcul sur des octets qui n'existent plus |
+| REC-04 | `descripteur_deterministe` | les mêmes champs passés dans deux ordres | Fichier trié, identique à l'octet dans les deux cas | Le descripteur est la seule trace de ce qui a été téléchargé. Un descripteur dont l'ordre suit l'ordre d'appel n'est pas comparable d'une exécution à l'autre |
+| REC-05 | `date_de_source_iso_complete` | trois horodatages ISO, et un `last-modified` HTTP | Le plus récent l'emporte ; le résultat vérifie `^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$` et est relu **à l'identique** par le `date -u -d` de pipeline.yml ; un `last-modified` HTTP devient un horodatage ISO complet | `CONTREPOINT_DATE_CALCUL` en dérive (contrats.md §8.1). Une date réduite au jour produit une ligne de preuve invalide contre le schéma `preuve-1`, et `date -u -d` d'une chaîne vide rend l'heure courante — c'est-à-dire l'horloge, précisément ce que le pipeline ne lit jamais |
+| REC-06 | `cache_immuable` | entrée de cache déjà présente, et empreinte inconnue | L'entrée présente n'est pas réécrite ; l'empreinte inconnue crée la sienne | Le cache indexé par empreinte est ce qui rend un calcul de 2026 rejouable en 2027 (RG-116, ingestion-votes.md §9e). Un cache réécrit n'est plus une archive, c'est une copie du jour |
+
+Les contrôles de niveau 3 restants — reprise réelle sur troncature, MD5 publié,
+fraîcheur d'une source censée être vivante — sont exercés par une exécution
+manuelle de `scripts/recuperer-sources.sh` et consignés dans
+[verification-2026-08-27.md](verification-2026-08-27.md) §0.
 
 ---
 
@@ -343,6 +378,7 @@ première ligne d'implémentation.
 
 | # | Cycle | Tests écrits d'abord | Ce qui se montre à la fin |
 |---|---|---|---|
+| **−1** | La récupération des archives | REC-01 → REC-06 | Six tests rouges puis verts hors ligne, puis une exécution réelle : deux archives, leurs tailles, leurs deux empreintes et la date de source. Le cron hebdomadaire peut s'exécuter |
 | **0** | Les trois adaptateurs de sérialisation | ING-01, ING-02, ING-03, ING-04 | Quatre tests rouges, puis verts, sur des fixtures réelles. Aucune logique métier encore écrite. Les trois pièges de l'ADR 0001 §1.4 sont neutralisés avant qu'ils ne coûtent |
 | **1** | Lecture d'un scrutin et ses cohérences | ING-05, ING-06, ING-07, ING-08 | Le contenu d'un scrutin, affiché : date, votants, décomptes, avec les invariants de la source vérifiés |
 | **2** | Le codage | MAT-01, MAT-02, MAT-03, ING-09, ING-10, ING-11, ING-12 | Les triplets d'un scrutin. **Le cycle le plus important du projet** : MAT-01 est écrit avant tout ce qui pourrait le contourner |

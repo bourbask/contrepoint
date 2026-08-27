@@ -40,6 +40,40 @@ r=$(contenu '(BEGIN (RSA|OPENSSH|EC|PGP) PRIVATE KEY)|gh[pousr]_[A-Za-z0-9]{20,}
 r=$(contenu '(api[_-]?key|secret|password|passwd|token)[[:space:]]*[:=][[:space:]]*['"'"'"][^'"'"'"]{8,}')
 [ -n "$r" ] && { signaler "valeur sensible affectée en clair :"; echo "$r" | sed 's/^/      /'; }
 
+# ---- 1bis. Outillage shell et intégration continue -------------------------
+# Ajouté après la revue du 2026-08-27 : les scripts manipulent des valeurs
+# venues du réseau, et les workflows manipulent le jeton.
+
+# Une liste de fichiers passée à une commande sans terminateur d'options ni
+# séparateur NUL : un nom venu d'une archive distante devient un drapeau.
+r=$(contenu 'find [^|]*\| *(xargs|while)' | grep -vE 'print0|-z |xargs -0[^|]* --')
+[ -n "$r" ] && { signaler "liste de fichiers sans -print0 ni -- : un nom hostile devient une option :"; echo "$r" | sed 's/^/      /'; }
+
+# Un jeton d'intégration continue déclaré plus largement que l'étape qui en a
+# besoin. Une ligne seule ne dit pas si elle est dans un bloc `env:` : la
+# première version de ce contrôle était un grep, et elle signalait des jetons
+# correctement portés. Il faut lire le YAML.
+r=$(echo "$fichiers" | grep -E '^\.github/workflows/.*\.ya?ml$' | while read -r f; do
+  python3 - "$f" <<'PYEOF'
+import sys, yaml
+f = sys.argv[1]
+try:
+    d = yaml.safe_load(open(f)) or {}
+except Exception:
+    sys.exit(0)
+JETONS = ('GH_TOKEN', 'GITHUB_TOKEN')
+def porte(env, ou):
+    for k in (env or {}):
+        if k in JETONS:
+            print(f"{f}: {k} déclaré au niveau {ou}")
+porte(d.get('env'), 'du workflow')
+for nom, job in (d.get('jobs') or {}).items():
+    if not isinstance(job, dict): continue
+    porte(job.get('env'), f"du travail « {nom} »")
+PYEOF
+done)
+[ -n "$r" ] && { signaler "jeton déclaré plus largement que l'étape qui en a besoin :"; echo "$r" | sed 's/^/      /'; }
+
 # ---- 2. Fichiers qui ne doivent jamais être suivis --------------------------
 r=$(echo "$fichiers" | grep -E '(^|/)\.env($|\.)|(^|/)\.netrc$|(^|/)id_(rsa|ed25519)$|\.pem$|\.p12$|(^|/)\.direnv/')
 [ -n "$r" ] && { signaler "fichier à ne pas suivre :"; echo "$r" | sed 's/^/      /'; }

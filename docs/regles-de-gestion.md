@@ -18,7 +18,8 @@ Abréviations des sources : **ADR0** = [adr/0000-perimetre-brique0.md](adr/0000-
 **ING** = [brique0/ingestion-votes.md](brique0/ingestion-votes.md),
 **POS** = [brique0/positionnement.md](brique0/positionnement.md),
 **REG** = [brique0/registre-entites.md](brique0/registre-entites.md),
-**CON** = [brique0/contrats.md](brique0/contrats.md).
+**CON** = [brique0/contrats.md](brique0/contrats.md),
+**VER** = [brique0/verification-2026-08-27.md](brique0/verification-2026-08-27.md).
 
 ---
 
@@ -50,6 +51,12 @@ Abréviations des sources : **ADR0** = [adr/0000-perimetre-brique0.md](adr/0000-
 | RG-18 | Une mise au point de vote est ingérée et jamais appliquée à la valeur de la cellule. | ING §3 |
 | RG-19 | Le parseur absorbe les trois irrégularités mesurées de la source — un bloc `votant` nu au lieu d'un tableau, un tableau dont les éléments sont nuls, un identifiant enveloppé dans un objet `{"#text":…}` — dans trois adaptateurs, sans cas particulier ailleurs dans le code. | ADR1 §1.4, ING §4 |
 | RG-20 | Un téléchargement est repris jusqu'à la taille annoncée par la source, son empreinte SHA-256 est consignée, et une empreinte qui change sans que la date de source change fait échouer l'exécution. | ADR1 §1.5 |
+| RG-114 | La porte de complétude d'un téléchargement est la taille annoncée par `content-length`, jamais le MD5 publié par le producteur : la source répond en plusieurs constructions du même contenu et le MD5 suit celle que son propre serveur voit. Le MD5 est consigné à titre documentaire et ne fait jamais échouer la récupération. | ING §1, VER §0 |
+| RG-115 | Chaque archive récupérée porte deux empreintes. Celle de l'archive atteste du téléchargement ; celle du contenu, calculée selon CON §2.8 — tri des chemins relatifs en ordre d'octets sous `LC_ALL=C` —, décide d'une ré-émission. C'est l'empreinte de contenu, et elle seule, qui déclenche l'échec de RG-20. | CON §2.8, VER §0 |
+| RG-116 | Le cache d'archives est indexé par empreinte d'archive et immuable : une entrée présente n'est ni réécrite ni retéléchargée. | ING §9a |
+| RG-117 | La date de calcul est dérivée du `last-modified` de la source la plus récente et écrite en horodatage ISO complet dans `data/cache/derniere-source.txt`. Son absence fait échouer l'exécution ; elle n'est jamais comblée par l'horloge. | CON §8.1, ING §9c |
+| RG-118 | Une archive source est déposée comme asset de release, nommée par son SHA-256 et immuable, si et seulement si sa licence autorise explicitement la redistribution. La Licence Ouverte v1.0 des archives de l'Assemblée nationale l'autorise ; une source sans licence publiée, CHES en particulier, n'est jamais déposée. | ADR0 §8, ING §1 |
+| RG-119 | L'étape de récupération sépare la logique vérifiable de l'appel réseau. Complétude, empreinte de contenu, contrôle de stabilité, descripteur et date de source sont testés hors ligne sur des fichiers locaux ; seule l'enveloppe réseau est sans test hors ligne, et elle échoue bruyamment. | DOD §7, ING §9d |
 
 ## C. Estimation de l'axe des votes
 

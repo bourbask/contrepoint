@@ -13,8 +13,10 @@ on:
         default: false
 
 permissions:
-  contents: write
-  pull-requests: write
+  contents: write        # release des archives, poussée de la branche de données
+  pull-requests: write   # gh pr create
+  issues: write          # gh issue create en cas d'échec — sans quoi le seul
+                         # canal d'alerte renvoie 403, masqué par if: failure()
 
 concurrency:
   group: pipeline
@@ -28,6 +30,11 @@ jobs:
         with:
           ref: develop
           fetch-depth: 0
+          # Sans cela le jeton reste en clair dans .git/config pendant
+          # l'extraction d'archives réseau et pendant cargo run, qui exécute
+          # les scripts de construction de toutes les dépendances. Seule
+          # l'étape qui pousse en a besoin : elle appelle gh auth setup-git.
+          persist-credentials: false
 
       - id: exists
         run: echo "yes=${{ hashFiles('pipeline/Cargo.toml') != '' }}" >> "$GITHUB_OUTPUT"
@@ -52,15 +59,35 @@ jobs:
       # un défaut à combler par `date -u`.
       # data/cache/ est ignoré par git : le descripteur n'existe dans aucun
       # checkout, il doit être produit par cette exécution.
+      # L'index des empreintes est le seul état qui doit survivre d'une
+      # exécution à l'autre : sans lui, « le contenu a changé sans que la date
+      # de source change » n'est pas détectable. Il vit comme asset de la
+      # release d'archives, le cache d'Actions évinçant à sept jours.
+      - name: récupérer l'index des empreintes
+        if: steps.exists.outputs.yes == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p data/cache
+          ./scripts/archives.sh retrouver-index data/cache/index.txt
+
       - name: récupérer les archives
         if: steps.exists.outputs.yes == 'true'
+        run: ./scripts/recuperer-sources.sh
+
+      # Rejouer en 2027 le calcul de 2026 exige l'archive de 2026 : les
+      # archives de l'Assemblée sont reconstruites chaque nuit et
+      # rétroactivement modifiables (brique0/ingestion-votes.md §9e). Leur
+      # redistribution est autorisée par la Licence Ouverte v1.0 (ADR 0000 §8).
+      - name: déposer les archives
+        if: steps.exists.outputs.yes == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
-          if [ ! -x scripts/recuperer-sources.sh ]; then
-            echo "::error::scripts/recuperer-sources.sh absent — voir l'issue « écrire scripts/recuperer-sources.sh »."
-            echo "Le pipeline ne peut pas s'exécuter sans l'étape de récupération."
-            exit 1
-          fi
-          ./scripts/recuperer-sources.sh
+          for d in data/cache/*/; do
+            ./scripts/archives.sh deposer "$d"
+          done
+          ./scripts/archives.sh deposer-index data/cache/index.txt
 
       - id: date_calcul
         name: date de calcul
@@ -110,6 +137,7 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git config commit.gpgsign false
+          gh auth setup-git
           git checkout -b "$branche"
           git add public/api data/preuves
           git commit --no-gpg-sign -m "data: exécution du $(date -u +%Y-%m-%d)"
@@ -130,6 +158,6 @@ jobs:
           titre="pipeline: échec de l'exécution du $(date -u +%Y-%m-%d)"
           if [ -z "$(gh issue list --state open --search "$titre" --json number --jq '.[].number')" ]; then
             lien="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
-            printf "L'exécution planifiée a échoué : %s\n\nLes artefacts publiés restent ceux de la dernière exécution valide.\n" "$lien" > /tmp/corps-issue.md
-            gh issue create --title "$titre" --body-file /tmp/corps-issue.md --label bug
+            printf "L'exécution planifiée a échoué : %s\n\nLes artefacts publiés restent ceux de la dernière exécution valide.\n" "$lien" > "$RUNNER_TEMP/corps-issue.md"
+            gh issue create --title "$titre" --body-file "$RUNNER_TEMP/corps-issue.md" --label bug
           fi
