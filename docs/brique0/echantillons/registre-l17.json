@@ -1244,7 +1244,7 @@
         "debut": "2024-07-18",
         "fin": null,
         "etabli_le": "2026-08-27",
-        "remarque": "Ancre gauche : plus gros groupe de l'extrémité, IQR 0,047 en unités ancrées (positionnement.md §5)."
+        "remarque": "Ancre gauche : groupe le plus nombreux du pôle, IQR 0,047 en unités ancrées (positionnement.md §5)."
       },
       "composition": [
         {
@@ -1299,7 +1299,7 @@
         "debut": "2024-07-18",
         "fin": null,
         "etabli_le": "2026-08-27",
-        "remarque": "Ancre droite : plus gros groupe de l'extrémité, IQR 0,052 en unités ancrées (positionnement.md §5)."
+        "remarque": "Ancre droite : groupe le plus nombreux du pôle, IQR 0,052 en unités ancrées (positionnement.md §5)."
       },
       "composition": [
         {
