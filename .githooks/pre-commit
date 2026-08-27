@@ -18,6 +18,9 @@ lancer() {
 lancer "lexique (code et données)"   ./scripts/lexique.sh code
 lancer "lexique (documentation)"     ./scripts/lexique.sh docs
 lancer "sécurité"                    ./scripts/securite.sh
+# Les mêmes portes qu'en CI, au même verdict. Une porte qui n'existe que dans
+# ci.yml se découvre en échec après le push, c'est-à-dire trop tard.
+lancer "portes de CI"                ./scripts/portes-de-ci.sh
 
 # La relecture par l'agent sécurité est exigée en plus quand le diff touche les
 # données, les schémas ou les artefacts publiés. Le crochet ne peut pas la

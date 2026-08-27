@@ -7,7 +7,7 @@
 | Curieux, non technique | [wiki-miroir.md](wiki-miroir.md) | Correspondance page de wiki ↔ fichier du dépôt, nature de chaque page, et les six règles de synchronisation |
 | [utilisation.md](utilisation.md) |
 | Qui veut juger la méthode | [methode.md](methode.md), [brique0/positionnement.md](brique0/positionnement.md), [juridique.md](juridique.md) |
-| Qui veut écrire du code | [regles-de-gestion.md](regles-de-gestion.md), [architecture.md](architecture.md), [tdd.md](tdd.md), [definition-of-done.md](definition-of-done.md) |
+| Qui veut écrire du code | [mise-en-route.md](mise-en-route.md), [regles-de-gestion.md](regles-de-gestion.md), [architecture.md](architecture.md), [tdd.md](tdd.md), [definition-of-done.md](definition-of-done.md) |
 | Qui veut écrire du texte | [ton.md](ton.md), [juridique.md](juridique.md) |
 
 ## Racine du dépôt
@@ -33,6 +33,7 @@
 | [juridique.md](juridique.md) | Le précédent Décodex, les cinq règles de publication, le lexique contraint, fouille de textes, données personnelles |
 | [ton.md](ton.md) | Le registre de rédaction, le lexique contraint étendu, les termes canoniques imposés à tous les documents, les tournures bannies et les contrôles sur le diff |
 | [tdd.md](tdd.md) | Le cycle rouge / vert / refactor, ce qui est interdit, et la procédure quand un test doit changer |
+| [mise-en-route.md](mise-en-route.md) | L'ordre à suivre avant la première PR, ce que `scripts/setup-github.sh` règle par l'API, et les réglages qu'aucun appel ne pose : `core.hooksPath`, l'environnement de publication |
 | [definition-of-done.md](definition-of-done.md) | Les 23 points qu'une PR vers `develop` doit démontrer, et ce qui n'est pas fini quoi qu'en dise l'auteur |
 
 ## Arbitrages (ADR)

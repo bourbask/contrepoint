@@ -403,10 +403,63 @@ passerait alors pour la mauvaise raison.
 
 ---
 
+## 14bis. Où vit chaque suite
+
+La porte 1 désigne chaque suite **par son fichier**, jamais par le répertoire qui
+la contiendra. Ce tableau est donc à la fois la convention d'emplacement et la
+condition d'activation de la porte : une suite mord le jour où son fichier naît,
+et pas avant.
+
+| Préfixe | Fichier de la suite |
+|---|---|
+| `REC` | `scripts/test-recuperer-sources.sh` |
+| `ING` | `pipeline/tests/ingestion.rs` |
+| `MAT` | `pipeline/tests/matrice.rs` |
+| `EST` | `pipeline/tests/estimateur.rs` |
+| `AGR` | `pipeline/tests/agregation.rs` |
+| `REG` | `pipeline/tests/registre.rs` |
+| `PRE` | `pipeline/tests/preuves.rs` |
+| `EXP` | `pipeline/tests/export.rs`, `web/src/contrat.test.ts` |
+
+Pointer le répertoire `pipeline/` aurait fait basculer six préfixes — 96
+identifiants — au premier fichier Rust créé. Un contrôle qui refuse quatre-vingt-
+seize fois d'un coup se fait contourner, pas satisfaire.
+
 ## 15. Couverture minimale exigée pour merger
 
 Trois portes, dans l'ordre de force. La première seule est un critère de
 qualité ; les deux autres sont des détecteurs d'oubli.
+
+### 15.0 Où chaque porte est implémentée, et laquelle ne l'est pas encore
+
+Une porte déclarée ici et absente de `ci.yml` est contournée dès la première PR
+pressée : c'est arrivé deux fois le 2026-08-27. Le tableau dit donc, pour chaque
+porte, le travail qui l'exécute — ou pourquoi elle ne peut pas encore l'être.
+
+| Porte | Travail de `ci.yml` | État |
+|---|---|---|
+| Porte 1 — identifiants de test déclarés | `portes` → `./scripts/portes-de-ci.sh identifiants` | **Active.** S'applique par préfixe, dès que la suite de ce préfixe existe. Au 2026-08-27 : `REC` seul, les six identifiants sont écrits ; les 96 autres sont annoncés « en attente », pas passés sous silence |
+| Porte 2 — branches ≥ 90 % sur `matrice` et `estimateur` | `couverture-et-determinisme` | **Squelette**, gardé par `hashFiles('pipeline/Cargo.toml')`. Le module n'existe pas ; la commande `cargo llvm-cov --branch` et le seuil sont écrits |
+| Porte 3 — lignes ≥ 70 % sur le binaire | `couverture-et-determinisme` | **Squelette**, même garde, même commande |
+| Lexique sur le diff | `garde-fous` → `./scripts/lexique.sh code` et `docs` | **Active** depuis l'origine |
+| Deux exécutions consécutives, artefacts identiques | `couverture-et-determinisme` | **Squelette.** C'est le contrôle 1 de contrats.md §8.2 ; il exige le binaire `contrepoint` |
+| Isolement de l'horloge, et ajout seul | `couverture-et-determinisme` | **Squelettes.** Contrôles 2 et 3 de contrats.md §8.2 |
+| Aucun test sauté sans date de reprise | `portes` → `./scripts/portes-de-ci.sh tests-ignores` | **Active.** Sans source Rust ni TypeScript elle le dit et ne prétend rien |
+| I12 et I13 de contrats.md §6 | `portes` → `./scripts/portes-de-ci.sh invariants` | **Active** sur les artefacts qui existent, `data/registre/partis.json` compris |
+| Artefacts contre `schemas/` | `artefacts` | **Active** depuis l'origine |
+| Suite hors ligne de récupération (§4bis) | `garde-fous` → `./scripts/test-recuperer-sources.sh` | **Active** |
+| Tolérance modifiée sans motif dans la description de la PR | aucun | **Non automatisable.** Le motif est dans un champ de PR, pas dans l'arbre ; c'est un point de revue, et il reste écrit ci-dessous comme tel |
+| Contrôles 8 à 11 et 15 de positionnement.md §9 | aucun | **Niveau 2**, hors PR par construction (§2) |
+
+Chaque porte active a été prouvée capable d'échouer : violation fabriquée,
+rouge constaté, violation retirée, vert constaté. Une porte qui n'a jamais
+montré son rouge est une liste qu'on construit et qu'on n'utilise pas.
+
+`ci-ok` reste la seule vérification exigée par les protections de branches. Les
+travaux `portes` et `couverture-et-determinisme` y figurent en `needs` ; ils ne
+sont jamais ajoutés à `CHECKS` de `scripts/setup-github.sh`, un travail gardé
+par `hashFiles` ne publiant aucun contexte quand il saute
+([../mise-en-route.md](../mise-en-route.md) §1).
 
 ### Porte 1 — la liste nominative des invariants, bloquante
 
@@ -415,6 +468,16 @@ Tout identifiant de test de ce document (`ING-…`, `MAT-…`, `EST-…`, `AGR-�
 que la PR touche le module concerné. La vérification est une boucle de grep en
 CI : les identifiants sont dans le document, les noms de fonctions sont dans le
 code, l'un cite l'autre.
+
+La boucle va **dans les deux sens** : un identifiant déclaré ici et absent de la
+suite est une porte fantôme ; un identifiant cité dans une suite et absent d'ici
+est un test que le plan ne connaît pas, donc une couverture qu'aucun document
+n'oppose. Les deux sont bloquants. La correspondance préfixe → suite est dans
+`scripts/portes-de-ci.sh` et nulle part ailleurs : `REC` →
+`scripts/test-recuperer-sources.sh`, `EXP` → `pipeline` et `web`, tout le reste →
+`pipeline`. Un préfixe dont aucune suite n'existe encore est annoncé « en
+attente » avec son décompte, et n'échoue pas — la porte ne prétend pas mesurer
+ce qui n'est pas écrit.
 
 **Pourquoi c'est la porte principale.** Un pourcentage de couverture mesure
 l'exécution, pas l'assertion : un test qui appelle tout le pipeline et n'affirme
@@ -452,10 +515,11 @@ mesure surtout la quantité de tests de rendu écrits.
 
 ### Portes non chiffrées, également bloquantes
 
-- Le grep de lexique de definition-of-done.md §11 sur le diff.
-- Deux exécutions consécutives donnant des artefacts identiques, empreinte dans la description de la PR (§4).
-- Aucun test `#[ignore]` sans motif écrit **et** date de reprise.
-- Aucune tolérance modifiée sans motif dans la description de la PR.
+- Le grep de lexique de definition-of-done.md §11 sur le diff. Travail `garde-fous`.
+- Deux exécutions consécutives donnant des artefacts identiques, empreinte dans la description de la PR (§4). Squelette, travail `couverture-et-determinisme`.
+- Aucun test sauté — `#[ignore]`, `.skip(`, `.todo(`, `xit(` — sans **date de reprise sur la ligne**. Travail `portes`. Le motif seul ne suffit pas : c'est la date qui empêche « à réactiver plus tard » de durer trois ans.
+- Aucune tolérance modifiée sans motif dans la description de la PR. Point de revue : le motif vit dans un champ de PR, hors de l'arbre, et aucun travail ne peut le lire.
+- Les invariants mécaniques I12 et I13 de contrats.md §6, sur tout artefact de `public/api/` et de `data/`. Travail `portes`.
 
 ---
 
