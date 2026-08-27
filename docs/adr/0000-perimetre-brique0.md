@@ -237,4 +237,24 @@ PR**, pas affirmés.
 |---|---|
 | **Afficher une position individuelle de député** | La méthode ne la soutient pas (discipline de vote) et c'est le vecteur direct de l'accusation de ciblage de personnes. Aucun gain d'usage ne compense |
 | **Toute source exigeant une étape manuelle récurrente** — inscription, connexion, parser HTML fragile | Contredit la contrainte fondatrice. Conséquence assumée : Manifesto Project reste dehors, ParlGov reste dehors, et une source qui cesse de répondre est retirée explicitement, avec son code HTTP et sa date, au lieu d'être laissée en place |
-| **Redistribuer un fichier de données tiers dont la redistribution n'est pas explicitement autorisée** | Un litige de licence arrête le projet plus vite qu'un litige sur la méthode, et sans argument à opposer. Le dépôt distribue le script de téléchargement, l'URL, la date et l'empreinte. Jamais la copie |
+| **Redistribuer un fichier de données tiers dont la redistribution n'est pas explicitement autorisée** | Un litige de licence arrête le projet plus vite qu'un litige sur la méthode, et sans argument à opposer. La règle distingue deux cas, et un seul est refusé — voir ci-dessous |
+
+### Amendement du 2026-08-27 — la redistribution suit la licence, elle n'est pas interdite en bloc
+
+La formulation initiale refusait toute redistribution. Elle interdisait par
+ricochet la conservation des archives sources, alors que la rejouabilité promise
+— rejouer en 2027 le calcul de 2026 — l'exige : les archives de l'Assemblée sont
+reconstruites chaque nuit et rétroactivement modifiables
+([brique0/ingestion-votes.md](../brique0/ingestion-votes.md) §9e). Le cache
+d'intégration continue ne peut pas les porter, il évince à sept jours sous un
+plafond de dix gigaoctets.
+
+La règle devient :
+
+| Cas | Décision |
+|---|---|
+| **Source dont la licence autorise explicitement la redistribution** | La copie est conservée et déposée comme asset de release, indexée par son SHA-256, avec la mention de paternité exigée. C'est le cas des archives de l'Assemblée nationale, publiées sous **Licence Ouverte / Open Licence version 1.0**, qui accorde le droit de « reproduire, copier », « diffuser, redistribuer, publier et transmettre » l'information, sous la seule obligation de mentionner la paternité — source et date de dernière mise à jour. Mention retenue : `Assemblée nationale — Licence Ouverte v1.0 — données du <date last-modified de l'archive>`. Vérifié dans le PDF de la licence, qui seul porte le numéro de version (`content/download/28755/file/Licence_Ouverte.pdf`) |
+| **Source sans licence publiée, ou dont la licence n'autorise pas explicitement la redistribution** | Inchangé : le dépôt distribue le script de téléchargement, l'URL, la date et l'empreinte. Jamais la copie. **CHES reste dehors** : aucune licence n'y est publiée, et la condition obtenue par échange écrit le 2026-08-27 n'est qu'une exigence de citation — ni autorisation de republication, ni cession de droits |
+
+Aucune autre source n'est admise au dépôt sans que sa licence ait été lue et
+citée ici. Le mécanisme est `scripts/archives.sh` et la règle est RG-118.

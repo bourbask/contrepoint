@@ -49,12 +49,43 @@ lit un artefact produit par un autre autrement que par le fichier déclaré.
 
 ### [0] Récupération
 
-Script d'intégration continue, pas du code du binaire. `curl -C -` en boucle
-jusqu'à la taille annoncée, `unzip`, SHA-256 consigné, échec bruyant si une
-empreinte change sans que la date de source change (RG-20).
+`scripts/recuperer-sources.sh`, script d'intégration continue, pas du code du
+binaire. Le script est coupé en deux, et la coupure est la décision de
+conception : un script qui appelle le réseau n'est pas testable hors ligne
+(RG-119).
+
+| Moitié | Contenu | Test |
+|---|---|---|
+| Logique | complétude d'un téléchargement contre la taille annoncée, empreinte de contenu (CON §2.8, `LC_ALL=C`), contrôle de stabilité, écriture du descripteur, choix de la date de source | `scripts/test-recuperer-sources.sh`, hors ligne, sourçant le script |
+| Enveloppe réseau | `curl -sSIL` pour les en-têtes, `curl -C -` en boucle jusqu'à la taille annoncée, `unzip` | aucun test hors ligne, par construction ; échoue bruyamment (ING §9d) |
+
+La porte est la taille annoncée, jamais le MD5 du producteur (RG-114). Deux
+empreintes sont consignées : celle de l'archive atteste du téléchargement, celle
+du contenu décide d'une ré-émission et déclenche seule l'échec bruyant quand
+elle change à date de source constante (RG-20, RG-115).
+
+Sorties, toutes sous `data/cache/`, non versionnées :
+
+```
+data/cache/<empreinte_archive>/<nom>.zip        l'archive, immuable (RG-116)
+data/cache/<empreinte_archive>/extrait/         l'archive décompressée
+data/cache/<empreinte_archive>/descripteur.txt  url, tailles, last-modified,
+                                                etag, md5 documentaire,
+                                                les deux empreintes, nb fichiers
+data/cache/index.txt                            (nom, date_source, contenu, archive)
+data/cache/derniere-source.txt                  horodatage ISO, source de
+                                                CONTREPOINT_DATE_CALCUL (RG-117)
+```
+
+`scripts/archives.sh` dépose chaque entrée de cache comme asset de release
+GitHub nommé par son SHA-256, et sait la retrouver : le cache d'Actions évince
+à sept jours et ne peut pas porter la rejouabilité (ING §9e). Ne sont déposées
+que les sources dont la licence autorise la redistribution (RG-118, ADR 0000
+§8). `index.txt` y est déposé aussi : c'est le seul état qui doit survivre d'une
+exécution à l'autre, sans quoi l'échec bruyant de RG-20 n'est pas détectable.
 
 **Ne fait pas :** aucun parsing, aucune transformation, aucune écriture dans
-`data/`. Les archives récupérées ne sont pas versionnées.
+`data/` hors du cache. Les archives récupérées ne sont pas versionnées.
 
 ### [1] Ingestion
 
