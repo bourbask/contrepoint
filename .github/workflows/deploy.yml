@@ -1,0 +1,47 @@
+name: deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  construire:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - id: exists
+        run: echo "yes=${{ hashFiles('web/package.json') != '' }}" >> "$GITHUB_OUTPUT"
+      - if: steps.exists.outputs.yes == 'true'
+        uses: actions/setup-node@v6
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+      - if: steps.exists.outputs.yes == 'true'
+        working-directory: web
+        run: npm ci && npm run build
+      - if: steps.exists.outputs.yes == 'true'
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: web/dist
+
+  publier:
+    needs: construire
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.pages.outputs.page_url }}
+    steps:
+      - id: pages
+        uses: actions/deploy-pages@v4
+        continue-on-error: true

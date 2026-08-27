@@ -13,7 +13,7 @@ REPO="${REPO:-bourbask/contrepoint}"
 # Vérifications de statut exigées avant merge. Vide au départ : la protection
 # refuserait tout merge tant que la CI n'a pas publié de contexte de ce nom.
 # À remplir avec les noms de jobs réels dès que .github/workflows/ci.yml existe.
-CHECKS="${CHECKS:-}"
+CHECKS="${CHECKS:-ci-ok}"
 
 run() {
   if [[ -n "${DRY_RUN:-}" ]]; then
@@ -97,4 +97,4 @@ label release          "fbca04" "Montée de version (develop → main)"
 
 echo
 echo "Fait. Rappel : ajouter les contextes de CI dès que ci.yml existe, par ex."
-echo "  CHECKS='ci' ./scripts/setup-github.sh"
+echo "  CHECKS='ci-ok' ./scripts/setup-github.sh"

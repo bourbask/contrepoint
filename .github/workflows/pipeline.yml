@@ -1,0 +1,97 @@
+name: pipeline
+
+# Recalcule les positions depuis les sources publiques.
+# N'écrit jamais directement sur develop : ouvre une PR, que le propriétaire relit.
+on:
+  schedule:
+    - cron: '0 5 * * 1'   # lundi 05:00 UTC
+  workflow_dispatch:
+    inputs:
+      forcer_pr:
+        description: "Ouvrir une PR même sans changement d'artefact"
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: pipeline
+  cancel-in-progress: false
+
+jobs:
+  executer:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: develop
+          fetch-depth: 0
+
+      - id: exists
+        run: echo "yes=${{ hashFiles('pipeline/Cargo.toml') != '' }}" >> "$GITHUB_OUTPUT"
+
+      - if: steps.exists.outputs.yes != 'true'
+        run: |
+          echo "::notice::pipeline pas encore implémenté — rien à exécuter"
+
+      - if: steps.exists.outputs.yes == 'true'
+        uses: dtolnay/rust-toolchain@stable
+      - if: steps.exists.outputs.yes == 'true'
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: pipeline
+
+      # Le téléchargement reprend sur troncature : le serveur de l'Assemblée
+      # ferme la connexion en cours de transfert sans erreur (ADR 0001, §1.5).
+      # Une archive incomplète publierait un paysage politique amputé.
+      - name: exécuter
+        if: steps.exists.outputs.yes == 'true'
+        working-directory: pipeline
+        run: cargo run --locked --release
+
+      - id: diff
+        if: steps.exists.outputs.yes == 'true'
+        run: |
+          if [ -n "$(git status --porcelain public/api data/preuves)" ]; then
+            echo "change=1" >> "$GITHUB_OUTPUT"
+            git status --porcelain public/api data/preuves | head -20
+          else
+            echo "change=0" >> "$GITHUB_OUTPUT"
+            echo "aucun changement d'artefact"
+          fi
+
+      - name: ouvrir la PR
+        if: steps.exists.outputs.yes == 'true' && (steps.diff.outputs.change == '1' || inputs.forcer_pr)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          jour=$(git log -1 --format=%cd --date=short)
+          branche="data/execution-$(date -u +%Y-%m-%d)"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git config commit.gpgsign false
+          git checkout -b "$branche"
+          git add public/api data/preuves
+          git commit --no-gpg-sign -m "data: exécution du $(date -u +%Y-%m-%d)"
+          git push origin "$branche"
+          gh pr create --base develop --head "$branche" \
+            --title "data: exécution du $(date -u +%Y-%m-%d)" \
+            --body-file .github/corps/execution-pipeline.md \
+            --label brique-0
+
+      # En cas d'échec, le site conserve la dernière sortie valide. C'est le
+      # comportement voulu : afficher « données arrêtées le … » plutôt que rien
+      # (ROADMAP, risque d'abandon).
+      - name: signaler l'échec
+        if: failure()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          titre="pipeline: échec de l'exécution du $(date -u +%Y-%m-%d)"
+          if [ -z "$(gh issue list --state open --search "$titre" --json number --jq '.[].number')" ]; then
+            lien="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+            printf "L'exécution planifiée a échoué : %s\n\nLes artefacts publiés restent ceux de la dernière exécution valide.\n" "$lien" > /tmp/corps-issue.md
+            gh issue create --title "$titre" --body-file /tmp/corps-issue.md --label bug
+          fi

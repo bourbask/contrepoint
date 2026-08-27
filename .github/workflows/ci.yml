@@ -1,0 +1,146 @@
+name: ci
+
+on:
+  pull_request:
+    branches: [develop, main]
+  push:
+    branches-ignore: [develop, main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  pipeline:
+    name: pipeline (rust)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - id: exists
+        run: echo "yes=${{ hashFiles('pipeline/Cargo.toml') != '' }}" >> "$GITHUB_OUTPUT"
+      - if: steps.exists.outputs.yes == 'true'
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+      - if: steps.exists.outputs.yes == 'true'
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: pipeline
+      - name: format
+        if: steps.exists.outputs.yes == 'true'
+        working-directory: pipeline
+        run: cargo fmt --check
+      - name: clippy
+        if: steps.exists.outputs.yes == 'true'
+        working-directory: pipeline
+        run: cargo clippy --locked --all-targets -- -D warnings
+      # Hors ligne et sans jeton, conformément à docs/tdd.md.
+      - name: tests
+        if: steps.exists.outputs.yes == 'true'
+        working-directory: pipeline
+        run: cargo test --locked
+      # rayon est exclu du chemin déterministe par l'ADR 0001 (§1.6).
+      # ndarray-linalg est exclu nommément (§1.8).
+      - name: dépendances interdites
+        if: steps.exists.outputs.yes == 'true'
+        working-directory: pipeline
+        run: |
+          if grep -qE '^(rayon|ndarray-linalg)\b' Cargo.lock; then
+            echo "::error::dépendance exclue par docs/adr/0001-stack.md présente dans Cargo.lock"
+            grep -nE '^(rayon|ndarray-linalg)\b' Cargo.lock
+            exit 1
+          fi
+
+  web:
+    name: front (react/ts)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - id: exists
+        run: echo "yes=${{ hashFiles('web/package.json') != '' }}" >> "$GITHUB_OUTPUT"
+      - if: steps.exists.outputs.yes == 'true'
+        uses: actions/setup-node@v6
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+      - if: steps.exists.outputs.yes == 'true'
+        working-directory: web
+        run: npm ci
+      - name: types
+        if: steps.exists.outputs.yes == 'true'
+        working-directory: web
+        run: npx tsc --noEmit
+      - name: tests
+        if: steps.exists.outputs.yes == 'true'
+        working-directory: web
+        run: npm test --if-present
+      - name: build
+        if: steps.exists.outputs.yes == 'true'
+        working-directory: web
+        run: npm run build
+
+  artefacts:
+    name: artefacts et schémas
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '22'
+      # Le contrat pipeline <-> front est vérifié en CI et non à la compilation
+      # (ADR 0001, §6 « ce que cette recommandation concède »).
+      - name: valider les artefacts contre schemas/
+        run: |
+          shopt -s nullglob
+          artefacts=(public/api/**/*.json public/api/*.json data/registre/*.json)
+          if [ ${#artefacts[@]} -eq 0 ]; then
+            echo "aucun artefact à valider pour l'instant"
+            exit 0
+          fi
+          npx --yes ajv-cli@5 --version
+          for s in schemas/*.schema.json; do
+            echo "::group::$s"
+            npx --yes ajv-cli@5 compile -s "$s" --spec=draft2020 || exit 1
+            echo "::endgroup::"
+          done
+
+  garde-fous:
+    name: garde-fous méthode
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      # docs/juridique.md interdit tout axe à pôle dépréciatif, y compris en
+      # interne. Un identifiant de champ suffit à créer la métrique par
+      # inadvertance : on la refuse au niveau du dépôt.
+      - name: aucun axe de fiabilité
+        run: |
+          motifs='fiabilit|credibilit|crédibilit|veracit|véracit|desinformation|désinformation|fake.?news|infox'
+          cibles=$(git ls-files 'pipeline/**' 'web/**' 'schemas/**' 'data/**' 'public/**' 2>/dev/null || true)
+          if [ -z "$cibles" ]; then echo "rien à vérifier"; exit 0; fi
+          if echo "$cibles" | xargs -r grep -inE "$motifs" ; then
+            echo "::error::terme interdit par docs/juridique.md dans le code ou les données"
+            exit 1
+          fi
+          echo "aucun terme interdit"
+
+  ci-ok:
+    name: ci-ok
+    if: always()
+    needs: [pipeline, web, artefacts, garde-fous]
+    runs-on: ubuntu-latest
+    steps:
+      - name: verdict
+        run: |
+          echo "pipeline=${{ needs.pipeline.result }}"
+          echo "web=${{ needs.web.result }}"
+          echo "artefacts=${{ needs.artefacts.result }}"
+          echo "garde-fous=${{ needs.garde-fous.result }}"
+          for r in "${{ needs.pipeline.result }}" "${{ needs.web.result }}" \
+                   "${{ needs.artefacts.result }}" "${{ needs.garde-fous.result }}"; do
+            [ "$r" = "success" ] || [ "$r" = "skipped" ] || exit 1
+          done
