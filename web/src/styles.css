@@ -1,0 +1,288 @@
+/* Contrepoint — ecriture visuelle de la partition.
+ *
+ * Le nom porte la forme : plusieurs voix independantes sur un meme sujet, dont
+ * la valeur tient a leur difference. Un systeme par entite, une portee par
+ * famille, une accolade qui les relie sans les fondre.
+ *
+ * Aucune police distante : le front ne fait aucun appel reseau hors de
+ * `public/api/` (docs/architecture.md). Le caractere vient du traitement —
+ * capitales espacees en chasse fixe pour les indications de voix, romain pour
+ * les noms, italique pour ce qui se lit et ne se mesure pas.
+ *
+ * La couleur ne porte jamais seule : chaque famille a sa tete de note.
+ * Les trois teintes sont celles d'une partition annotee — encre, crayon rouge,
+ * crayon bleu — et sont indexees sur le RANG de la famille dans le manifeste,
+ * jamais sur l'entite : aucune couleur de parti n'entre ici.
+ */
+
+:root {
+  color-scheme: light dark;
+
+  --papier: #e8eaee;
+  --papier-systeme: #f5f6f8;
+  --encre: #191e2c;
+  --encre-pale: #5c6373;
+  --regle: #b7bec9;
+  --crayon-rouge: #a3322a;
+  --crayon-bleu: #2b5490;
+  --crayon-vert: #3f6b3c;
+
+  --serif: "Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua",
+    Charter, Georgia, serif;
+  --mono: ui-monospace, "SF Mono", SFMono-Regular, "Cascadia Mono", Menlo,
+    Consolas, "Liberation Mono", monospace;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --papier: #12151b;
+    --papier-systeme: #1a1e27;
+    --encre: #e3e7ee;
+    --encre-pale: #939bab;
+    --regle: #39404e;
+    --crayon-rouge: #e5897f;
+    --crayon-bleu: #8fb2e4;
+    --crayon-vert: #8bbd84;
+  }
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--papier);
+  color: var(--encre);
+  font-family: var(--serif);
+  font-size: 16px;
+  line-height: 1.5;
+  -webkit-text-size-adjust: 100%;
+}
+
+.page {
+  max-width: 64rem;
+  margin: 0 auto;
+  padding: 2.5rem 1.25rem 4rem;
+}
+
+/* ---- Titre : la marque est un systeme de trois voix ---------------------- */
+
+.marque { display: flex; align-items: center; gap: 0.9rem; }
+
+.marque__cle { flex: none; }
+.marque__cle .accolade { stroke: var(--regle); stroke-width: 1.2; fill: none; }
+.marque__cle .v0 { color: var(--encre); }
+.marque__cle .v1 { color: var(--crayon-rouge); }
+.marque__cle .v2 { color: var(--crayon-bleu); }
+
+.marque h1 {
+  margin: 0;
+  font-size: 2rem;
+  font-weight: 500;
+  letter-spacing: -0.012em;
+}
+
+.these {
+  margin: 0.9rem 0 0;
+  max-width: 42rem;
+  color: var(--encre-pale);
+  font-size: 1.02rem;
+}
+
+.bandeau {
+  margin: 1.6rem 0 0;
+  padding: 0.55rem 0;
+  border-top: 1px solid var(--regle);
+  border-bottom: 1px solid var(--regle);
+  font-family: var(--mono);
+  font-size: 0.74rem;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--encre-pale);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem 1.6rem;
+}
+
+/* ---- Le graphe ----------------------------------------------------------- */
+
+svg.lecture-svg,
+svg.partition { display: block; max-width: 100%; margin-top: 1.8rem; }
+
+svg text { fill: var(--encre); }
+
+.entete,
+.famille {
+  font-family: var(--mono);
+  font-size: 10.5px;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+  fill: var(--encre-pale);
+}
+.entete { letter-spacing: 0.2em; }
+
+.entite,
+.dispersion,
+.graduation {
+  font-family: var(--mono);
+  font-size: 10.5px;
+  fill: var(--encre-pale);
+  font-variant-numeric: tabular-nums;
+}
+
+.titre { font-family: var(--serif); font-size: 16.5px; }
+.motif,
+.note { font-family: var(--serif); font-size: 12px; font-style: italic; fill: var(--encre-pale); }
+
+.valeur {
+  font-family: var(--mono);
+  font-size: 12.5px;
+  font-variant-numeric: tabular-nums;
+  fill: currentColor;
+}
+.valeur--absente {
+  font-size: 11px;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  fill: var(--encre-pale);
+}
+
+.portee { stroke: var(--regle); stroke-width: 1; }
+.portee--tacet { stroke-dasharray: 2 4; }
+.barre { stroke: var(--regle); stroke-width: 1; }
+.accolade { stroke: var(--regle); stroke-width: 1.2; }
+
+.systeme:nth-child(odd) .fond { fill: var(--papier-systeme); }
+
+/* Une famille, une teinte, indexee sur son rang dans le manifeste. */
+.marqueur--0 { color: var(--encre); }
+.marqueur--1 { color: var(--crayon-rouge); }
+.marqueur--2 { color: var(--crayon-bleu); }
+.marqueur--3 { color: var(--crayon-vert); }
+.marqueur--4 { color: var(--encre-pale); }
+
+.tete--pleine { fill: currentColor; }
+.tete--creuse { fill: none; stroke: currentColor; stroke-width: 1.9; }
+.pause { fill: currentColor; }
+
+.marqueur { cursor: pointer; }
+.marqueur .cible { fill: transparent; }
+.marqueur .tete,
+.marqueur .pause { transform-box: fill-box; transform-origin: center; }
+
+@media (prefers-reduced-motion: no-preference) {
+  .marqueur .tete,
+  .marqueur .pause { transition: transform 110ms ease-out; }
+}
+
+.marqueur:hover .tete,
+.marqueur:focus-visible .tete { transform: scale(1.3); }
+
+.marqueur:focus-visible { outline: none; }
+.marqueur:focus-visible .cible {
+  stroke: currentColor;
+  stroke-width: 2;
+  fill: color-mix(in srgb, currentColor 10%, transparent);
+}
+
+/* ---- Entites sans mesure ------------------------------------------------- */
+
+.sans-mesure { margin-top: 2.6rem; }
+.sans-mesure h2,
+.pied h2 {
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  font-weight: 400;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--encre-pale);
+  margin: 0 0 0.7rem;
+  padding-bottom: 0.45rem;
+  border-bottom: 1px solid var(--regle);
+}
+.sans-mesure dl { margin: 0; }
+.sans-mesure dt { font-size: 1rem; margin-top: 0.7rem; }
+.sans-mesure dd { margin: 0.1rem 0 0; color: var(--encre-pale); font-style: italic; font-size: 0.9rem; }
+
+/* ---- Preuve -------------------------------------------------------------- */
+
+dialog.preuve {
+  width: min(46rem, 100vw - 2rem);
+  max-height: 86vh;
+  padding: 0;
+  border: 1px solid var(--regle);
+  background: var(--papier);
+  color: var(--encre);
+}
+dialog.preuve::backdrop { background: rgb(0 0 0 / 45%); }
+
+.preuve__tete {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1.1rem 1.4rem;
+  border-bottom: 1px solid var(--regle);
+  position: sticky;
+  top: 0;
+  background: var(--papier);
+}
+.preuve__tete h2 { margin: 0; font-size: 1.15rem; font-weight: 500; }
+.preuve__corps { padding: 1.1rem 1.4rem 1.6rem; overflow: auto; }
+
+.preuve__corps dl { display: grid; grid-template-columns: minmax(8rem, 12rem) 1fr; gap: 0.35rem 1.1rem; margin: 0; }
+.preuve__corps dt {
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--encre-pale);
+  padding-top: 0.22rem;
+}
+.preuve__corps dd { margin: 0; font-size: 0.95rem; overflow-wrap: anywhere; }
+.preuve__corps dd .chiffre { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+
+.preuve__entree { border-top: 1px solid var(--regle); margin-top: 1.2rem; padding-top: 1rem; }
+.preuve__brut {
+  margin: 1.4rem 0 0;
+  padding: 0.8rem;
+  border: 1px solid var(--regle);
+  background: var(--papier-systeme);
+  font-family: var(--mono);
+  font-size: 0.68rem;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  max-height: 16rem;
+  overflow: auto;
+}
+
+.bouton {
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--encre);
+  background: none;
+  border: 1px solid var(--regle);
+  padding: 0.35rem 0.7rem;
+  cursor: pointer;
+}
+.bouton:hover { border-color: var(--encre-pale); }
+.bouton:focus-visible { outline: 2px solid var(--encre); outline-offset: 2px; }
+
+a { color: inherit; text-decoration-color: var(--regle); text-underline-offset: 0.18em; }
+a:focus-visible { outline: 2px solid var(--encre); outline-offset: 2px; }
+
+/* ---- Pied ---------------------------------------------------------------- */
+
+.pied { margin-top: 3rem; font-size: 0.86rem; color: var(--encre-pale); }
+.pied p { margin: 0.45rem 0; }
+.pied ul { margin: 0.6rem 0 0; padding: 0; list-style: none; display: flex; flex-wrap: wrap; gap: 1.2rem; }
+
+.refus {
+  margin: 2rem 0;
+  padding: 1rem 1.2rem;
+  border-left: 3px solid var(--crayon-rouge);
+  background: var(--papier-systeme);
+}
+.refus p { margin: 0.3rem 0; }
