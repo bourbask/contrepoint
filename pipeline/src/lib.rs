@@ -5,6 +5,9 @@
 //! Le JSON publié est une transcription automatique de XML : l'arité et le type
 //! y sont perdus. Ces trois fonctions les rendent, et rien d'autre.
 
+pub mod ingestion;
+pub mod matrice;
+
 use serde_json::Value;
 
 /// Adaptateur « un-ou-plusieurs » (§4a et §4b).

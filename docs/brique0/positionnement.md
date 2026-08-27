@@ -64,8 +64,8 @@ suite de tests devra retrouver dans l'implémentation Rust, aux tolérances du �
 **`organeRef: "PO0"`.** Sur **14 scrutins** — **12** le 2024-12-02, un le
 2025-04-07, un le 2026-04-16, recompté le 2026-08-27 (voir
 [verification-2026-08-27.md](verification-2026-08-27.md)) — la ventilation ne
-porte pas de groupe résoluble : 1 895
-cellules et 335 acteurs sont rattachés à un identifiant `PO0` absent du
+porte pas de groupe résoluble : 1 916
+cellules et 336 acteurs sont rattachés à un identifiant `PO0` absent du
 référentiel AMO30. Le rattachement **n'est pas lisible dans ces 14 fichiers** :
 il y est résolu par les mandats, avec période de validité. Partout ailleurs, le
 groupe est lu dans le bloc de ventilation du scrutin, où il est daté par

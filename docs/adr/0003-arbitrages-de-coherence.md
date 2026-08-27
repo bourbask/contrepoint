@@ -47,7 +47,7 @@ validité ». Les deux ne peuvent pas être vrais, et le cycle 4 des tests
 
 `positionnement.md` §1 tire sa conclusion d'un seul cas — les blocs
 `organeRef: "PO0"`, référence pendante qui ne se résout pas dans AMO30 : 146
-blocs, sur 14 scrutins, 1 895 cellules et 335 acteurs. Le cas est réel ; il ne
+blocs, sur 14 scrutins, 1 916 cellules et 336 acteurs — recomptés le 2026-08-28 par le code du cycle 1, contre 1 895 et 335 annoncés auparavant. Le cas est réel ; il ne
 suffit pas à disqualifier la source. `ingestion-votes.md` §8 a mesuré le
 remplacement complet.
 
