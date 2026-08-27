@@ -105,7 +105,13 @@ jobs:
               *) echo "" ;;
             esac
           }
-          artefacts=(public/api/**/*.json data/registre/partis.json)
+          # nullglob n'élimine que les motifs à joker : un chemin littéral
+          # absent resterait dans la liste. On filtre sur l'existence.
+          candidats=(public/api/**/*.json data/registre/partis.json)
+          artefacts=()
+          for c in "${candidats[@]}"; do
+            [ -f "$c" ] && artefacts+=("$c")
+          done
           if [ ${#artefacts[@]} -eq 0 ]; then
             echo "aucun artefact produit pour l'instant"
           fi
