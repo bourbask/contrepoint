@@ -4,7 +4,12 @@ Cartographier qui se situe où dans le paysage politique et médiatique françai
 à partir de mesures reproductibles et de preuves datées — pour pouvoir croiser
 plusieurs angles sur une même information sans dépendre d'un seul son de cloche.
 
-> Statut : **conception**. Rien n'est implémenté. Ce dépôt contient pour
+> Statut : **conception**. Aucun code de produit n'est implémenté. Les chiffres
+> cités dans la documentation ne sont pas des estimations : ils viennent de
+> mesures réellement exécutées sur les archives publiques, hors pipeline, dont le
+> protocole et les commandes sont consignés dans
+> [docs/brique0/verification-2026-08-27.md](docs/brique0/verification-2026-08-27.md).
+> Ce dépôt contient pour
 > l'instant la méthode, la roadmap et les arbitrages.
 
 ## Le problème

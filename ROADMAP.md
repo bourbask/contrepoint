@@ -30,7 +30,7 @@ Sortie visible : le décompte des scrutins retenus et écartés, et pourquoi.
 
 ### v0.2 — l'axe issu des votes
 
-- [ ] Estimation de position sur la matrice (analyse des correspondances / ACP, premier axe)
+- [ ] Estimation de position **sur les seules cellules observées** : moindres carrés alternés de rang 1 avec constante par scrutin. L'ACP et l'analyse des correspondances sont écartées — elles exigent une matrice complète, et 77 % des cellules sont manquantes ([ADR 0003](docs/adr/0003-arbitrages-de-coherence.md), [docs/methode.md](docs/methode.md) §2)
 - [ ] Fixation du signe de l'axe par deux points de repère connus, pour que « gauche » soit stable d'une exécution à l'autre
 - [ ] Agrégation au niveau du parti
 - [ ] Dispersion intra-groupe publiée, pas cachée : **écart interquartile et écart-type de rééchantillonnage**. Jamais la variance — illisible sur un axe sans unité — jamais l'étendue : un minimum et un maximum sont les coordonnées de deux membres identifiables ([ADR 0003](docs/adr/0003-arbitrages-de-coherence.md) §3)
