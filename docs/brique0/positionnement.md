@@ -58,8 +58,10 @@ suite de tests devra retrouver dans l'implémentation Rust, aux tolérances du �
 
 ### Deux pièges de données non encore consignés
 
-**`organeRef: "PO0"`.** Sur **14 scrutins** (13 le 2024-12-02, un le 2025-04-07,
-un le 2026-04-16), la ventilation ne porte pas de groupe résoluble : 1 895
+**`organeRef: "PO0"`.** Sur **14 scrutins** — **12** le 2024-12-02, un le
+2025-04-07, un le 2026-04-16, recompté le 2026-08-27 (voir
+[verification-2026-08-27.md](verification-2026-08-27.md)) — la ventilation ne
+porte pas de groupe résoluble : 1 895
 cellules et 335 acteurs sont rattachés à un identifiant `PO0` absent du
 référentiel AMO30. Le rattachement d'un député à son groupe ne peut donc **pas**
 être lu dans le fichier de scrutin ; il doit venir des mandats, avec période de

@@ -51,4 +51,5 @@
 | [brique0/registre-entites.md](brique0/registre-entites.md) | Identifiants réels de chaque source, modèle de données, périodes de validité, cas durs, règles de validation, procédure de correction |
 | [brique0/contrats.md](brique0/contrats.md) | Le registre de preuves et les trois artefacts du front, champ par champ, avec versionnement des schémas et invariants vérifiés |
 | [brique0/plan-de-tests.md](brique0/plan-de-tests.md) | Les tests à écrire, leur ordre, les trois tolérances numériques, les portes de couverture bloquantes |
+| [brique0/verification-2026-08-27.md](brique0/verification-2026-08-27.md) | Recomptage sur l'archive complète : volumétrie confirmée, scrutins `PO0` recomptés, gain du rang 1 tranché, et l'empreinte d'archive qui ne se reproduit pas |
 | [brique0/echantillons/README.md](brique0/echantillons/README.md) | Les fixtures de scrutins, leur provenance, leur empreinte, et le script qui les reconstruit |

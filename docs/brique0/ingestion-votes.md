@@ -446,11 +446,11 @@ Matrice résultante :
 | Députés sous 100 positions | 16 |
 
 **7 979 scrutins et 1,19 million de cellules suffisent à un estimateur de rang 1.** La conclusion « corpus trop faible » ne s'applique pas ici. La
-limite réelle est ailleurs, et elle est déjà mesurée (ADR 0001 §1.3) : le gain du
-terme de rang 1 au-delà d'une simple constante par scrutin est de **2,1 %** de
-variance résiduelle. L'axe est stable, correctement ordonné, et résume une petite
-part du comportement de vote. Le corpus n'est pas le facteur limitant ; la
-discipline de vote l'est.
+limite réelle est ailleurs : l'axe explique **60,8 % du résidu** après constante
+par scrutin (recompté le 2026-08-27, voir
+[verification-2026-08-27.md](verification-2026-08-27.md)), mais il l'explique en
+séparant les blocs et non les individus. Le corpus n'est pas le facteur
+limitant ; la discipline de vote l'est.
 
 Les 3 députés sous 10 positions exprimées (2, 4 et 8 votes) reçoivent une
 coordonnée dénuée de sens. Elle n'est pas publiée — ADR 0000 §2 l'interdit pour

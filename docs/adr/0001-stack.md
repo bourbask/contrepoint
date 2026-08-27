@@ -87,6 +87,12 @@ Modèle ajusté sur les cellules observées, avec une constante par scrutin :
 `valeur ≈ b[scrutin] + x[député] × y[scrutin]`. Le premier axe `x`, agrégé par
 groupe au 2026-07-21 :
 
+> **Chiffres d'exploration.** Ce tableau a servi à départager les piles. Il est
+> remplacé par `../brique0/positionnement.md` §6, qui est la spécification
+> retenue : les effectifs y diffèrent, le rattachement n'étant pas fait de la
+> même façon. Le recomptage du 2026-08-27 confirme les effectifs de
+> `positionnement.md`, pas ceux-ci.
+
 | Groupe | n | Moyenne | Écart-type intra |
 |---|---|---|---|
 | LFI-NFP | 71 | −1,439 | 0,046 |
@@ -122,10 +128,19 @@ théorique, c'est une nécessité constatée. Deux implémentations indépendant
 (NumPy et Rust sans dépendance) donnent une corrélation de −1,000000 : même
 axe, signe opposé.
 
-**Ce que l'axe n'explique pas.** Le gain du terme rang 1 au-delà d'une simple
-constante par scrutin est de **2,1 %** de variance résiduelle. L'axe est stable et
-correctement ordonné, mais il ne résume qu'une petite part du comportement de
-vote. À énoncer, et à ne pas surinterpréter en dérive sur de faibles écarts.
+**Ce que l'axe explique.** Le gain du terme rang 1 au-delà d'une simple constante
+par scrutin est de **60,8 % du résidu**, soit 51,5 % de la variance totale — la
+constante par scrutin n'en expliquant que 15,2 %. L'axe n'est donc pas
+marginal : il porte l'essentiel de ce qui reste une fois le sens du vote retiré.
+
+> Une version antérieure de ce document annonçait **2,1 %**, chiffre faux d'un
+> facteur trente et propagé dans deux autres documents. Recompté le 2026-08-27
+> sur l'archive complète, protocole et commandes dans
+> [../brique0/verification-2026-08-27.md](../brique0/verification-2026-08-27.md).
+
+Cela ne lève pas la limite de séparation : l'axe explique bien le comportement de
+vote, mais il le fait en séparant les blocs, pas les individus — la dispersion
+intra-groupe reste dérisoire devant l'amplitude.
 
 ### 1.4 Deux pièges de parsing, mesurés
 
@@ -496,7 +511,7 @@ faciles à tester qu'à corriger après coup.
 | 0 | `cargo init contrepoint-pipeline`, `Cargo.lock` versionné. Adaptateurs « un-ou-plusieurs » et « chaîne ou objet xsi », avec un test sur `VTANR5L17V5268` (cas `votant` objet nu) et sur un `acteur.uid` enveloppé | 2 tests qui échouent avant les adaptateurs et passent après | 1.4 |
 | 1 | Script CI de récupération : `curl -C -` en boucle jusqu'à `content-length`, SHA-256 consigné, échec bruyant si l'empreinte change sans que la date de source change | tableau des archives, taille, empreinte, `last-modified` | 1.5 |
 | 2 | Ingestion des scrutins → triplets `(acteur, scrutin, valeur)`, l'absence n'étant jamais écrite. Référentiel depuis AMO30, jointure sur période de validité | décompte des scrutins retenus et écartés, et pourquoi (roadmap v0.1) | 1.2, 1.5 |
-| 3 | ALS rang 1, initialisation déterministe sans générateur aléatoire, signe fixé par deux points d'ancrage déclarés dans un fichier de données | positions par groupe, **écart-type intra publié**, et le gain de 2,1 % énoncé | 1.3, 1.6 |
+| 3 | ALS rang 1, initialisation déterministe sans générateur aléatoire, signe fixé par deux points d'ancrage déclarés dans un fichier de données | positions par groupe, **dispersion intra publiée**, et le gain sur le résidu énoncé | 1.3, 1.6 |
 | 4 | Registre de preuves JSONL en ajout seul : entité, valeur, méthode, source, date de source, date de calcul, empreinte d'archive, version de `rustc` et du pipeline | reconstruction complète depuis les archives redonnant le même fichier | 1.7 |
 | 5 | Test de non-régression : instantané `insta` de la sortie complète, plus une assertion de validité méthodologique (ordre des groupes, `|corr|` ≈ 1 avec la référence) à tolérance déclarée | suite hors ligne, sans réseau, sans jeton | 1.7 |
 | 6 | Front Vite + React/TS, SVG manuel, `d3-scale`. Une bande par parti, trois marqueurs distincts, curseur temporel, clic vers la preuve. Thèmes clair et sombre, navigation au clavier, `aria-label` par marqueur, jamais la couleur comme seul porteur d'information | le graphe (roadmap v0.6) | — |
@@ -524,7 +539,7 @@ discipline :
 |---|---|
 | JSON ou XML pour les scrutins (1.4) | Parser les deux, compter les cas particuliers de chaque côté. Décider avant l'étape 2, le changer après coûte l'ingestion entière. |
 | Seuil de participation (1.2) | Méthodologique. Publier la sensibilité de l'axe au seuil plutôt que choisir un chiffre : c'est une sortie du projet, pas un paramètre à cacher. |
-| Suffisance du rang 1 (2,1 %) | Si l'axe s'avère instable dans le temps, les estimateurs de référence (IRT bayésien, W-NOMINATE) deviennent justifiés — comme prévu par `methode.md`, et pas avant. Ils changeraient le calcul, pas la pile. |
+| Suffisance du rang 1 | Si l'axe s'avère instable dans le temps, les estimateurs de référence (IRT bayésien, W-NOMINATE) deviennent justifiés — comme prévu par `methode.md`, et pas avant. Ils changeraient le calcul, pas la pile. |
 | Fraîcheur des archives AN | AMO50 est figé au 2024-07-11, AMO30 est quotidien. Vérifier `last-modified` de chaque archive à chaque exécution et échouer si une source censée être vivante ne bouge plus. |
 | Points d'ancrage du signe | Deux entités et le sens attendu, dans un fichier de données versionné et non dans le code. Le choix est un arbitrage à documenter publiquement. |
 | Contrat de schéma entre Rust et TypeScript | Réévaluer si le registre d'entités devient une source de bugs (concession de la section 6). |
