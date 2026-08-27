@@ -41,6 +41,7 @@
 | [adr/0000-perimetre-brique0.md](adr/0000-perimetre-brique0.md) | Périmètre de la v0, députés non publiés individuellement, législatures, licence, ton éditorial, politique de version, risques acceptés et refusés |
 | [adr/0001-stack.md](adr/0001-stack.md) | Mesures faites sur les sources réelles, trois piles comparées, recommandation Rust + React/TS, plan de mise en place en huit étapes |
 | [adr/0002-arborescence-et-chaine-de-publication.md](adr/0002-arborescence-et-chaine-de-publication.md) | Emplacement du code et des artefacts, artefacts versionnés, chaîne de version et de publication |
+| [adr/0003-arbitrages-de-coherence.md](adr/0003-arbitrages-de-coherence.md) | Les sept contradictions entre documents de conception, actées : source du rattachement au groupe, absence de seuil de participation, et les cinq points tranchés par recomptage ou par la relecture juridique |
 
 ## Brique 0 — les acteurs
 

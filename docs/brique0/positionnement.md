@@ -63,10 +63,14 @@ suite de tests devra retrouver dans l'implémentation Rust, aux tolérances du �
 [verification-2026-08-27.md](verification-2026-08-27.md)) — la ventilation ne
 porte pas de groupe résoluble : 1 895
 cellules et 335 acteurs sont rattachés à un identifiant `PO0` absent du
-référentiel AMO30. Le rattachement d'un député à son groupe ne peut donc **pas**
-être lu dans le fichier de scrutin ; il doit venir des mandats, avec période de
-validité. Un pipeline qui fait confiance au scrutin perd le groupe de 335
-députés sur ces dates, ou fabrique un treizième groupe.
+référentiel AMO30. Le rattachement **n'est pas lisible dans ces 14 fichiers** :
+il y est résolu par les mandats, avec période de validité. Partout ailleurs, le
+groupe est lu dans le bloc de ventilation du scrutin, où il est daté par
+construction — c'est la source actée par
+[../adr/0003-arbitrages-de-coherence.md](../adr/0003-arbitrages-de-coherence.md)
+§1, et AMO30 n'intervient qu'en recours. Un pipeline qui fait confiance au
+scrutin *sans traiter ce cas* perd le groupe de 335 députés sur ces dates, ou
+fabrique un treizième groupe.
 
 **Deux identifiants pour UDR** (`PO847173` et `PO872880`), cohérent avec les
 périodes de validité relevées par l'ADR 0001 §1.5. L'agrégation par

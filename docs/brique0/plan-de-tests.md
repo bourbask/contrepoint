@@ -118,7 +118,7 @@ Fixtures : les cinq scrutins verbatim et les deux index de
 | ING-14 | `dedoublonnage_des_mandats_gp` | `mandats-gp-l17.json`, cas mandat dupliqué | Regroupement par `(organeRef, dateDebut)`, `dateFin` maximale retenue, `null` = en cours ; aucun chevauchement résiduel entre deux `organeRef` | 18 chevauchements sur 648 députés, 17 716 cellules ambiguës. Sans la règle, la jointure choisit au hasard |
 | ING-15 | `mandat_ref_ne_donne_pas_le_groupe` [C] | `VTANR5L17V156.json` + `mandats-gp-l17.json` | Le rattachement ne consulte jamais `votant.mandatRef` pour le groupe | `mandatRef` pointe toujours un mandat `ASSEMBLEE`, 1 270 476 / 1 270 476. Le piège est de croire tenir la jointure ; le test empêche de le recroire |
 
-### Cas particulier `PO0` — un conflit de spécification à trancher avant ING-16
+### Cas particulier `PO0` — conflit de spécification, acté par l'ADR 0003 §1
 
 ingestion-votes.md §8 retient **le groupe du bloc de ventilation**, AMO30 ne
 servant que de recours pour les 146 blocs `PO0`. positionnement.md §1 écrit
@@ -128,7 +128,9 @@ scrutin ; il doit venir des mandats ». Les deux ne peuvent pas être vrais.
 Ce plan retient **ingestion-votes.md** : c'est la version mesurée sur les
 1 270 476 cellules, elle explique les 2 255 désaccords par un retard de `dateFin`
 du mandat de non-inscrit, et elle évite une jointure là où la source publie déjà
-la réponse datée. Le point est listé au §16 comme blocage à acter formellement.
+la réponse datée. C'est ce que
+[../adr/0003-arbitrages-de-coherence.md](../adr/0003-arbitrages-de-coherence.md)
+§1 acte : le blocage est levé, les tests ci-dessous peuvent être écrits.
 
 | ID | Test | Entrée | Sortie attendue | Ce qui casse si le test disparaît |
 |---|---|---|---|---|
@@ -410,20 +412,28 @@ mesure surtout la quantité de tests de rendu écrits.
 
 ---
 
-## 16. Contradictions de spécification à trancher avant le cycle concerné
+## 16. Contradictions de spécification — toutes actées
 
 Ces points ne sont pas des choix de tests : ce sont des spécifications qui se
 contredisent. Un test écrit avant l'arbitrage épinglerait la mauvaise version.
+**Un plan de tests ne tranche pas une spécification** : il constate le conflit.
+L'arbitrage est [../adr/0003-arbitrages-de-coherence.md](../adr/0003-arbitrages-de-coherence.md).
 
-| # | Contradiction | Cycle bloqué | Version retenue par ce plan, à acter |
+Le tableau n'est pas supprimé : il documente que les contradictions ont existé,
+et laquelle chaque cycle aurait figée sans arbitrage.
+
+| # | Contradiction | Cycle bloqué | Version actée |
 |---|---|---|---|
-| 1 | **Source du rattachement au groupe.** ingestion-votes.md §8 : le bloc de ventilation, AMO30 en recours. positionnement.md §1 : « le rattachement ne peut pas être lu dans le fichier de scrutin ; il doit venir des mandats » | 4 | ingestion-votes.md, mesuré sur 1 270 476 cellules |
-| 2 | **Nombre de scrutins à `PO0`.** ingestion-votes.md §8 : 14 scrutins, dont 13 le 2024-12-02 et un le 2026-04-16. positionnement.md §1 : 14 scrutins, dont 13 le 2024-12-02, un le 2025-04-07 **et** un le 2026-04-16 — soit 15 énumérés pour 14 annoncés | 4 | Aucune. À recompter sur l'archive : le test ING-16 ne doit pas figer un total faux |
-| 3 | **Gain du rang 1.** ADR 0001 §1.3 : 2,1 %. positionnement.md §1 et blocage 1 : 59,1 %, invariant au codage | 14 | 59,1 %. L'ADR 0001 §1.3 et son étape 3 du §7 sont à corriger dans la même PR que le cycle 14 |
-| 4 | **Dispersion publiée.** ROADMAP.md v0.2 et methode.md §2 : « variance intra-groupe publiée ». positionnement.md §6 : IQR et étendue, « aucune variance » | 9 | IQR et étendue. AGR-03 l'épingle ; ROADMAP.md et methode.md sont à mettre à jour dans la même PR (definition-of-done.md §19) |
-| 5 | **Fixture du cas `votant` objet nu.** ADR 0001 §7 étape 0 cite `VTANR5L17V5646`. `echantillons/README.md` livre `VTANR5L17V5268` | 0 | `VTANR5L17V5268`, la fixture qui existe |
-| 6 | **Filtre de participation.** ROADMAP.md v0.1 et methode.md exigent « un seuil documenté ». ingestion-votes.md §6 : aucun seuil, la mesure dit que le seuil justifiable est l'absence de seuil | 3 | Aucun seuil, `nombreVotants` publié. MAT-05 l'épingle ; ROADMAP.md et methode.md à mettre à jour |
-| 7 | **Version de la Licence Ouverte.** ADR 0000 §4 : « lire 2.0 dans le PDF », marqué `A VERIFIER`. ingestion-votes.md §1 : v1.0, lu dans le PDF, citation verbatim | 1 | v1.0 pour l'AN. La mention de data.gouv.fr pour le nuancier est bien `lov2` : deux sources, deux versions, pas une contradiction |
+| 1 | **Source du rattachement au groupe.** ingestion-votes.md §8 : le bloc de ventilation, AMO30 en recours. positionnement.md §1 : « le rattachement ne peut pas être lu dans le fichier de scrutin ; il doit venir des mandats » | 4 | **Acté** — ADR 0003 §1 : le bloc de ventilation du scrutin, mesuré sur 1 270 476 cellules (2 255 désaccords, 0,2 %, tous par retard de `dateFin` du mandat de non-inscrit). AMO30 : recours pour les blocs `PO0`, périodes de validité, contrôle croisé. `ING-16` à `ING-19` peuvent être écrits |
+| 2 | **Nombre de scrutins à `PO0`.** ingestion-votes.md §8 : 14 scrutins, dont 13 le 2024-12-02 et un le 2026-04-16. positionnement.md §1 : 14 scrutins, dont 13 le 2024-12-02, un le 2025-04-07 **et** un le 2026-04-16 — soit 15 énumérés pour 14 annoncés | 4 | **Acté** — ADR 0003 §3 : recompté sur l'archive complète, **14** au total, **12** le 2024-12-02, 1 le 2025-04-07, 1 le 2026-04-16. Juste sur le total, faux sur la ventilation dans les deux documents |
+| 3 | **Gain du rang 1.** ADR 0001 §1.3 : 2,1 %. positionnement.md §1 et blocage 1 : 59,1 %, invariant au codage | 14 | **Acté** — ADR 0003 §3 : **60,8 % du résidu** après constante par scrutin, recompté ; 51,5 % de la variance totale. L'ADR 0001 se trompait d'un facteur trente |
+| 4 | **Dispersion publiée.** ROADMAP.md v0.2 et methode.md §2 : « variance intra-groupe publiée ». positionnement.md §6 : IQR et étendue, « aucune variance » | 9 | **Acté** — ADR 0003 §3, tranché par la relecture juridique : **IQR et écart-type de rééchantillonnage, jamais la variance, jamais l'étendue** — une borne d'étendue est la coordonnée d'un membre identifiable. `AGR-03` l'épingle ; ROADMAP.md v0.2 et methode.md §2 mis à jour dans la PR de l'ADR |
+| 5 | **Fixture du cas `votant` objet nu.** ADR 0001 §7 étape 0 cite `VTANR5L17V5646`. `echantillons/README.md` livre `VTANR5L17V5268` | 0 | **Acté** — ADR 0003 §3 : `VTANR5L17V5268`, la fixture qui existe |
+| 6 | **Filtre de participation.** ROADMAP.md v0.1 et methode.md exigent « un seuil documenté ». ingestion-votes.md §6 : aucun seuil, la mesure dit que le seuil justifiable est l'absence de seuil | 3 | **Acté** — ADR 0003 §2 : **aucun seuil**. Filtre unique `min(pour, contre) ≥ 1` — 455 écartés sur 8 434, dont les 23 motions de censure, 7 979 retenus. `nombreVotants` publié, jamais une porte. `MAT-05` l'épingle ; ROADMAP.md v0.1 et methode.md §1 mis à jour dans la PR de l'ADR |
+| 7 | **Version de la Licence Ouverte.** ADR 0000 §4 : « lire 2.0 dans le PDF », marqué `A VERIFIER`. ingestion-votes.md §1 : v1.0, lu dans le PDF, citation verbatim | 1 | **Acté** — ADR 0003 §3 : **v1.0** pour l'Assemblée, **`lov2`** pour le nuancier sur data.gouv.fr. Deux sources, deux versions, pas une contradiction |
+
+Le §5 de ce plan porte le même arbitrage pour le cas `PO0` : il est désormais
+acté par l'ADR 0003 §1, et `ING-16` n'attend plus rien.
 
 ---
 

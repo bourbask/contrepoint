@@ -520,9 +520,12 @@ député, jamais le mandat de groupe. 1 270 476 / 1 270 476, aucune exception.
 
 **146 blocs de groupe portent `organeRef = "PO0"`.** Aucun fichier
 `organe/PO0.json` n'existe dans AMO30 : la référence est pendante. Elle se
-concentre sur **14 scrutins** (0,17 %), dont 13 du seul 2024-12-02 et
-`VTANR5L17V6256` du 2026-04-16 : dans ces 14 fichiers, **tous** les blocs de
-groupe ont perdu leur `organeRef`, pas seulement un.
+concentre sur **14 scrutins** (0,17 %) : **12** le 2024-12-02, un le 2025-04-07
+et `VTANR5L17V6256` le 2026-04-16 — ventilation recomptée sur l'archive complète
+([verification-2026-08-27.md](verification-2026-08-27.md) §2), une version
+antérieure de ce document annonçant 13 pour la seule date de décembre. Dans ces
+14 fichiers, **tous** les blocs de groupe ont perdu leur `organeRef`, pas
+seulement un.
 
 Traitement : pour un bloc `PO0`, le groupe est résolu par le mandat GP AMO30 des
 votants du bloc à la date du scrutin. Vérifié sur les 146 blocs — la résolution
