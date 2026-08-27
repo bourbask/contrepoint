@@ -21,8 +21,10 @@ votes publics, jeux de données académiques cités. Utile seule.
 - [ ] Ingestion des scrutins nominatifs, AN open data (JSON, licence Etalab)
 - [ ] Matrice `député × scrutin`, codage pour / contre / abstention / absent
 - [ ] **Absent ≠ abstention.** L'absence est une donnée manquante, jamais une position
-- [ ] Filtre de participation : écarter les scrutins trop peu suivis, seuil documenté
-- [ ] Rattachement des députés à leur groupe **avec période de validité** (les changements de groupe en cours de mandature sont fréquents)
+- [ ] **Aucun seuil de participation** — mesuré injustifiable, aucune rupture ne désigne de valeur et un seuil relevé dégrade la séparation des blocs ([ADR 0003](docs/adr/0003-arbitrages-de-coherence.md) §2)
+- [ ] Filtre unique : un scrutin sans minorité enregistrée n'entre pas dans la matrice — `min(pour, contre) ≥ 1`. **455 scrutins écartés sur 8 434**, dont les **23 motions de censure** en totalité (l'article 49-2 ne fait voter qu'un camp) ; **7 979 retenus**
+- [ ] `nombreVotants` publié par scrutin, avec le décompte — jamais employé comme porte d'entrée dans la matrice
+- [ ] Rattachement des députés à leur groupe **avec période de validité** (les changements de groupe en cours de mandature sont fréquents) : le groupe vient du **bloc de ventilation du scrutin**, daté par construction ; AMO30 sert de recours pour les blocs `organeRef: "PO0"` et de source des périodes de validité ([ADR 0003](docs/adr/0003-arbitrages-de-coherence.md) §1)
 
 Sortie visible : le décompte des scrutins retenus et écartés, et pourquoi.
 
@@ -31,7 +33,7 @@ Sortie visible : le décompte des scrutins retenus et écartés, et pourquoi.
 - [ ] Estimation de position sur la matrice (analyse des correspondances / ACP, premier axe)
 - [ ] Fixation du signe de l'axe par deux points de repère connus, pour que « gauche » soit stable d'une exécution à l'autre
 - [ ] Agrégation au niveau du parti
-- [ ] Variance intra-groupe publiée, pas cachée
+- [ ] Dispersion intra-groupe publiée, pas cachée : **écart interquartile et écart-type de rééchantillonnage**. Jamais la variance — illisible sur un axe sans unité — jamais l'étendue : un minimum et un maximum sont les coordonnées de deux membres identifiables ([ADR 0003](docs/adr/0003-arbitrages-de-coherence.md) §3)
 
 **Limite méthodologique à énoncer sur le site, pas à découvrir plus tard :** la
 discipline de vote est quasi totale à l'Assemblée. L'axe issu des scrutins
@@ -147,7 +149,7 @@ et que rien d'existant ne couvre.**
 |---|---|
 | Abandon | Une personne, pas de temps libre. Un jeu de données de positionnement figé à mi-chemin est pire qu'absent : ses chiffres périmés continuent d'être cités comme actuels. Le site doit afficher « données arrêtées le … » plutôt que se taire, et le jeu de données rester utilisable seul, site mort. |
 | Registre d'entités | Une erreur d'appariement parti / groupe / code se propage dans toutes les briques. C'est le point où la relecture manuelle est justifiée. |
-| Sparsité des scrutins | Peu de scrutins publics, participation faible. Sans seuil de participation, l'axe mesure surtout qui était présent. |
+| Sparsité des scrutins | Peu de scrutins publics, participation faible — médiane de 133 votants pour 577 sièges. Le risque « l'axe mesure surtout qui était présent » a été mesuré et écarté : la corrélation des coordonnées est de 1,0000 entre corpus complet et corpus filtré à 50 votants, et c'est le seuil élevé qui casse l'ordre des blocs ([ADR 0003](docs/adr/0003-arbitrages-de-coherence.md) §2). |
 | Discipline de vote | Fait remonter le groupe, pas l'idéologie individuelle. Limite à afficher, pas à masquer. |
 | Flux RSS tronqués | Beaucoup de rédactions ne servent que titre et chapô. Les divergences chiffrées ont besoin du corps de texte. |
 | Parsers HTML | La ligne de maintenance qui tue les projets solo. Raison de l'ordre des briques. |

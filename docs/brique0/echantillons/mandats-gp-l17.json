@@ -1,0 +1,205 @@
+{
+  "_provenance": "derive de AMO30... par docs/brique0/echantillons/extraire-echantillons.py ; seuls les mandats typeOrgane=GP et typeOrgane=ASSEMBLEE de la legislature 17 sont conserves",
+  "acteurs": [
+    {
+      "acteurRef": "PA267285",
+      "_cas": "mandat GP duplique a periodes identiques",
+      "nom": "Wauquiez",
+      "prenom": "Laurent",
+      "mandatsGP": [
+        {
+          "uid": "PM842901",
+          "organeRef": "PO840056",
+          "dateDebut": "2024-07-08",
+          "dateFin": "2024-07-18"
+        },
+        {
+          "uid": "PM845666",
+          "organeRef": "PO845425",
+          "dateDebut": "2024-07-19",
+          "dateFin": null
+        },
+        {
+          "uid": "PM845696",
+          "organeRef": "PO845425",
+          "dateDebut": "2024-07-19",
+          "dateFin": null
+        }
+      ],
+      "mandatsAssemblee": [
+        {
+          "uid": "PM842900",
+          "organeRef": "PO838901",
+          "dateDebut": "2024-07-07",
+          "dateFin": null
+        }
+      ]
+    },
+    {
+      "acteurRef": "PA330240",
+      "_cas": "trois groupes successifs : AD -> UDR -> UDDPLR, plus doublons de mandat",
+      "nom": "Ciotti",
+      "prenom": "Éric",
+      "mandatsGP": [
+        {
+          "uid": "PM842358",
+          "organeRef": "PO840056",
+          "dateDebut": "2024-07-08",
+          "dateFin": "2024-07-18"
+        },
+        {
+          "uid": "PM845570",
+          "organeRef": "PO845520",
+          "dateDebut": "2024-07-19",
+          "dateFin": "2024-09-11"
+        },
+        {
+          "uid": "PM845697",
+          "organeRef": "PO845520",
+          "dateDebut": "2024-07-19",
+          "dateFin": "2024-09-11"
+        },
+        {
+          "uid": "PM847179",
+          "organeRef": "PO847173",
+          "dateDebut": "2024-09-12",
+          "dateFin": "2025-09-04"
+        },
+        {
+          "uid": "PM847180",
+          "organeRef": "PO847173",
+          "dateDebut": "2024-09-12",
+          "dateFin": "2025-09-04"
+        },
+        {
+          "uid": "PM872889",
+          "organeRef": "PO872880",
+          "dateDebut": "2025-09-05",
+          "dateFin": null
+        },
+        {
+          "uid": "PM872901",
+          "organeRef": "PO872880",
+          "dateDebut": "2025-09-05",
+          "dateFin": null
+        }
+      ],
+      "mandatsAssemblee": [
+        {
+          "uid": "PM842357",
+          "organeRef": "PO838901",
+          "dateDebut": "2024-07-07",
+          "dateFin": null
+        }
+      ]
+    },
+    {
+      "acteurRef": "PA642725",
+      "_cas": "la ventilation dit DR le 2024-10-22, le mandat AMO30 dit encore NI",
+      "nom": "Liégeon",
+      "prenom": "Eric",
+      "mandatsGP": [
+        {
+          "uid": "PM849179",
+          "organeRef": "PO840056",
+          "dateDebut": "2024-10-22",
+          "dateFin": "2024-10-22"
+        },
+        {
+          "uid": "PM849257",
+          "organeRef": "PO845425",
+          "dateDebut": "2024-10-23",
+          "dateFin": null
+        }
+      ],
+      "mandatsAssemblee": [
+        {
+          "uid": "PM849129",
+          "organeRef": "PO838901",
+          "dateDebut": "2024-07-07",
+          "dateFin": null
+        }
+      ]
+    },
+    {
+      "acteurRef": "PA642868",
+      "_cas": "retour dans le meme groupe apres passage NI, deux dateFin concurrentes",
+      "nom": "Christophe",
+      "prenom": "Paul",
+      "mandatsGP": [
+        {
+          "uid": "PM843123",
+          "organeRef": "PO840056",
+          "dateDebut": "2024-07-08",
+          "dateFin": "2024-07-18"
+        },
+        {
+          "uid": "PM845846",
+          "organeRef": "PO845470",
+          "dateDebut": "2024-07-19",
+          "dateFin": "2024-10-21"
+        },
+        {
+          "uid": "PM858590",
+          "organeRef": "PO840056",
+          "dateDebut": "2025-01-24",
+          "dateFin": "2025-01-24"
+        },
+        {
+          "uid": "PM859174",
+          "organeRef": "PO845470",
+          "dateDebut": "2025-01-25",
+          "dateFin": "2026-04-06"
+        },
+        {
+          "uid": "PM859175",
+          "organeRef": "PO845470",
+          "dateDebut": "2025-01-25",
+          "dateFin": "2026-03-31"
+        }
+      ],
+      "mandatsAssemblee": [
+        {
+          "uid": "PM843122",
+          "organeRef": "PO838901",
+          "dateDebut": "2024-07-07",
+          "dateFin": "2024-10-21"
+        },
+        {
+          "uid": "PM858305",
+          "organeRef": "PO838901",
+          "dateDebut": "2024-07-07",
+          "dateFin": "2026-04-06"
+        }
+      ]
+    },
+    {
+      "acteurRef": "PA721908",
+      "_cas": "presidente de l'Assemblee : 7508 non-votants de cause PAN",
+      "nom": "Braun-Pivet",
+      "prenom": "Yaël",
+      "mandatsGP": [
+        {
+          "uid": "PM843468",
+          "organeRef": "PO840056",
+          "dateDebut": "2024-07-08",
+          "dateFin": "2024-07-18"
+        },
+        {
+          "uid": "PM845466",
+          "organeRef": "PO845407",
+          "dateDebut": "2024-07-19",
+          "dateFin": null
+        }
+      ],
+      "mandatsAssemblee": [
+        {
+          "uid": "PM843467",
+          "organeRef": "PO838901",
+          "dateDebut": "2024-07-07",
+          "dateFin": null
+        }
+      ]
+    }
+  ]
+}

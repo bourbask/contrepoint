@@ -1,0 +1,383 @@
+{
+  "_provenance": "derive de AMO30_tous_acteurs_tous_mandats_tous_organes_historique.json.zip par docs/brique0/echantillons/extraire-echantillons.py ; chaque element est l'objet `organe` verbatim",
+  "organes": [
+    {
+      "@xmlns": "http://schemas.assemblee-nationale.fr/referentiel",
+      "@xmlns:xsi": "http://www.w3.org/2001/XMLSchema-instance",
+      "@xsi:type": "GroupePolitique_type",
+      "uid": "PO840056",
+      "codeType": "GP",
+      "libelle": "Non inscrit",
+      "libelleEdition": "des députés non inscrits",
+      "libelleAbrege": "NI",
+      "libelleAbrev": "NI",
+      "viMoDe": {
+        "dateDebut": "2024-07-01",
+        "dateAgrement": null,
+        "dateFin": null
+      },
+      "organeParent": null,
+      "chambre": null,
+      "regime": "5ème République",
+      "legislature": "17",
+      "secretariat": {
+        "secretaire01": null,
+        "secretaire02": null
+      },
+      "positionPolitique": null,
+      "preseance": "99",
+      "couleurAssociee": "#8D949A"
+    },
+    {
+      "@xmlns": "http://schemas.assemblee-nationale.fr/referentiel",
+      "@xmlns:xsi": "http://www.w3.org/2001/XMLSchema-instance",
+      "@xsi:type": "GroupePolitique_type",
+      "uid": "PO845520",
+      "codeType": "GP",
+      "libelle": "À Droite",
+      "libelleEdition": "du groupe À Droite",
+      "libelleAbrege": "AD",
+      "libelleAbrev": "AD",
+      "viMoDe": {
+        "dateDebut": "2024-07-18",
+        "dateAgrement": null,
+        "dateFin": "2024-09-11"
+      },
+      "organeParent": null,
+      "chambre": null,
+      "regime": "5ème République",
+      "legislature": "17",
+      "secretariat": {
+        "secretaire01": null,
+        "secretaire02": null
+      },
+      "positionPolitique": null,
+      "preseance": "11",
+      "couleurAssociee": "#3367A7"
+    },
+    {
+      "@xmlns": "http://schemas.assemblee-nationale.fr/referentiel",
+      "@xmlns:xsi": "http://www.w3.org/2001/XMLSchema-instance",
+      "@xsi:type": "GroupePolitique_type",
+      "uid": "PO845454",
+      "codeType": "GP",
+      "libelle": "Les Démocrates",
+      "libelleEdition": "du groupe Les Démocrates",
+      "libelleAbrege": "Dem",
+      "libelleAbrev": "DEM",
+      "viMoDe": {
+        "dateDebut": "2024-07-18",
+        "dateAgrement": null,
+        "dateFin": null
+      },
+      "organeParent": null,
+      "chambre": null,
+      "regime": "5ème République",
+      "legislature": "17",
+      "secretariat": {
+        "secretaire01": null,
+        "secretaire02": null
+      },
+      "positionPolitique": null,
+      "preseance": "7",
+      "couleurAssociee": "#F07E26"
+    },
+    {
+      "@xmlns": "http://schemas.assemblee-nationale.fr/referentiel",
+      "@xmlns:xsi": "http://www.w3.org/2001/XMLSchema-instance",
+      "@xsi:type": "GroupePolitique_type",
+      "uid": "PO845425",
+      "codeType": "GP",
+      "libelle": "Droite Républicaine",
+      "libelleEdition": "du groupe Droite Républicaine",
+      "libelleAbrege": "DR",
+      "libelleAbrev": "DR",
+      "viMoDe": {
+        "dateDebut": "2024-07-18",
+        "dateAgrement": null,
+        "dateFin": null
+      },
+      "organeParent": null,
+      "chambre": null,
+      "regime": "5ème République",
+      "legislature": "17",
+      "secretariat": {
+        "secretaire01": null,
+        "secretaire02": null
+      },
+      "positionPolitique": null,
+      "preseance": "5",
+      "couleurAssociee": "#8CB0DC"
+    },
+    {
+      "@xmlns": "http://schemas.assemblee-nationale.fr/referentiel",
+      "@xmlns:xsi": "http://www.w3.org/2001/XMLSchema-instance",
+      "@xsi:type": "GroupePolitique_type",
+      "uid": "PO845439",
+      "codeType": "GP",
+      "libelle": "Écologiste et Social",
+      "libelleEdition": "du groupe Écologiste et Social",
+      "libelleAbrege": "EcoS",
+      "libelleAbrev": "ECOS",
+      "viMoDe": {
+        "dateDebut": "2024-07-18",
+        "dateAgrement": null,
+        "dateFin": null
+      },
+      "organeParent": null,
+      "chambre": null,
+      "regime": "5ème République",
+      "legislature": "17",
+      "secretariat": {
+        "secretaire01": null,
+        "secretaire02": null
+      },
+      "positionPolitique": null,
+      "preseance": "6",
+      "couleurAssociee": "#77AA79"
+    },
+    {
+      "@xmlns": "http://schemas.assemblee-nationale.fr/referentiel",
+      "@xmlns:xsi": "http://www.w3.org/2001/XMLSchema-instance",
+      "@xsi:type": "GroupePolitique_type",
+      "uid": "PO845407",
+      "codeType": "GP",
+      "libelle": "Ensemble pour la République",
+      "libelleEdition": "du groupe Ensemble pour la République",
+      "libelleAbrege": "EPR",
+      "libelleAbrev": "EPR",
+      "viMoDe": {
+        "dateDebut": "2024-07-18",
+        "dateAgrement": null,
+        "dateFin": null
+      },
+      "organeParent": null,
+      "chambre": null,
+      "regime": "5ème République",
+      "legislature": "17",
+      "secretariat": {
+        "secretaire01": null,
+        "secretaire02": null
+      },
+      "positionPolitique": null,
+      "preseance": "2",
+      "couleurAssociee": "#7B4591"
+    },
+    {
+      "@xmlns": "http://schemas.assemblee-nationale.fr/referentiel",
+      "@xmlns:xsi": "http://www.w3.org/2001/XMLSchema-instance",
+      "@xsi:type": "GroupePolitique_type",
+      "uid": "PO845514",
+      "codeType": "GP",
+      "libelle": "Gauche Démocrate et Républicaine",
+      "libelleEdition": "du groupe Gauche Démocrate et Républicaine",
+      "libelleAbrege": "GDR",
+      "libelleAbrev": "GDR",
+      "viMoDe": {
+        "dateDebut": "2024-07-18",
+        "dateAgrement": null,
+        "dateFin": null
+      },
+      "organeParent": null,
+      "chambre": null,
+      "regime": "5ème République",
+      "legislature": "17",
+      "secretariat": {
+        "secretaire01": null,
+        "secretaire02": null
+      },
+      "positionPolitique": null,
+      "preseance": "10",
+      "couleurAssociee": "#830E21"
+    },
+    {
+      "@xmlns": "http://schemas.assemblee-nationale.fr/referentiel",
+      "@xmlns:xsi": "http://www.w3.org/2001/XMLSchema-instance",
+      "@xsi:type": "GroupePolitique_type",
+      "uid": "PO845470",
+      "codeType": "GP",
+      "libelle": "Horizons & Indépendants",
+      "libelleEdition": "du groupe Horizons & Indépendants",
+      "libelleAbrege": "HOR",
+      "libelleAbrev": "HOR",
+      "viMoDe": {
+        "dateDebut": "2024-07-18",
+        "dateAgrement": null,
+        "dateFin": null
+      },
+      "organeParent": null,
+      "chambre": null,
+      "regime": "5ème République",
+      "legislature": "17",
+      "secretariat": {
+        "secretaire01": null,
+        "secretaire02": null
+      },
+      "positionPolitique": null,
+      "preseance": "8",
+      "couleurAssociee": "#B5E2F9"
+    },
+    {
+      "@xmlns": "http://schemas.assemblee-nationale.fr/referentiel",
+      "@xmlns:xsi": "http://www.w3.org/2001/XMLSchema-instance",
+      "@xsi:type": "GroupePolitique_type",
+      "uid": "PO845413",
+      "codeType": "GP",
+      "libelle": "La France insoumise - Nouveau Front Populaire",
+      "libelleEdition": "du groupe La France insoumise - Nouveau Front Populaire",
+      "libelleAbrege": "LFI-NFP",
+      "libelleAbrev": "LFI-NFP",
+      "viMoDe": {
+        "dateDebut": "2024-07-18",
+        "dateAgrement": null,
+        "dateFin": null
+      },
+      "organeParent": null,
+      "chambre": null,
+      "regime": "5ème République",
+      "legislature": "17",
+      "secretariat": {
+        "secretaire01": null,
+        "secretaire02": null
+      },
+      "positionPolitique": null,
+      "preseance": "3",
+      "couleurAssociee": "#C00D0D"
+    },
+    {
+      "@xmlns": "http://schemas.assemblee-nationale.fr/referentiel",
+      "@xmlns:xsi": "http://www.w3.org/2001/XMLSchema-instance",
+      "@xsi:type": "GroupePolitique_type",
+      "uid": "PO845485",
+      "codeType": "GP",
+      "libelle": "Libertés, Indépendants, Outre-mer et Territoires",
+      "libelleEdition": "du groupe Libertés, Indépendants, Outre-mer et Territoires",
+      "libelleAbrege": "LIOT",
+      "libelleAbrev": "LIOT",
+      "viMoDe": {
+        "dateDebut": "2024-07-18",
+        "dateAgrement": null,
+        "dateFin": null
+      },
+      "organeParent": null,
+      "chambre": null,
+      "regime": "5ème République",
+      "legislature": "17",
+      "secretariat": {
+        "secretaire01": null,
+        "secretaire02": null
+      },
+      "positionPolitique": null,
+      "preseance": "9",
+      "couleurAssociee": "#FFD96F"
+    },
+    {
+      "@xmlns": "http://schemas.assemblee-nationale.fr/referentiel",
+      "@xmlns:xsi": "http://www.w3.org/2001/XMLSchema-instance",
+      "@xsi:type": "GroupePolitique_type",
+      "uid": "PO845401",
+      "codeType": "GP",
+      "libelle": "Rassemblement National",
+      "libelleEdition": "du groupe Rassemblement National",
+      "libelleAbrege": "RN",
+      "libelleAbrev": "RN",
+      "viMoDe": {
+        "dateDebut": "2024-07-18",
+        "dateAgrement": null,
+        "dateFin": null
+      },
+      "organeParent": null,
+      "chambre": null,
+      "regime": "5ème République",
+      "legislature": "17",
+      "secretariat": {
+        "secretaire01": null,
+        "secretaire02": null
+      },
+      "positionPolitique": null,
+      "preseance": "1",
+      "couleurAssociee": "#313567"
+    },
+    {
+      "@xmlns": "http://schemas.assemblee-nationale.fr/referentiel",
+      "@xmlns:xsi": "http://www.w3.org/2001/XMLSchema-instance",
+      "@xsi:type": "GroupePolitique_type",
+      "uid": "PO845419",
+      "codeType": "GP",
+      "libelle": "Socialistes et apparentés",
+      "libelleEdition": "du groupe Socialistes et apparentés",
+      "libelleAbrege": "SOC",
+      "libelleAbrev": "SOC",
+      "viMoDe": {
+        "dateDebut": "2024-07-18",
+        "dateAgrement": null,
+        "dateFin": null
+      },
+      "organeParent": null,
+      "chambre": null,
+      "regime": "5ème République",
+      "legislature": "17",
+      "secretariat": {
+        "secretaire01": null,
+        "secretaire02": null
+      },
+      "positionPolitique": null,
+      "preseance": "4",
+      "couleurAssociee": "#F5B4CE"
+    },
+    {
+      "@xmlns": "http://schemas.assemblee-nationale.fr/referentiel",
+      "@xmlns:xsi": "http://www.w3.org/2001/XMLSchema-instance",
+      "@xsi:type": "GroupePolitique_type",
+      "uid": "PO847173",
+      "codeType": "GP",
+      "libelle": "UDR",
+      "libelleEdition": "du groupe UDR",
+      "libelleAbrege": "UDR",
+      "libelleAbrev": "UDR",
+      "viMoDe": {
+        "dateDebut": "2024-09-12",
+        "dateAgrement": null,
+        "dateFin": "2025-09-04"
+      },
+      "organeParent": null,
+      "chambre": null,
+      "regime": "5ème République",
+      "legislature": "17",
+      "secretariat": {
+        "secretaire01": null,
+        "secretaire02": null
+      },
+      "positionPolitique": null,
+      "preseance": "11",
+      "couleurAssociee": "#3367A7"
+    },
+    {
+      "@xmlns": "http://schemas.assemblee-nationale.fr/referentiel",
+      "@xmlns:xsi": "http://www.w3.org/2001/XMLSchema-instance",
+      "@xsi:type": "GroupePolitique_type",
+      "uid": "PO872880",
+      "codeType": "GP",
+      "libelle": "Union des droites pour la République",
+      "libelleEdition": "du groupe Union des droites pour la République",
+      "libelleAbrege": "UDR",
+      "libelleAbrev": "UDDPLR",
+      "viMoDe": {
+        "dateDebut": "2025-09-05",
+        "dateAgrement": null,
+        "dateFin": null
+      },
+      "organeParent": null,
+      "chambre": null,
+      "regime": "5ème République",
+      "legislature": "17",
+      "secretariat": {
+        "secretaire01": null,
+        "secretaire02": null
+      },
+      "positionPolitique": null,
+      "preseance": "11",
+      "couleurAssociee": "#3367A7"
+    }
+  ]
+}
