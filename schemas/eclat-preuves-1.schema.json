@@ -1,0 +1,9 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "eclat-preuves-1.schema.json",
+  "title": "Éclat de preuves servi au front",
+  "description": "public/api/preuves/<xx>.json, où <xx> est le préfixe de deux caractères hexadécimaux des `id` qu'il contient. Les lignes y sont identiques octet pour octet à celles du registre de preuves : le front n'affiche jamais une preuve reformatée (I16). Un éclat ne contient que des lignes référencées par au moins un instantané du manifeste.",
+  "type": "array",
+  "minItems": 1,
+  "items": { "$ref": "preuve-1.schema.json" }
+}
