@@ -137,13 +137,13 @@ Fixtures : les cinq scrutins verbatim et les deux index de
 
 | ID | Test | Entrée | Sortie attendue | Ce qui casse si le test disparaît |
 |---|---|---|---|---|
-| ING-01 | `votant_tableau_ou_objet_nu` | `VTANR5L17V5268.json` | Les blocs où `votant` est un objet nu rendent une liste d'un élément ; aucun bloc n'est perdu | 27,3 % du corpus cesse d'être lu, préférentiellement sur les scrutins serrés — et l'échec est silencieux si le désérialiseur avale l'erreur (ingestion-votes.md §4a) |
-| ING-02 | `uid_chaine_ou_objet_xsi` | `mandats-gp-l17.json` (`acteur.uid` enveloppé) et `organes-groupes-l17.json` (`organe.uid` chaîne) | Les deux formes rendent la même chaîne `PA…` / `PO…` | La jointure au référentiel tombe entièrement : `acteur.uid` est un objet dans AMO30 (§4c) |
-| ING-03 | `mise_au_point_tableau_de_nuls` | `VTANR5L17V2767.json` | `pours`/`contres` en objet nu ou `null`, `abstentions`/`nonVotants` en tableau dont les éléments sont `null` : rendu = liste vide, jamais un votant inexistant | Un `[null, null]` compté comme deux entrées invente 2 mises au point sur 8 270 scrutins (§4b) |
-| ING-04 | `valeurs_numeriques_serialisees_en_chaine` | `VTANR5L17V156.json` | `"163"` lu comme 163, et un non-numérique est une erreur, pas un 0 | Tout le jeu sérialise les nombres en chaîne ; un `unwrap_or(0)` transforme un champ illisible en scrutin à zéro votant |
+| ADA-01 | `votant_tableau_ou_objet_nu` | `VTANR5L17V5268.json` | Les blocs où `votant` est un objet nu rendent une liste d'un élément ; aucun bloc n'est perdu | 27,3 % du corpus cesse d'être lu, préférentiellement sur les scrutins serrés — et l'échec est silencieux si le désérialiseur avale l'erreur (ingestion-votes.md §4a) |
+| ADA-02 | `uid_chaine_ou_objet_xsi` | `organes-groupes-l17.json` (`organe.uid` chaîne) et la forme enveloppée relevée dans AMO30, citée verbatim par ADR 0001 §1 mesure 10 — `mandats-gp-l17.json` est dérivé et n'en porte aucune | Les deux formes rendent la même chaîne `PA…` / `PO…` | La jointure au référentiel tombe entièrement : `acteur.uid` est un objet dans AMO30 (§4c) |
+| ADA-03 | `mise_au_point_tableau_de_nuls` | `VTANR5L17V2767.json` | `pours`/`contres` en objet nu ou `null`, `abstentions`/`nonVotants` en tableau dont les éléments sont `null` : rendu = liste vide, jamais un votant inexistant | Un `[null, null]` compté comme deux entrées invente 2 mises au point sur 8 270 scrutins (§4b) |
+| ADA-04 | `valeurs_numeriques_serialisees_en_chaine` | `VTANR5L17V156.json` | `"163"` lu comme 163, et un non-numérique est une erreur, pas un 0 | Tout le jeu sérialise les nombres en chaîne ; un `unwrap_or(0)` transforme un champ illisible en scrutin à zéro votant |
 | ING-05 | `legislature_lue_dans_la_donnee` | les cinq scrutins | `scrutin.legislature == "17"` lu du champ ; aucune dérivation d'un libellé ni du chemin | Le libellé de la fiche source dit « XV législature » et il est faux (ADR 0000 §3). Un pipeline qui fait confiance au libellé étiquette tout le corpus sur la mauvaise législature |
 | ING-06 | `coherences_de_synthese` | `VTANR5L17V156.json` | `nombreVotants == pour + contre + abstentions` et `suffragesExprimes == pour + contre` ; violation = erreur bloquante | La seule vérification bon marché que le fichier a été lu correctement de bout en bout ; sans elle, un décalage d'un bloc passe |
-| ING-07 | `longueur_nominative_egale_decompte` | les cinq scrutins | Pour les 4 positions, `len(votant[]) == decompteVoix.<position>` | Attrape la perte de votants due à ING-01 même si l'adaptateur ne lève pas d'erreur. C'est le garde-fou de l'adaptateur, pas de l'adaptateur seul |
+| ING-07 | `longueur_nominative_egale_decompte` | les cinq scrutins | Pour les 4 positions, `len(votant[]) == decompteVoix.<position>` | Attrape la perte de votants due à ADA-01 même si l'adaptateur ne lève pas d'erreur. C'est le garde-fou de l'adaptateur, pas de l'adaptateur seul |
 | ING-08 | `un_acteur_au_plus_une_fois_par_scrutin` | les cinq scrutins | Aucun `acteurRef` en double, toutes positions confondues | Un doublon crée deux cellules contradictoires pour la même case et l'estimateur les moyenne en silence |
 | ING-09 [C] | `non_votants_volontaires_jamais_lu_comme_categorie` | `VTANR5L17V156.json` | Le pipeline n'expose aucun accès à `decompteVoix.nonVotantsVolontaires` comme catégorie de position ; le champ est ignoré ou consigné comme doublon | Le champ vaut exactement `abstentions` dans 101 208 blocs sur 101 208. Le lire double-compte les abstentions et fabrique une cinquième catégorie absente de la source |
 | ING-10 | `trois_causes_de_non_votant_reconnues_sans_etre_interpretees` | `VTANR5L17V5268.json` | `MG`, `PAN`, `PSE` acceptées ; une quatrième valeur inconnue est une erreur bloquante ; **aucune** des trois ne change le codage | Une nouvelle cause apparue dans la source passerait pour une position ; et un codage qui dépend du libellé s'effondre le jour où le libellé change |
@@ -379,7 +379,7 @@ première ligne d'implémentation.
 | # | Cycle | Tests écrits d'abord | Ce qui se montre à la fin |
 |---|---|---|---|
 | **−1** | La récupération des archives | REC-01 → REC-06 | Six tests rouges puis verts hors ligne, puis une exécution réelle : deux archives, leurs tailles, leurs deux empreintes et la date de source. Le cron hebdomadaire peut s'exécuter |
-| **0** | Les trois adaptateurs de sérialisation | ING-01, ING-02, ING-03, ING-04 | Quatre tests rouges, puis verts, sur des fixtures réelles. Aucune logique métier encore écrite. Les trois pièges de l'ADR 0001 §1.4 sont neutralisés avant qu'ils ne coûtent |
+| **0** | Les trois adaptateurs de sérialisation | ADA-01, ADA-02, ADA-03, ADA-04 | Quatre tests rouges, puis verts, sur des fixtures réelles. Aucune logique métier encore écrite. Les trois pièges de l'ADR 0001 §1.4 sont neutralisés avant qu'ils ne coûtent |
 | **1** | Lecture d'un scrutin et ses cohérences | ING-05, ING-06, ING-07, ING-08 | Le contenu d'un scrutin, affiché : date, votants, décomptes, avec les invariants de la source vérifiés |
 | **2** | Le codage | MAT-01, MAT-02, MAT-03, ING-09, ING-10, ING-11, ING-12 | Les triplets d'un scrutin. **Le cycle le plus important du projet** : MAT-01 est écrit avant tout ce qui pourrait le contourner |
 | **3** | Le filtre et le décompte | MAT-04, MAT-05, MAT-06 | La sortie visible de la roadmap v0.1 : retenus, écartés, motifs — sur cinq scrutins d'abord, sur 8 434 au niveau 2 |
@@ -413,6 +413,7 @@ et pas avant.
 | Préfixe | Fichier de la suite |
 |---|---|
 | `REC` | `scripts/test-recuperer-sources.sh` |
+| `ADA` | `pipeline/tests/adaptateurs.rs` |
 | `ING` | `pipeline/tests/ingestion.rs` |
 | `MAT` | `pipeline/tests/matrice.rs` |
 | `EST` | `pipeline/tests/estimateur.rs` |
@@ -421,9 +422,17 @@ et pas avant.
 | `PRE` | `pipeline/tests/preuves.rs` |
 | `EXP` | `pipeline/tests/export.rs`, `web/src/contrat.test.ts` |
 
-Pointer le répertoire `pipeline/` aurait fait basculer six préfixes — 96
+Pointer le répertoire `pipeline/` aurait fait basculer sept préfixes — 96
 identifiants — au premier fichier Rust créé. Un contrôle qui refuse quatre-vingt-
 seize fois d'un coup se fait contourner, pas satisfaire.
+
+La même falaise se rejouait à l'échelle d'un préfixe. Les quatre adaptateurs de
+sérialisation du cycle 0 (`ADA-01` à `ADA-04`) sont écrits quinze cycles avant le
+reste de l'ingestion : les loger dans `pipeline/tests/ingestion.rs` aurait fait
+refuser la porte dix-neuf fois pour quatre tests écrits. Ils portent donc leur
+propre préfixe et leur propre fichier, et `ING` reste « en attente » jusqu'au
+cycle 1. Le découpage suit la frontière réelle : `ADA` ne connaît que la forme
+sérialisée de la source, `ING` connaît le scrutin.
 
 ## 15. Couverture minimale exigée pour merger
 
@@ -438,8 +447,8 @@ porte, le travail qui l'exécute — ou pourquoi elle ne peut pas encore l'être
 
 | Porte | Travail de `ci.yml` | État |
 |---|---|---|
-| Porte 1 — identifiants de test déclarés | `portes` → `./scripts/portes-de-ci.sh identifiants` | **Active.** S'applique par préfixe, dès que la suite de ce préfixe existe. Au 2026-08-27 : `REC` seul, les six identifiants sont écrits ; les 96 autres sont annoncés « en attente », pas passés sous silence |
-| Porte 2 — branches ≥ 90 % sur `matrice` et `estimateur` | `couverture-et-determinisme` | **Squelette**, gardé par `hashFiles('pipeline/Cargo.toml')`. Le module n'existe pas ; la commande `cargo llvm-cov --branch` et le seuil sont écrits |
+| Porte 1 — identifiants de test déclarés | `portes` → `./scripts/portes-de-ci.sh identifiants` | **Active.** S'applique par préfixe, dès que la suite de ce préfixe existe. Au 2026-08-27 : `REC` et `ADA`, soit dix identifiants écrits ; les 92 autres sont annoncés « en attente », pas passés sous silence |
+| Porte 2 — branches ≥ 90 % sur `matrice` et `estimateur` | `couverture-et-determinisme` | **Squelette**, gardé par `hashFiles('pipeline/src/main.rs')`. Le module n'existe pas ; la commande `cargo llvm-cov --branch` et le seuil sont écrits |
 | Porte 3 — lignes ≥ 70 % sur le binaire | `couverture-et-determinisme` | **Squelette**, même garde, même commande |
 | Lexique sur le diff | `garde-fous` → `./scripts/lexique.sh code` et `docs` | **Active** depuis l'origine |
 | Deux exécutions consécutives, artefacts identiques | `couverture-et-determinisme` | **Squelette.** C'est le contrôle 1 de contrats.md §8.2 ; il exige le binaire `contrepoint` |
@@ -463,7 +472,7 @@ par `hashFiles` ne publiant aucun contexte quand il saute
 
 ### Porte 1 — la liste nominative des invariants, bloquante
 
-Tout identifiant de test de ce document (`ING-…`, `MAT-…`, `EST-…`, `AGR-…`,
+Tout identifiant de test de ce document (`ADA-…`, `ING-…`, `MAT-…`, `EST-…`, `AGR-…`,
 `REG-…`, `PRE-…`, `EXP-…`) doit exister comme fonction de test dans l'arbre, dès
 que la PR touche le module concerné. La vérification est une boucle de grep en
 CI : les identifiants sont dans le document, les noms de fonctions sont dans le
@@ -474,8 +483,8 @@ suite est une porte fantôme ; un identifiant cité dans une suite et absent d'i
 est un test que le plan ne connaît pas, donc une couverture qu'aucun document
 n'oppose. Les deux sont bloquants. La correspondance préfixe → suite est dans
 `scripts/portes-de-ci.sh` et nulle part ailleurs : `REC` →
-`scripts/test-recuperer-sources.sh`, `EXP` → `pipeline` et `web`, tout le reste →
-`pipeline`. Un préfixe dont aucune suite n'existe encore est annoncé « en
+`scripts/test-recuperer-sources.sh`, `ADA` → `pipeline/tests/adaptateurs.rs`, `EXP` →
+`pipeline` et `web`, tout le reste → `pipeline`. Un préfixe dont aucune suite n'existe encore est annoncé « en
 attente » avec son décompte, et n'échoue pas — la porte ne prétend pas mesurer
 ce qui n'est pas écrit.
 

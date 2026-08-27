@@ -187,16 +187,19 @@ jobs:
 
   # Squelettes. Ces portes sont déclarées bloquantes et ne peuvent PAS être
   # vérifiées aujourd'hui : elles portent sur du code et des artefacts qui
-  # n'existent pas. Le travail saute tant que pipeline/Cargo.toml est absent,
-  # et il porte la commande exacte qu'il exécutera — une porte qui saute en le
-  # disant vaut mieux qu'une porte déclarée sans travail en face.
+  # n'existent pas. Les trois contrôles de déterminisme exigent le binaire
+  # `contrepoint` et les seuils de couverture visent `matrice` et `estimateur` :
+  # la garde suit donc `pipeline/src/main.rs`, et non `pipeline/Cargo.toml`, qui
+  # existe depuis le cycle 0 des adaptateurs. Le travail porte la commande exacte
+  # qu'il exécutera — une porte qui saute en le disant vaut mieux qu'une porte
+  # déclarée sans travail en face.
   couverture-et-determinisme:
     name: couverture et déterminisme (squelette)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
       - id: exists
-        run: echo "yes=${{ hashFiles('pipeline/Cargo.toml') != '' }}" >> "$GITHUB_OUTPUT"
+        run: echo "yes=${{ hashFiles('pipeline/src/main.rs') != '' }}" >> "$GITHUB_OUTPUT"
       - if: steps.exists.outputs.yes == 'true'
         uses: dtolnay/rust-toolchain@stable
         with:

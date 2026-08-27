@@ -1,4 +1,5 @@
 /target
+/pipeline/target
 node_modules/
 dist/
 .env
