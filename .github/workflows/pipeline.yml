@@ -46,9 +46,32 @@ jobs:
       # Le téléchargement reprend sur troncature : le serveur de l'Assemblée
       # ferme la connexion en cours de transfert sans erreur (ADR 0001, §1.5).
       # Une archive incomplète publierait un paysage politique amputé.
+      # contrats.md §8.1 : le pipeline ne lit jamais l'horloge. La date de
+      # calcul est dérivée du `last-modified` de la source la plus récente,
+      # écrit par le script de récupération. Son absence est une erreur, pas
+      # un défaut à combler par `date -u`.
+      - id: date_calcul
+        name: date de calcul
+        if: steps.exists.outputs.yes == 'true'
+        run: |
+          f=data/cache/derniere-source.txt
+          if [ ! -f "$f" ]; then
+            echo "::error::$f absent — le script de récupération n'a pas tourné."
+            echo "La date de calcul se dérive des sources, jamais de l'horloge (contrats.md §8.1)."
+            exit 1
+          fi
+          d=$(tr -d '[:space:]' < "$f")
+          case "$d" in
+            [0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]*) ;;
+            *) echo "::error::date de source illisible : '$d'"; exit 1 ;;
+          esac
+          echo "valeur=$d" >> "$GITHUB_OUTPUT"
+
       - name: exécuter
         if: steps.exists.outputs.yes == 'true'
         working-directory: pipeline
+        env:
+          CONTREPOINT_DATE_CALCUL: ${{ steps.date_calcul.outputs.valeur }}
         run: cargo run --locked --release
 
       - id: diff

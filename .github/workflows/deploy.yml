@@ -44,4 +44,3 @@ jobs:
     steps:
       - id: pages
         uses: actions/deploy-pages@v4
-        continue-on-error: true

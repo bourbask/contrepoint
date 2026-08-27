@@ -3,8 +3,6 @@ name: ci
 on:
   pull_request:
     branches: [develop, main]
-  push:
-    branches-ignore: [develop, main]
   workflow_dispatch:
 
 permissions:
@@ -96,37 +94,61 @@ jobs:
       # (ADR 0001, §6 « ce que cette recommandation concède »).
       - name: valider les artefacts contre schemas/
         run: |
-          shopt -s nullglob
-          artefacts=(public/api/**/*.json public/api/*.json data/registre/*.json)
+          shopt -s globstar nullglob
+          echec=0
+          associer() {
+            case "$1" in
+              public/api/index.json)          echo schemas/manifeste-1.schema.json ;;
+              public/api/instantanes/*.json)  echo schemas/instantane-1.schema.json ;;
+              public/api/preuves/*.json)      echo schemas/eclat-preuves-1.schema.json ;;
+              data/registre/partis.json)      echo schemas/registre-partis-1.schema.json ;;
+              *) echo "" ;;
+            esac
+          }
+          artefacts=(public/api/**/*.json data/registre/partis.json)
           if [ ${#artefacts[@]} -eq 0 ]; then
-            echo "aucun artefact à valider pour l'instant"
-            exit 0
+            echo "aucun artefact produit pour l'instant"
           fi
-          npx --yes ajv-cli@5 --version
-          for s in schemas/*.schema.json; do
-            echo "::group::$s"
-            npx --yes ajv-cli@5 compile -s "$s" --spec=draft2020 || exit 1
+          for a in "${artefacts[@]}"; do
+            s=$(associer "$a")
+            if [ -z "$s" ]; then
+              echo "::error file=$a::artefact sans schéma associé — ajouter le schéma ou la correspondance dans ci.yml"
+              echec=1; continue
+            fi
+            if [ ! -f "$s" ]; then
+              echo "::error file=$a::schéma $s absent"
+              echec=1; continue
+            fi
+            echo "::group::$a contre $s"
+            npx --yes ajv-cli@5 validate --spec=draft2020 --strict=true -s "$s" -d "$a" || echec=1
             echo "::endgroup::"
           done
+          # Le registre de preuves est du JSONL : une ligne, un document.
+          if [ -f data/preuves/positions.jsonl ] && [ -f schemas/preuve-1.schema.json ]; then
+            n=0
+            while IFS= read -r ligne; do
+              n=$((n+1))
+              printf '%s' "$ligne" > /tmp/ligne.json
+              npx --yes ajv-cli@5 validate --spec=draft2020 --strict=true \
+                -s schemas/preuve-1.schema.json -d /tmp/ligne.json >/dev/null \
+                || { echo "::error file=data/preuves/positions.jsonl,line=$n::ligne invalide"; echec=1; }
+            done < data/preuves/positions.jsonl
+            echo "$n lignes de preuve validées"
+          fi
+          exit $echec
 
   garde-fous:
     name: garde-fous méthode
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
+      # Liste canonique dans scripts/lexique.sh — jamais recopiée ailleurs.
       # docs/juridique.md interdit tout axe à pôle dépréciatif, y compris en
-      # interne. Un identifiant de champ suffit à créer la métrique par
-      # inadvertance : on la refuse au niveau du dépôt.
-      - name: aucun axe de fiabilité
-        run: |
-          motifs='fiabilit|credibilit|crédibilit|veracit|véracit|desinformation|désinformation|fake.?news|infox'
-          cibles=$(git ls-files 'pipeline/**' 'web/**' 'schemas/**' 'data/**' 'public/**' 2>/dev/null || true)
-          if [ -z "$cibles" ]; then echo "rien à vérifier"; exit 0; fi
-          if echo "$cibles" | xargs -r grep -inE "$motifs" ; then
-            echo "::error::terme interdit par docs/juridique.md dans le code ou les données"
-            exit 1
-          fi
-          echo "aucun terme interdit"
+      # interne : un simple nom de champ suffirait à créer la métrique.
+      - name: lexique (code et données)
+        run: ./scripts/lexique.sh code
+      - name: lexique (documentation)
+        run: ./scripts/lexique.sh docs
 
   ci-ok:
     name: ci-ok
