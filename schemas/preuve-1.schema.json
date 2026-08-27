@@ -65,7 +65,9 @@
           "propertyNames": { "pattern": "^[a-z0-9_]+$" },
           "additionalProperties": {
             "anyOf": [
-              { "type": ["string", "number", "boolean"] },
+              { "type": "string" },
+              { "type": "number" },
+              { "type": "boolean" },
               { "type": "array", "items": { "type": "string" } }
             ]
           }
@@ -97,7 +99,7 @@
           "source": {
             "enum": ["an_scrutins_17", "an_organe", "an_parpol_mandats", "ches_2024", "ches_trend", "manifesto", "nuance_leg2024", "parlgov", "wikidata", "declaration_publique", "registre_partis"]
           },
-          "url": { "type": "string", "format": "uri" },
+          "url": { "type": "string", "pattern": "^https://", "description": "URL absolue en https de la ressource récupérée. Un motif et non le format `uri` : ajv en mode strict refuse un format inconnu, et le contrôle qui compte est la joignabilité de la ressource, vérifiée par I3 contre le registre d'entités." },
           "producteur": {
             "type": "string",
             "minLength": 1,
@@ -167,8 +169,8 @@
       "if": { "properties": { "famille": { "const": "votes" } }, "required": ["famille"] },
       "then": {
         "properties": {
-          "entite": { "pattern": "^groupe\\." },
-          "echelle": { "properties": { "id": { "const": "votes_lfi_rn" } } }
+          "entite": { "type": "string", "pattern": "^groupe\\." },
+          "echelle": { "type": "object", "properties": { "id": { "const": "votes_an17_ancre_v1" } } }
         }
       }
     },
@@ -176,8 +178,8 @@
       "if": { "properties": { "famille": { "const": "experts" } }, "required": ["famille"] },
       "then": {
         "properties": {
-          "entite": { "pattern": "^(parti|coalition)\\." },
-          "echelle": { "properties": { "id": { "const": "ches_lrgen_0_10" } } },
+          "entite": { "type": "string", "pattern": "^(parti|coalition)\\." },
+          "echelle": { "type": "object", "properties": { "id": { "const": "ches_lrgen_0_10" } } },
           "valeur_code": { "type": "null" }
         }
       }
@@ -186,8 +188,8 @@
       "if": { "properties": { "famille": { "const": "administratif" } }, "required": ["famille"] },
       "then": {
         "properties": {
-          "entite": { "pattern": "^(parti|coalition)\\." },
-          "echelle": { "properties": { "id": { "const": "nuance_leg2024" } } },
+          "entite": { "type": "string", "pattern": "^(parti|coalition)\\." },
+          "echelle": { "type": "object", "properties": { "id": { "const": "nuance_leg2024" } } },
           "valeur": { "type": "null" }
         }
       }
@@ -214,9 +216,9 @@
       "type": "object",
       "additionalProperties": false,
       "required": ["id", "min", "max", "decimales", "libelle"],
-      "description": "Liste close. `min` et `max` sont les bornes de graduation : une valeur en dehors est un refus. L'identifiant encode l'ancrage — inverser le signe crée `votes_rn_lfi`, il ne redéfinit pas `votes_lfi_rn`.",
+      "description": "Liste close. `min` et `max` sont les bornes de graduation : une valeur en dehors est un refus. L'identifiant encode la **convention** d'ancrage, jamais les ancres : `votes_an17_ancre_v1` nomme la transformation affine du §5 de positionnement.md, et les deux groupes qui tiennent les pôles sont de la donnée, lue dans le champ `ancre_axe` du registre d'entités et reprise dans `methode.parametres`. Changer de convention crée `…_v2` ; changer d'ancre ne change pas l'identifiant. Aucun identifiant technique ne porte le nom d'une entité mesurée (RG-112).",
       "properties": {
-        "id": { "enum": ["votes_lfi_rn", "ches_lrgen_0_10", "nuance_leg2024"] },
+        "id": { "enum": ["votes_an17_ancre_v1", "ches_lrgen_0_10", "nuance_leg2024"] },
         "min": { "type": ["number", "null"] },
         "max": { "type": ["number", "null"] },
         "decimales": { "type": ["integer", "null"], "minimum": 0, "maximum": 6 },

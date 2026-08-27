@@ -60,8 +60,8 @@ Abréviations des sources : **ADR0** = [adr/0000-perimetre-brique0.md](adr/0000-
 | RG-27 | Une permutation des lignes de la matrice ne déplace aucune position publiée. | POS §5 |
 | RG-28 | Aucune réduction flottante parallèle n'est employée sur le chemin déterministe. | ADR1 §1.6, POS §4 |
 | RG-29 | Le signe et l'échelle de l'axe sont fixés par une unique transformation affine ancrée sur deux médianes de groupe nommées : médiane de l'ancre gauche = −1, médiane de l'ancre droite = +1. | POS §5 |
-| RG-30 | Les deux ancres sont déclarées dans le registre d'entités comme identifiants de groupe avec période de validité, jamais en dur dans le code. | POS §5, ADR1 §8 |
-| RG-31 | Si une ancre est absente à la date d'agrégation, le pipeline échoue bruyamment et ne choisit jamais d'ancre de remplacement. | POS §5 |
+| RG-30 | Les deux ancres sont déclarées dans le registre d'entités, dans le champ `ancre_axe` des groupes, avec leur pôle et leur période de validité — jamais en dur dans le code, jamais dérivées d'un identifiant d'échelle. À une date donnée, au plus un groupe porte le pôle `gauche` et au plus un le pôle `droite`. | POS §5, ADR1 §8, REG §3.4.1, REG §6 V24 |
+| RG-31 | Si une ancre est absente à la date d'agrégation, le pipeline échoue bruyamment et ne choisit jamais d'ancre de remplacement — ni celle de la période précédente, ni un ancrage sur un seul pôle. | POS §5, REG §6 V25, CON §6 I5 |
 | RG-32 | Le second axe est calculé, sert aux contrôles de séparation, et n'est jamais publié comme position ni étiqueté. | POS §4, POS §10 |
 | RG-33 | Les valeurs sont arrondies au nombre de décimales de leur échelle avant écriture ; la garantie d'identité octet pour octet porte sur l'artefact arrondi. | POS §5, ADR1 §1.7 |
 
@@ -84,7 +84,9 @@ Abréviations des sources : **ADR0** = [adr/0000-perimetre-brique0.md](adr/0000-
 | # | Règle | Fondement |
 |---|---|---|
 | RG-50 | Un groupe parlementaire et un parti sont deux entités distinctes du modèle ; l'une n'est jamais employée à la place de l'autre. | MET §4, REG §1 |
-| RG-51 | Toute entité, relation, appartenance et identifiant externe porte une période de validité. | MET §4, REG §4 |
+| RG-51 | Toute entité, relation, appartenance, identifiant externe et déclaration d'ancre porte une période de validité. | MET §4, REG §4, REG §3.4.1 |
+| RG-58 | La date de début d'une législature est sa date d'**ouverture** — sa première séance —, déclarée avec la source qui l'atteste. Elle n'est jamais la date du scrutin, celle du début des mandats ni celle de la proclamation des résultats : quatre faits, quatre dates. | REG §3.1.1, REG §4.1 |
+| RG-59 | L'organe des députés non inscrits n'est pas un groupe parlementaire : il n'est jamais agrégé comme un parti, et il porte la seule exception nommée à l'inclusion d'un groupe dans la période de sa législature. | REG §2.1, REG §4.2, REG §6 V13 |
 | RG-52 | Un `id` d'entité est immuable : rien n'est renommé ni supprimé ; une entité qui cesse d'exister reçoit une date de fin. | REG §7 |
 | RG-53 | Le registre n'accepte aucune clé absente de son schéma — producteur strict. | REG §6, CON §5.1 |
 | RG-54 | Un marqueur de votes ne rejoint la bande d'un parti que si la composition du groupe désigne exactement un parti et qu'aucun autre groupe valide à la même date ne le désigne ; sinon le groupe reçoit sa propre bande. | CON §4.3 |
@@ -147,7 +149,7 @@ Abréviations des sources : **ADR0** = [adr/0000-perimetre-brique0.md](adr/0000-
 | # | Règle | Fondement |
 |---|---|---|
 | RG-100 | La version porte sur le contrat de sortie, pas sur le code ; majeure, mineure et patch sont définies par ADR0 §6. | ADR0 §6 |
-| RG-101 | Une inversion de la convention de signe de l'axe est une majeure et crée un nouvel identifiant d'échelle, les lignes antérieures restant interprétables. | ADR0 §6, CON §2.3 |
+| RG-101 | Un identifiant d'échelle encode la **convention** d'ancrage, jamais les ancres : `votes_an17_ancre_v1` nomme la transformation affine, et les deux groupes qui tiennent les pôles sont de la donnée, lue dans `ancre_axe` du registre et reprise dans `instantane.ancrage` et `methode.parametres`. Une inversion de la convention de signe, ou tout autre changement de la transformation, est une **majeure** et crée `…_v2` ; les lignes antérieures restent interprétables parce qu'elles portent leur propre ancrage, pas parce que leur identifiant d'échelle le nommait. Changer d'ancre à convention inchangée ne touche pas l'identifiant : c'est un patch qui ré-émet des lignes. | ADR0 §6, CON §2.3, CON §5, RG-112 |
 | RG-102 | Un changement du contrat de sortie s'accompagne, dans la même PR, de l'incrément de version et du journal de ce qui rompt. | DOD §20 |
 | RG-103 | Une modification de la méthode s'accompagne, dans la même PR, de la modification de MET. | DOD §19 |
 | RG-104 | Une source ajoutée s'accompagne d'une ligne dans [sources.md](sources.md) avec son format, sa licence et sa date de vérification. | DOD §22 |

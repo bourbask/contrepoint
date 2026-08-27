@@ -591,11 +591,21 @@ opposition de norme relative 0,652 existe dans la même matrice. Elle n'est pas
 publiée comme position, mais elle doit être mentionnée dans la page de méthode,
 sans quoi le premier axe est présenté comme l'ensemble du comportement de vote.
 
-**Blocage 3 — l'ancre est un objet du registre d'entités.** Le §5 impose que
-`LFI-NFP` et `RN` soient stockés comme identifiants de groupe avec période de
-validité, et que l'absence d'une ancre arrête le pipeline. Le registre d'entités
-(v0.4) doit donc porter un attribut « ancre d'axe », qui n'est mentionné ni dans
-ROADMAP.md ni dans methode.md.
+**Blocage 3 — l'ancre est un objet du registre d'entités. ~~Bloquant~~ Résolu.**
+Le §5 impose que les deux ancres soient stockées comme identifiants de groupe avec
+période de validité, et que l'absence d'une ancre arrête le pipeline.
+
+Le registre porte désormais un champ `ancre_axe` sur les groupes — pôle, période
+de validité, date d'établissement —, avec les règles de validation qui
+l'accompagnent : au plus une ancre par pôle à une date donnée, et arrêt du
+pipeline si un pôle manque à la date d'agrégation. Voir
+[registre-entites.md](registre-entites.md) et
+`schemas/registre-partis-1.schema.json`.
+
+Le champ ne porte pas de `source`, et c'est délibéré : **le choix d'une ancre
+n'est pas la lecture d'une source, c'est une décision de méthode datée.** Les
+deux tests qui étaient inécrivables — la déclaration de l'ancre, et la fixation
+du signe qui en dépend — existent maintenant.
 
 **Précision, pas blocage.** Le jeu 17 ne contient **aucun scrutin avant le
 2024-10-08**. L'exemple de l'ADR 0001 §1.5 sur « tout scrutin du 8 au 18 juillet

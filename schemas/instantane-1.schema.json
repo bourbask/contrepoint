@@ -24,7 +24,7 @@
       "type": "object",
       "additionalProperties": false,
       "required": ["famille", "ancre_gauche", "ancre_droite", "note"],
-      "description": "Porté comme donnée et non comme texte d'interface : c'est lui qui rend fausse la superposition de deux instantanés.",
+      "description": "Porté comme donnée et non comme texte d'interface : c'est lui qui rend fausse la superposition de deux instantanés. `ancre_gauche` et `ancre_droite` sont recopiés du champ `ancre_axe` du registre d'entités, valide à `date` — jamais dérivés d'un identifiant d'échelle, qui n'encode que la convention d'ancrage (contrats.md §2.3), et jamais choisis par le pipeline : une ancre absente à cette date l'arrête (V25, RG-31).",
       "properties": {
         "famille": { "type": "string", "pattern": "^[a-z_]+$" },
         "ancre_gauche": { "type": "string", "pattern": "^groupe\\.an[0-9]{2}\\.[a-z0-9-]+$" },

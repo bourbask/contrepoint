@@ -10,7 +10,7 @@ set -euo pipefail
 # Axes à pôle dépréciatif : interdits partout, sans exception.
 AXES='fiabilit|credibilit|crédibilit|veracit|véracit|desinformation|désinformation|fake.?news|infox'
 # Qualifications d'organisation plutôt que mesures : interdites dans le produit.
-QUALIF='biais d[eu]s? (media|média|journal|rédaction|redaction)|partial|militant|palmar|note globale'
+QUALIF='biais d[eu]s? (media|média|journal|rédaction|redaction)|partial|militant|palmar|note globale|extrémit|extremit|extrémis|extremis'
 # Agrégations qui écrasent les familles de mesure (règle non négociable n°6).
 AGREG='score global|indice de position|consensus des mesures|moyenne des familles'
 

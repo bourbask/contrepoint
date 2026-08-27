@@ -49,7 +49,7 @@ source (RG-104).
 | `an_scrutins_17`, `an_organe` | `Assemblée nationale` | `2026-08-27` | `last-modified` de l'archive |
 | `ches_2024` | `Chapel Hill Expert Survey` | `2026-08-04` | date de dépôt de la ressource dans la version `ches-europe` (`updated_at` de l'API GitHub Releases) |
 | `nuance_leg2024` | `Ministère de l'intérieur` | `2024-07-10` | `last-modified` de la ressource, et organisation déclarée sur data.gouv.fr |
-| `registre_partis` | `Contrepoint` | `A VERIFIER` — `2026-08-27` est la date de `partis.exemple.json` ; celle du registre réel viendra avec lui | `git log -1 --format=%cs -- data/registre/partis.json` |
+| `registre_partis` | `Contrepoint` | `2026-08-27`, date d'établissement du registre | `git log -1 --format=%cs -- data/registre/partis.json` |
 
 ### Écartées
 

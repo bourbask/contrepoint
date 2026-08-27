@@ -87,6 +87,16 @@ r=$(contenu '\b([01][0-9]|2[0-3]):[0-5][0-9](:[0-5][0-9])?\b' \
       | grep -vE 'GMT|UTC|[T ][0-9]{2}:[0-9]{2}:[0-9]{2}Z|cron|schedule|[0-9]{4}-[0-9]{2}-[0-9]{2}[ T]')
 [ -n "$r" ] && { signaler "heure locale dans un document — un horodatage de récupération révèle des horaires :"; echo "$r" | sed 's/^/      /'; }
 
+# RG-112 — ni `echelle.id` ni `echelle.libelle` ne nomme une entité mesurée.
+# Le libellé avait survécu au renommage de l'identifiant : la règle portait sur
+# les identifiants, le risque portait sur la chaîne publiée.
+# Le motif exige l'accolade ouvrante : seul le libelle DE L'OBJET echelle est
+# vise. Le libelle d'un marqueur nomme le groupe de sa propre bande, ce qui est
+# legitime -- premiere version du motif trop large, corrigee le 2026-08-27.
+r=$(contenu '"echelle"[[:space:]]*:[[:space:]]*\{[^}]*"(id|libelle)"[[:space:]]*:[[:space:]]*"[^"]*\b[A-Z]{2,8}(-[A-Z]{2,8})?\b' \
+      | grep -vE '\b(XVI+e?|CHES)\b')
+[ -n "$r" ] && { signaler "sigle d'entité dans \`echelle.id\` ou \`echelle.libelle\` (RG-112) :"; echo "$r" | sed 's/^/      /'; }
+
 # ---- 5. Adresses privées et matériel ---------------------------------------
 r=$(contenu '\b(192\.168|10\.[0-9]{1,3})\.[0-9]{1,3}\.[0-9]{1,3}\b|\b([0-9a-fA-F]{2}:){5}[0-9a-fA-F]{2}\b')
 [ -n "$r" ] && { signaler "adresse privée ou matérielle :"; echo "$r" | sed 's/^/      /'; }
