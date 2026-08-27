@@ -34,18 +34,35 @@ Codage `pour / contre / abstention`. L'**absence est une donnée manquante**, pa
 une position — l'assimiler à une abstention fabrique un centrisme artificiel
 chez les députés peu présents.
 
-Filtre de participation : un scrutin trop peu suivi renseigne sur les présents,
-pas sur les positions. Seuil documenté et affiché.
+**Aucun seuil de participation.** L'objection est légitime — un scrutin peu
+suivi renseigne sur les présents — mais elle a été mesurée et ne tient pas :
+aucune rupture de la distribution ne désigne de valeur, et un seuil relevé
+dégrade la séparation des blocs au lieu de l'améliorer. Un seul filtre, qui est
+une définition et non un seuil : un scrutin sans minorité enregistrée n'entre pas
+dans la matrice — `min(pour, contre) ≥ 1` — sa variance étant nulle. 455 scrutins
+écartés sur 8 434, dont les 23 motions de censure en totalité, l'article 49-2 ne
+faisant voter qu'un camp ; 7 979 retenus. `nombreVotants` est publié par scrutin
+avec le décompte, jamais employé comme porte
+([ADR 0003](adr/0003-arbitrages-de-coherence.md) §2).
 
-Rattachement député → groupe **avec période de validité**. Les changements de
-groupe en cours de mandature sont fréquents et cassent silencieusement toute
-agrégation qui les ignore.
+Rattachement député → groupe **avec période de validité**. Le groupe retenu est
+celui du **bloc de ventilation du scrutin** : il est daté par construction et ne
+demande aucune jointure. Le référentiel AMO30 sert de recours pour les blocs
+`organeRef: "PO0"`, de source des périodes de validité des groupes, et de
+contrôle croisé ([ADR 0003](adr/0003-arbitrages-de-coherence.md) §1). Les
+changements de groupe en cours de mandature sont fréquents et cassent
+silencieusement toute agrégation qui les ignore.
 
 ### 2. Axe issu des votes
 
-Estimation de position sur la matrice, premier axe (analyse des correspondances
-ou ACP sur la matrice codée). Signe fixé par deux points de repère connus, sans
-quoi l'orientation de l'axe change d'une exécution à l'autre.
+Estimation de position sur les **seules cellules observées** : moindres carrés
+alternés de rang 1, avec une constante par scrutin qui absorbe le fait qu'un
+scrutin est majoritairement pour ou contre. L'ACP et l'analyse des
+correspondances sont écartées : elles exigent une matrice complète là où les
+trois quarts des cellules sont manquantes, et l'absence n'est pas une position.
+Signe et échelle fixés en une seule transformation affine, par les médianes des
+deux groupes de repère ramenées à −1 et +1 — sans quoi l'orientation de l'axe
+change d'une exécution à l'autre.
 
 Méthode volontairement légère. Les estimateurs de référence de la littérature
 (IRT bayésien, W-NOMINATE) sont plus corrects sur les données manquantes ; ils
@@ -55,8 +72,11 @@ deviennent justifiés si le premier axe s'avère instable, et pas avant.
 L'axe sépare donc nettement les blocs et très mal les individus — contrairement
 au Congrès américain d'où la méthode est empruntée. Les votes positionnent les
 **partis**. Le positionnement fin d'un député isolé n'est pas défendable et
-n'est pas affiché comme tel. La variance intra-groupe est publiée pour que la
-limite soit visible.
+n'est pas affiché comme tel. La dispersion intra-groupe est publiée pour que la
+limite soit visible : **écart interquartile et écart-type de rééchantillonnage**.
+Jamais la variance, illisible sur un axe sans unité ; jamais l'étendue, dont les
+deux bornes sont les coordonnées de deux membres identifiables du groupe
+([ADR 0003](adr/0003-arbitrages-de-coherence.md) §3).
 
 ### 3. Familles de mesure indépendantes
 
