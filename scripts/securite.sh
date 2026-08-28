@@ -151,6 +151,14 @@ fi
 # Durcissements ajoutés après la revue de sécurité du 2026-08-27 : ce que la
 # relecture avait attrapé et qu'aucun motif ne voyait.
 
+# `dispersion` ne porte que trois clés. Toute autre est une statistique
+# d'ordre : un minimum, un maximum ou un rang est la coordonnée d'un membre
+# identifiable (I19, RG-42, ADR 0003 §3). `preuves.rs` garde le producteur ;
+# ceci garde l'artefact, qui est ce qui part en ligne. `echelle.min` et
+# `echelle.max` sont légitimes et hors de ce motif — vérifié, pas supposé.
+r=$(contenu '"dispersion"[[:space:]]*:[[:space:]]*\{[^}]*"(etendue|minimum|maximum|min|max|rang|q1|q3|position)"')
+[ -n "$r" ] && { signaler "clé de dispersion hors des trois autorisées — statistique d'ordre exposée (I19) :"; echo "$r" | sed 's/^/      /'; }
+
 # `citation` porte du texte de tiers, sous une exception étroite plafonnée.
 r=$(contenu '"citation"[[:space:]]*:[[:space:]]*"([^"\\]|\\.){401,}"')
 [ -n "$r" ] && { signaler "\`citation\` au-delà du plafond de 400 caractères (RG-74, I20) :"; echo "$r" | sed 's/^/      /'; }

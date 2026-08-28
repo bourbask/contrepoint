@@ -238,6 +238,7 @@ sont au niveau 2.
 | AGR-09 | `deux_uid_pour_une_meme_entite_ne_sont_pas_fusionnes_par_lestimateur` | `PO847173` et `PO872880` | Deux lignes de groupe distinctes ; la réconciliation appartient au registre d'entités | Un `libelleAbrev` égal fusionnerait deux périodes distinctes ; ici les deux abrégés diffèrent (`UDR` / `UDDPLR`) et évitent la fusion par accident. Le test empêche de compter sur cet accident |
 | AGR-10 | `ecart_type_de_reechantillonnage_est_celui_du_jackknife` | quatre plis de médianes écrites à la main, −0,02 / −0,01 / +0,01 / +0,02 | `√((K−1)/K · Σ(θₖ − θ̄)²)` = **0,0273861278752583**, en dur | Le facteur du jackknife ne vit que dans une ligne de `agregation.rs`, et la construction des plis vit dans `examples/verification-corpus.rs`, que la CI n'exécute pas. Sans ce test, le passage au bootstrap — `√(Σ/(K−1))` = 0,0182574185835055, un facteur 1,5 — survit à toute la suite, et avec lui un générateur aléatoire dans le pipeline |
 | AGR-11 [C] | `debug_de_membre_nexpose_pas_la_position` | un `Membre` construit dans le test, formaté par `{:?}` | L'acteur et le groupe restent lisibles ; **ni le mot `position`, ni sa valeur** | AGR-01 ne couvre que la chaîne rendue. Un `#[derive(Debug)]` sur `Membre` apparie l'acteur et sa coordonnée : un `dbg!`, un `{:?}` dans un message d'erreur ou une trace sur la sortie d'erreur publient une coordonnée individuelle sans passer par `rendre` |
+| AGR-12 | `le_seuil_de_liqr_est_le_premier_effectif_sans_extreme` | effectifs 2 à 32, positions distinctes croissantes | Le seuil de calcul de l'IQR égale le premier effectif où ni Q1 ni Q3 n'est un extrême, et rien n'est calculé en deçà | Le seuil valait **4**, et à 4 comme à 5 membres la médiane basse de la moitié inférieure **est** le minimum du groupe : l'IQR y portait une borne d'étendue (I19). Le test recompte la propriété par balayage plutôt que de comparer la constante à elle-même — les mutants 4, 5 et 7 sont tués |
 
 ---
 
@@ -391,7 +392,7 @@ première ligne d'implémentation.
 | **6** | L'estimateur | EST-01, EST-02, EST-03, EST-04 | Un axe sur matrice synthétique, exact. Rien de publiable encore, et c'est voulu : les invariances viennent avant les vraies données |
 | **7** | Les invariances | EST-05, EST-06, EST-07, EST-13, EST-14 | Six permutations et quatre initialisations qui donnent le même axe. Le déterminisme cesse d'être une intention |
 | **8** | L'ancrage | EST-08, EST-09, EST-10, EST-11, EST-12, EST-17 | Un axe où LFI-NFP vaut −1 et RN +1, ancres lues dans le registre, pipeline qui s'arrête si l'ancre manque |
-| **9** | L'agrégation et la règle de non-publication | AGR-01 → AGR-11 | Les bandes de partis avec médiane, IQR, écart-type de rééchantillonnage, effectif, date — et NI et LIOT en « non mesuré » avec leur raison. La première sortie qui ressemble au produit |
+| **9** | L'agrégation et la règle de non-publication | AGR-01 → AGR-12 | Les bandes de partis avec médiane, IQR, écart-type de rééchantillonnage, effectif, date — et NI et LIOT en « non mesuré » avec leur raison. La première sortie qui ressemble au produit |
 | **10** | Les alarmes | EST-15, EST-16 | Deux corpus synthétiques dégradés qui font passer la famille « votes » en « non mesuré ». Le risque accepté de l'ADR 0000 §8 devient un comportement observable |
 | **11** | Le registre d'entités | REG-01 → REG-22 | Un validateur qui refuse vingt-deux fichiers fautifs et accepte l'extrait. Une PR de correction du registre devient possible |
 | **12** | Le registre de preuves | PRE-01 → PRE-13 | Le JSONL en ajout seul, rejouable, idempotent. Le contrat des briques 1-3 existe |
@@ -451,7 +452,7 @@ porte, le travail qui l'exécute — ou pourquoi elle ne peut pas encore l'être
 | Porte | Travail de `ci.yml` | État |
 |---|---|---|
 | Porte 1 — identifiants de test déclarés | `portes` → `./scripts/portes-de-ci.sh identifiants` | **Active.** S'applique par préfixe, dès que la suite de ce préfixe existe. Au 2026-08-27 : `REC` et `ADA`, soit dix identifiants écrits ; les 92 autres sont annoncés « en attente », pas passés sous silence |
-| Porte 2 — branches ≥ 90 % sur `matrice` et `estimateur` | `couverture-et-determinisme` | **Squelette**, gardé par `hashFiles('pipeline/src/main.rs')`. Le module n'existe pas ; la commande `cargo llvm-cov --branch` et le seuil sont écrits |
+| Porte 2 — couverture de **lignes** sur `matrice` et `estimateur` | `couverture-et-determinisme` | **Active.** La couverture de **branches** exigerait `-Z coverage-options=branch`, donc le compilateur *nightly* : l'épingler contredirait la reproductibilité que l'ADR 0001 impose, *nightly* étant une cible mouvante. Le seuil de branches reste **déclaré et non tenu**, et c'est dit ici plutôt que masqué par un drapeau qui échoue |
 | Porte 3 — lignes ≥ 70 % sur le binaire | `couverture-et-determinisme` | **Squelette**, même garde, même commande |
 | Lexique sur le diff | `garde-fous` → `./scripts/lexique.sh code` et `docs` | **Active** depuis l'origine |
 | Deux exécutions consécutives, artefacts identiques | `couverture-et-determinisme` | **Squelette.** C'est le contrôle 1 de contrats.md §8.2 ; il exige le binaire `contrepoint` |
@@ -497,7 +498,7 @@ rien couvre 100 % des lignes. Ce que le projet doit garantir n'est pas un taux,
 c'est une liste — celle de definition-of-done.md §9, de positionnement.md §9 et
 des 25 règles du registre. Une liste se vérifie exactement ; un taux s'approche.
 
-### Porte 2 — couverture de branches ≥ 90 % sur deux modules
+### Porte 2 — couverture sur deux modules (lignes ; branches hors de portée sur stable)
 
 Sur `matrice` (codage, filtre) et sur `estimateur` (ancrage, alarmes)
 uniquement.
