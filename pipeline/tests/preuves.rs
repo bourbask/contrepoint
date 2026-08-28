@@ -37,7 +37,7 @@ fn lignes_de_reference() -> Vec<String> {
 fn ligne_nominale() -> Value {
     json!({
         "schema": SCHEMA,
-        "contrat": "0.3.0",
+        "contrat": "0.4.0",
         "famille": "votes",
         "entite": "groupe.an17.rn",
         "valeur": 1.0,
@@ -46,7 +46,7 @@ fn ligne_nominale() -> Value {
             "id": "votes_an17_ancre_v1",
             "min": -1.0,
             "max": 1.0,
-            "decimales": 4,
+            "decimales": 2,
             "libelle": "Votes XVIIe législature, unités médianes ancrées"
         },
         "motif_code": null,
@@ -510,11 +510,11 @@ fn forme_canonique_des_lignes() {
         );
     }
     assert!(
-        rendue.contains(r#""valeur":1.0000"#),
+        rendue.contains(r#""valeur":1.00"#),
         "décimales de l'échelle : {rendue}"
     );
     assert!(
-        rendue.contains(r#""iqr":0.0520"#),
+        rendue.contains(r#""iqr":0.05"#),
         "dispersion aux décimales de l'échelle"
     );
     assert!(

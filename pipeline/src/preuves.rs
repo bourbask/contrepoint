@@ -68,8 +68,13 @@ const CLES_LOGICIEL: &[&str] = &["version", "commit"];
 
 const FAMILLES: [&str; 3] = ["votes", "experts", "administratif"];
 const METHODES: [&str; 3] = ["votes_rang1_ancre", "ches_lrgen", "nuance_constatee"];
-const MOTIFS: [&str; 4] = [
+const MOTIFS: [&str; 5] = [
     "hors_source",
+    // Distinct de `hors_source` : l'entité **est** dans les sources, aucune
+    // famille n'a simplement produit de ligne pour elle. Les confondre faisait
+    // dire à l'artefact que la source ne porte pas l'entité, ce qu'un lecteur
+    // recoupant le registre voyait faux.
+    "aucune_mesure",
     "sous_seuil_de_publication",
     "source_indeterminee",
     "source_non_recuperable",
@@ -118,7 +123,15 @@ pub const ECHELLES: [Echelle; 3] = [
         "votes_an17_ancre_v1",
         Some(-1.0),
         Some(1.0),
-        Some(4),
+        // Deux décimales, et non quatre. À effectif impair la médiane d'un
+        // groupe **est** la coordonnée ancrée d'un député : à quatre décimales,
+        // la valeur publiée était celle d'une personne, au chiffre près. L'ADR
+        // 0003 §3 avait écarté l'étendue pour ce motif exact — « un minimum et
+        // un maximum sont les coordonnées de deux membres identifiables » — sans
+        // voir que Q2 tombe sous le même raisonnement quand l'effectif est
+        // impair. Arrondir ne cache rien de mesurable : nul ne lit un axe
+        // gauche-droite au dix-millième.
+        Some(2),
         "votes",
     ),
     ("ches_lrgen_0_10", Some(0.0), Some(10.0), Some(2), "experts"),
