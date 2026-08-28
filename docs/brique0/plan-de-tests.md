@@ -150,7 +150,7 @@ Fixtures : les cinq scrutins verbatim et les deux index de
 | ING-11 | `par_delegation_est_une_position` | `VTANR5L17V5268.json` (les deux valeurs présentes) | `parDelegation = "true"` code comme `"false"` | 15,4 % des cellules exprimées. Les traiter en empêchement viderait un septième de la matrice (§3) |
 | ING-12 | `mise_au_point_ingeree_jamais_appliquee` | `VTANR5L17V2767.json` | La cellule vaut le vote de la machine ; la mise au point est un attribut du scrutin, comptée et exposée | 3 043 entrées, dont 746 combleraient une absence par une intention déclarée — interdit par methode.md. Et une matrice qui applique les mises au point est incohérente avec `sort.code` de la source |
 | ING-13 | `ordre_des_fichiers_sans_effet` [P] | les cinq scrutins, présentés dans 5 ordres fixes | Sortie identique à l'octet | La machine de mesure a livré `VTANR5L17V5646` avant `VTANR5L17V2136` : l'ordre du système de fichiers entre dans la sortie si rien ne l'interdit (definition-of-done.md §6) |
-| ING-14 | `dedoublonnage_des_mandats_gp` | `mandats-gp-l17.json`, cas mandat dupliqué | Regroupement par `(organeRef, dateDebut)`, `dateFin` maximale retenue, `null` = en cours ; aucun chevauchement résiduel entre deux `organeRef` | 18 chevauchements sur 648 députés, 17 716 cellules ambiguës. Sans la règle, la jointure choisit au hasard |
+| ING-14 | `dedoublonnage_des_mandats_gp` | `mandats-gp-l17.json`, cas mandat dupliqué | Regroupement par `(organeRef, dateDebut)`, `dateFin` maximale retenue, `null` = en cours ; aucun chevauchement résiduel entre deux `organeRef` | 18 chevauchements sur 648 députés, **0 cellule ambiguë** après dédoublonnage. Sans la règle, la jointure choisit au hasard |
 | ING-15 | `mandat_ref_ne_donne_pas_le_groupe` [C] | `VTANR5L17V156.json` + `mandats-gp-l17.json` | Le rattachement ne consulte jamais `votant.mandatRef` pour le groupe | `mandatRef` pointe toujours un mandat `ASSEMBLEE`, 1 270 476 / 1 270 476. Le piège est de croire tenir la jointure ; le test empêche de le recroire |
 
 ### Cas particulier `PO0` — conflit de spécification, acté par l'ADR 0003 §1
@@ -161,7 +161,7 @@ l'inverse : « le rattachement ne peut donc pas être lu dans le fichier de
 scrutin ; il doit venir des mandats ». Les deux ne peuvent pas être vrais.
 
 Ce plan retient **ingestion-votes.md** : c'est la version mesurée sur les
-1 270 476 cellules, elle explique les 2 255 désaccords par un retard de `dateFin`
+1 270 476 cellules, elle explique les 280 désaccords par un retard de `dateFin`
 du mandat de non-inscrit, et elle évite une jointure là où la source publie déjà
 la réponse datée. C'est ce que
 [../adr/0003-arbitrages-de-coherence.md](../adr/0003-arbitrages-de-coherence.md)
@@ -171,7 +171,7 @@ la réponse datée. C'est ce que
 |---|---|---|---|---|
 | ING-16 | `po0_resolu_par_les_mandats` | `VTANR5L17V6256.json` + `mandats-gp-l17.json` | Chaque bloc `PO0` non vide est résolu par le mandat GP de ses votants à `dateScrutin`, unanimement ; un bloc vide est sans objet | 335 acteurs sur 14 scrutins perdent leur groupe, ou un treizième groupe apparaît dans l'agrégation |
 | ING-17 [C] | `po0_non_resolu_est_bloquant` | bloc `PO0` construit dans le test, votants sans mandat GP à la date | Erreur bloquante. **Pas** de groupe « inconnu », pas de bloc ignoré | Un groupe « inconnu » remonte dans une agrégation publiée et devient une bande du graphe |
-| ING-18 | `desaccord_ventilation_amo30_tranche_pour_la_ventilation` | `mandats-gp-l17.json`, cas de désaccord | Le groupe retenu est celui de la ventilation ; le désaccord est compté et exposé, pas tu | Les 2 255 cellules concernées basculeraient chez les non-inscrits, dont la dispersion interne est la plus grande du jeu |
+| ING-18 | `desaccord_ventilation_amo30_tranche_pour_la_ventilation` | `mandats-gp-l17.json`, cas de désaccord | Le groupe retenu est celui de la ventilation ; le désaccord est compté et exposé, pas tu | Les 280 cellules concernées basculeraient chez les non-inscrits, dont la dispersion interne est la plus grande du jeu |
 | ING-19 | `periode_de_validite_respectee` | `mandats-gp-l17.json`, cas des trois groupes successifs | Un vote du 2025-05-01 est attribué au groupe valide **ce jour-là**, jamais au dernier groupe connu | Invariant nommément exigé par definition-of-done.md §9. Nul sur les données de la v0 (aucun scrutin avant le 2024-10-08) et réel dès la XVIe législature : le test protège l'extension, pas la v0 |
 
 ---
@@ -547,7 +547,7 @@ et laquelle chaque cycle aurait figée sans arbitrage.
 
 | # | Contradiction | Cycle bloqué | Version actée |
 |---|---|---|---|
-| 1 | **Source du rattachement au groupe.** ingestion-votes.md §8 : le bloc de ventilation, AMO30 en recours. positionnement.md §1 : « le rattachement ne peut pas être lu dans le fichier de scrutin ; il doit venir des mandats » | 4 | **Acté** — ADR 0003 §1 : le bloc de ventilation du scrutin, mesuré sur 1 270 476 cellules (2 255 désaccords, 0,2 %, tous par retard de `dateFin` du mandat de non-inscrit). AMO30 : recours pour les blocs `PO0`, périodes de validité, contrôle croisé. `ING-16` à `ING-19` peuvent être écrits |
+| 1 | **Source du rattachement au groupe.** ingestion-votes.md §8 : le bloc de ventilation, AMO30 en recours. positionnement.md §1 : « le rattachement ne peut pas être lu dans le fichier de scrutin ; il doit venir des mandats » | 4 | **Acté** — ADR 0003 §1 : le bloc de ventilation du scrutin, mesuré sur 1 270 476 lignes nominatives (280 désaccords sur cellules exprimées, tous par retard de `dateFin` du mandat de non-inscrit). AMO30 : recours pour les blocs `PO0`, périodes de validité, contrôle croisé. `ING-16` à `ING-19` peuvent être écrits |
 | 2 | **Nombre de scrutins à `PO0`.** ingestion-votes.md §8 : 14 scrutins, dont 13 le 2024-12-02 et un le 2026-04-16. positionnement.md §1 : 14 scrutins, dont 13 le 2024-12-02, un le 2025-04-07 **et** un le 2026-04-16 — soit 15 énumérés pour 14 annoncés | 4 | **Acté** — ADR 0003 §3 : recompté sur l'archive complète, **14** au total, **12** le 2024-12-02, 1 le 2025-04-07, 1 le 2026-04-16. Juste sur le total, faux sur la ventilation dans les deux documents |
 | 3 | **Gain du rang 1.** ADR 0001 §1.3 : 2,1 %. positionnement.md §1 et blocage 1 : 59,1 %, invariant au codage | 14 | **Acté** — ADR 0003 §3 : **60,8 % du résidu** après constante par scrutin, recompté ; 51,5 % de la variance totale. L'ADR 0001 se trompait d'un facteur trente |
 | 4 | **Dispersion publiée.** ROADMAP.md v0.2 et methode.md §2 : « variance intra-groupe publiée ». positionnement.md §6 : IQR et étendue, « aucune variance » | 9 | **Acté** — ADR 0003 §3, tranché par la relecture juridique : **IQR et écart-type de rééchantillonnage, jamais la variance, jamais l'étendue** — une borne d'étendue est la coordonnée d'un membre identifiable. `AGR-03` l'épingle ; ROADMAP.md v0.2 et methode.md §2 mis à jour dans la PR de l'ADR |

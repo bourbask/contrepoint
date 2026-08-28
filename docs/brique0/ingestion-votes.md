@@ -486,10 +486,21 @@ puis comparé au groupe du bloc pour les 1 270 476 cellules :
 
 | Comparaison | Cellules |
 |---|---|
-| Identique | 1 250 505 (98,4 %) |
-| ~~Plusieurs mandats GP valides à la date~~ | **0** — voir ci-dessous |
-| **Groupe différent, toutes positions** | **371** |
-| **Groupe différent, cellules exprimées** | **280** — c'est ce que le code publie |
+| Identique | **1 268 189** (99,82 %), dont 1 244 918 exprimées |
+| ~~Plusieurs mandats GP valides à la date~~ | **0** après dédoublonnage — voir ci-dessous |
+| Groupe différent, hors `PO0` | **371**, dont **280** exprimées — c'est ce que le code publie |
+| Blocs `PO0`, non résolubles par la ventilation | **1 916**, dont **1 895** exprimées |
+| **Total** | **1 270 476** |
+
+> **La colonne compte des lignes nominatives, pas des cellules.** La base de
+> 1 270 476 inclut les 23 383 non-votants — `1 270 476 − 1 247 093 = 9 991 + 7 508
+> + 5 884`. Une cellule est une position exprimée ; un non-votant n'en produit
+> aucune. Les deux décomptes sont donnés côte à côte pour que la distinction ne
+> se perde pas : c'est en la perdant qu'une « correction » a un moment inscrit
+> 1 916 cellules là où il y en a 1 895.
+>
+> `371 + 1 916 = 2 287`, ce qui rend lisible le troisième nombre de la note
+> ci-dessous.
 
 > **Recompté le 2026-08-28 par le code du cycle 1**, sur l'archive dont
 > l'empreinte de contenu est `c8457f34…`. Les valeurs annoncées auparavant —
