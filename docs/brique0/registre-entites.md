@@ -217,12 +217,12 @@ COM DIV DSV DVC DVD DVG ECO ENS EXD EXG FI
 HOR LR RDG REC REG RN SOC UDI UG UXD VEC
 ```
 
-Le fichier `resultats-definitifs-par-circonscription.csv` du 2nd tour porte en
-outre, par candidat, `Nuance candidat n`, `Nom candidat n` et `Elu n`. **Ces
-trois colonnes ne sont pas ingérées** : l'appariement d'une nuance administrative
-à une personne physique est hors périmètre (RG-111). Seul l'ensemble des codes
-distincts constatés est utilisé — la famille `administratif` mesure des partis et
-des coalitions, jamais des personnes.
+Le fichier retenu est `resultats-definitifs-par-region.csv` du 2nd tour, qui
+**ne porte aucune colonne nominative** et constate exactement les **mêmes 17
+codes** que la version par circonscription — vérifié le 2026-08-28, ensembles
+identiques. Le fichier par circonscription est écarté pour cette seule raison :
+il porte `Nuance candidat n` et `Nom candidat n` sur la même ligne, et RG-111
+interdit ce rattachement dans tout fichier du projet, cache compris.
 
 Trois faits à conserver avec la donnée :
 

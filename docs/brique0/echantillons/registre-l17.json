@@ -79,7 +79,7 @@
     {
       "id": "nuance_leg2024",
       "libelle": "Ministere de l'Interieur — codes de nuance constatés dans les resultats definitifs des legislatives 2024",
-      "url": "https://static.data.gouv.fr/resources/elections-legislatives-des-30-juin-et-7-juillet-2024-resultats-definitifs-du-2nd-tour/20240710-170728/resultats-definitifs-par-circonscription.csv",
+      "url": "https://static.data.gouv.fr/resources/elections-legislatives-des-30-juin-et-7-juillet-2024-resultats-definitifs-du-2nd-tour/20240710-170536/resultats-definitifs-par-region.csv",
       "recupere_le": "2026-08-27",
       "empreinte_sha256": "bcc062b9264dcf3dc1eac5463acf1e8743171b86385923e7f770fd9028271083",
       "cardinalite": "plusieurs",

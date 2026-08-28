@@ -28,7 +28,7 @@ source n'alimente aucune entrée : elle est lue, pas citée.
 | `an_organe` | Assemblée nationale | `https://data.assemblee-nationale.fr/static/openData/repository/17/amo/tous_acteurs_mandats_organes_xi_legislature/AMO30_tous_acteurs_tous_mandats_tous_organes_historique.json.zip` | ZIP de 13 991 fichiers JSON ; 3 119 acteurs, 10 813 organes, 59 déports ; 13 600 736 o | Licence Ouverte / Open Licence **v1.0** | quotidienne, reconstruction nocturne | **200**, `last-modified` 2026-08-27 00:34:47 GMT | v0 (v0.1, v0.4) |
 | `ches_2024` | Chapel Hill Expert Survey | `https://github.com/chesdata/chesdata.github.io/releases/download/ches-europe/CHES_2024_final_v2.csv` | CSV, 279 lignes de données, 99 668 o | **Aucune licence publiée.** Réutilisation soumise à citation, condition obtenue par échange écrit le 2026-08-27 | par vague : 1999, 2002, 2006, 2007, 2010, 2014, 2019, 2024 | **200**, `last-modified` 2026-08-04 17:28:50 GMT, SHA-256 `1c1ec053…` conforme | v0 (v0.3) |
 | `ches_trend` | Chapel Hill Expert Survey | `https://github.com/chesdata/chesdata.github.io/releases/download/ches-trend/1999-2024_CHES_dataset_meansV2.csv` | CSV, 1 441 lignes de données, 634 466 o | idem `ches_2024` | une révision par vague | **200**, `last-modified` 2026-08-04 17:23:11 GMT, SHA-256 `254384ab…` conforme | v0 (v0.3) |
-| `nuance_leg2024` | Ministère de l'intérieur | `https://static.data.gouv.fr/resources/elections-legislatives-des-30-juin-et-7-juillet-2024-resultats-definitifs-du-2nd-tour/20240710-170728/resultats-definitifs-par-circonscription.csv` | CSV, 578 lignes, 147 285 o ; **17 codes de nuance distincts constatés au 2nd tour** | **Licence Ouverte v2.0** (`license = lov2` sur data.gouv.fr) | figée : un dépôt par scrutin | **200**, `last-modified` 2024-07-10 17:07:28 GMT, SHA-256 `bcc062b9…` conforme, mesuré le 2026-08-28 | v0 (v0.3) |
+| `nuance_leg2024` | Ministère de l'intérieur | `https://static.data.gouv.fr/resources/elections-legislatives-des-30-juin-et-7-juillet-2024-resultats-definitifs-du-2nd-tour/20240710-170536/resultats-definitifs-par-region.csv` | CSV, 18 lignes de données, 6 767 o ; **17 codes de nuance distincts constatés au 2nd tour** ; **aucune colonne nominative** | **Licence Ouverte v2.0** (`license = lov2` sur data.gouv.fr) | figée : un dépôt par scrutin | **200**, `last-modified` 2024-07-10 17:05:37 GMT, SHA-256 `f8552401cffade4397fa501f161c961d377d629235d9f9a813ecb11ad5ba0c50`, mesuré le 2026-08-28 | v0 (v0.3) |
 | `registre_partis` | Contrepoint | `data/registre/partis.json` (fichier du dépôt) | JSON, 42 970 o, SHA-256 `186fc819…` | Licence Ouverte v2.0 ([../LICENSE-DONNEES](../LICENSE-DONNEES)) | à chaque correction du registre | non applicable — fichier local | v0 (v0.4) |
 
 ### 1.2 Lues, jamais citées — documentaire
@@ -106,7 +106,7 @@ Mesures des deux nouvelles sources, exécution du 2026-08-28 :
 | Source | Octets annoncés et reçus | Empreinte d'archive | Empreinte de contenu | `last-modified` |
 |---|---|---|---|---|
 | CHES 2024 | 99 668 | `1c1ec053…` | `1c1ec053…`, identique — fichier unique | 2026-08-04 17:28:50 GMT |
-| Nuances 2024, 2nd tour | 147 285 | `bcc062b9…` | `bcc062b9…`, identique — fichier unique | 2024-07-10 17:07:28 GMT |
+| Nuances 2024, 2nd tour, par région | 6 767 | `f8552401…` | `f8552401…`, identique — fichier unique | 2024-07-10 17:05:37 GMT |
 
 `A VERIFIER`, relevé le 2026-08-28 et non corrigé, hors du périmètre de ce
 ticket : la réponse **HEAD** de l'archive AMO30 annonce `content-length`
@@ -266,7 +266,7 @@ Trois faits qui commandent le modèle de données
   portés par `coalition.nfp` et `coalition.ensemble`, jamais par un parti.
 - **Aucune colonne nominative n'est ingérée** (RG-111). `Nuance candidat n`,
   `Nom candidat n` et `Elu n` du fichier par circonscription restent hors
-  périmètre : seul l'ensemble des 22 codes distincts est utilisé.
+  périmètre : seul l'ensemble des 17 codes distincts constatés au 2nd tour est utilisé.
 
 C'est précisément ce genre de rattachement révisé sans changement de
 comportement de vote que l'outil rend visible.

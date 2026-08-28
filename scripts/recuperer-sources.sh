@@ -44,7 +44,7 @@ SOURCES=(
   "scrutins|https://data.assemblee-nationale.fr/static/openData/repository/17/loi/scrutins/Scrutins.json.zip|zip|Assemblée nationale|Licence Ouverte v1.0"
   "amo30|https://data.assemblee-nationale.fr/static/openData/repository/17/amo/tous_acteurs_mandats_organes_xi_legislature/AMO30_tous_acteurs_tous_mandats_tous_organes_historique.json.zip|zip|Assemblée nationale|Licence Ouverte v1.0"
   "ches_2024|https://github.com/chesdata/chesdata.github.io/releases/download/ches-europe/CHES_2024_final_v2.csv|fichier|Chapel Hill Expert Survey|aucune licence publiée — réutilisation soumise à citation, condition obtenue par échange écrit le 2026-08-27"
-  "nuance_leg2024|https://static.data.gouv.fr/resources/elections-legislatives-des-30-juin-et-7-juillet-2024-resultats-definitifs-du-2nd-tour/20240710-170728/resultats-definitifs-par-circonscription.csv|fichier|Ministère de l'intérieur|Licence Ouverte v2.0"
+  "nuance_leg2024|https://static.data.gouv.fr/resources/elections-legislatives-des-30-juin-et-7-juillet-2024-resultats-definitifs-du-2nd-tour/20240710-170536/resultats-definitifs-par-region.csv|fichier|Ministère de l'intérieur|Licence Ouverte v2.0"
 )
 
 # ---- Fonctions pures --------------------------------------------------------

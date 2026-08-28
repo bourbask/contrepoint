@@ -46,7 +46,7 @@ pub const METHODE_ADMINISTRATIF: &str = "nuance_constatee";
 pub const VERSION_METHODE_ADMINISTRATIF: &str = "1.0.0";
 pub const ECHELLE_ADMINISTRATIF: &str = "nuance_leg2024";
 pub const LIBELLE_ECHELLE_ADMINISTRATIF: &str =
-    "Code de nuance attribué à une candidature, législatives 2024";
+    "Ministère de l'intérieur — code de nuance, législatives 2024";
 /// Le préfixe des seules colonnes lues. `Nom candidat n`, `Prénom candidat n`,
 /// `Sexe candidat n` et `Elu n` existent dans la source et ne sont **jamais**
 /// atteintes : RG-111 interdit d'ingérer une colonne nominative, et une nuance

@@ -137,11 +137,14 @@ verifier REC-07 "la paternité de CHES n'annonce aucune Licence Ouverte" propre 
 # et il échoue AVANT tout appel réseau à `gh`.
 deposable() { # url -> depose|refuse
   local url="$1" d sha sortie
-  printf 'contenu' > "$bac/faux.zip"
-  sha=$(sha256sum "$bac/faux.zip" | cut -d' ' -f1)
+  # Un .csv et non un .zip : les sources non redistribuables sont de forme
+  # `fichier`. Avec un faux zip, le refus venait de la recherche d'archive et
+  # non de la liste blanche — la porte testée n'était pas celle qui s'ouvre.
+  printf 'contenu' > "$bac/donnees.csv"
+  sha=$(sha256sum "$bac/donnees.csv" | cut -d' ' -f1)
   d="$bac/depot/$sha"
   mkdir -p "$d"
-  cp "$bac/faux.zip" "$d/"
+  cp "$bac/donnees.csv" "$d/"
   printf 'url=%s\n' "$url" > "$d/descripteur.txt"
   sortie=$(./scripts/archives.sh deposer "$d" 2>&1 || true)
   if printf '%s' "$sortie" | grep -q 'hors de la liste redistribuable'; then
