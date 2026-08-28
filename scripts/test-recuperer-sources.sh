@@ -117,6 +117,50 @@ deposer_cache d98c02036530900ba8d8083fd4edf6eb41f332b122ec11472ae035b1f0abff5b "
 verifier REC-06 "une empreinte inconnue crée son entrée" \
   "autre chose" "$(cat "$CONTREPOINT_CACHE/d98c02036530900ba8d8083fd4edf6eb41f332b122ec11472ae035b1f0abff5b/Scrutins.json.zip")"
 
+# ---- REC-07 — la mention de paternité est dérivée, jamais recopiée ----------
+# Deux des quatre sources ne sont pas de l'Assemblée nationale. Une mention
+# écrite en dur les attribuait toutes à elle, et à une licence qu'elles n'ont
+# pas : c'est une fausse attribution, pas une approximation (RG-76, RG-118).
+verifier REC-07 "la paternité vaut producteur, licence et date de la source" \
+  "Assemblée nationale — Licence Ouverte v1.0 — données du 2026-08-27T04:25:40Z" \
+  "$(paternite 'Assemblée nationale' 'Licence Ouverte v1.0' 2026-08-27T04:25:40Z)"
+p_ches=$(paternite 'Chapel Hill Expert Survey' 'aucune licence publiée — réutilisation soumise à citation' 2026-08-04T17:28:50Z)
+printf '%s' "$p_ches" | grep -q 'Assemblée nationale' && r=contaminee || r=propre
+verifier REC-07 "la paternité de CHES ne nomme pas l'Assemblée nationale" propre "$r"
+printf '%s' "$p_ches" | grep -q 'Licence Ouverte' && r=contaminee || r=propre
+verifier REC-07 "la paternité de CHES n'annonce aucune Licence Ouverte" propre "$r"
+
+# ---- REC-08 — seule une source redistribuable est déposée en release --------
+# CHES ne publie aucune licence (ADR 0000 §8, RG-118) et le nuancier n'est pas
+# dans la liste blanche : le dépôt distribue l'URL, la date et les empreintes,
+# jamais la copie. Le contrôle est exercé sur `scripts/archives.sh` lui-même,
+# et il échoue AVANT tout appel réseau à `gh`.
+deposable() { # url -> depose|refuse
+  local url="$1" d sha sortie
+  # Un .csv et non un .zip : les sources non redistribuables sont de forme
+  # `fichier`. Avec un faux zip, le refus venait de la recherche d'archive et
+  # non de la liste blanche — la porte testée n'était pas celle qui s'ouvre.
+  printf 'contenu' > "$bac/donnees.csv"
+  sha=$(sha256sum "$bac/donnees.csv" | cut -d' ' -f1)
+  d="$bac/depot/$sha"
+  mkdir -p "$d"
+  cp "$bac/donnees.csv" "$d/"
+  printf 'url=%s\n' "$url" > "$d/descripteur.txt"
+  sortie=$(./scripts/archives.sh deposer "$d" 2>&1 || true)
+  if printf '%s' "$sortie" | grep -q 'hors de la liste redistribuable'; then
+    echo refuse
+  else
+    echo depose
+  fi
+  rm -rf "$bac/depot"
+}
+verifier REC-08 "CHES n'est jamais déposé : aucune licence publiée" refuse \
+  "$(deposable 'https://github.com/chesdata/chesdata.github.io/releases/download/ches-europe/CHES_2024_final_v2.csv')"
+verifier REC-08 "le nuancier n'est pas dans la liste blanche non plus" refuse \
+  "$(deposable 'https://static.data.gouv.fr/resources/x/resultats-definitifs-par-circonscription.csv')"
+verifier REC-08 "une URL qui ressemble à celle de l'Assemblée sans en être une est refusée" refuse \
+  "$(deposable 'https://data.assemblee-nationale.fr.exemple.invalid/Scrutins.json.zip')"
+
 echo
 if [ "$echecs" -eq 0 ]; then
   echo "recuperer-sources : tous les tests passent"
