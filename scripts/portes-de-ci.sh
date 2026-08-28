@@ -203,7 +203,7 @@ tests_ignores() {
   # « à réactiver plus tard » de durer trois ans.
   r=$(find pipeline web \( -name target -o -name node_modules -o -name dist \) -prune -o \
         \( -name '*.rs' -o -name '*.ts' -o -name '*.tsx' \) -print0 2>/dev/null \
-      | xargs -0 -r grep -nHE -- '#\[ignore|\b(it|test|describe)\.(skip|todo)\(|xit\(|xdescribe\(' \
+      | xargs -0 -r grep -nHE -- '#\[ignore|\b(it|test|describe)\.(skip|todo)\(|\bxit\(|\bxdescribe\(' \
       | grep -vE '[0-9]{4}-[0-9]{2}-[0-9]{2}' || true)
   if [ -n "$r" ]; then
     signaler "test sauté sans date de reprise sur la ligne :"

@@ -7,8 +7,12 @@
 
 pub mod agregation;
 pub mod estimateur;
+pub mod export;
 pub mod ingestion;
 pub mod matrice;
+pub mod preuves;
+pub mod registre;
+pub mod sha256;
 
 use serde_json::Value;
 
