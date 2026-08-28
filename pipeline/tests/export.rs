@@ -1354,6 +1354,19 @@ fn contrat_porte_par_le_format_jamais_par_la_mesure() {
         "EXP-12 : l'instantané porte la version du contrat qu'on lui donne"
     );
 
+    // Versant manifeste de PRE-16 : `schemas` annonce le majeur que les lignes
+    // portent réellement. Le front compare cette liste à la sienne et refuse
+    // l'artefact entier sur un majeur inconnu (§5.2) — un manifeste qui annonce
+    // `/1` pendant que les éclats servent du `/2` éteint le graphe en
+    // production sans qu'aucun schéma formel ne s'en plaigne, `schemas` n'étant
+    // qu'un tableau de chaînes. La comparaison porte sur la constante, pas sur
+    // un littéral recopié : deux littéraux divergent.
+    assert_eq!(
+        manifeste_json["schemas"][0],
+        contrepoint::preuves::SCHEMA,
+        "EXP-12 : le manifeste annonce le majeur des lignes qu'il sert"
+    );
+
     // Et aucune ligne de preuve servie au front ne le porte — ni dans un éclat,
     // ni dans le registre dont l'éclat est la copie octet pour octet (I16).
     for (prefixe, contenu) in &eclats {

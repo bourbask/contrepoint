@@ -274,7 +274,6 @@ fn fam_06_citation_ches_mot_pour_mot() {
         assert_eq!(entree["citation"], CITATION);
     }
     let mut ligne = experts().remove(0);
-    ligne["schema"] = json!("contrepoint/preuve/1");
     ligne["entrees"][0]["citation"] = json!("Rovny et al. 2025.");
     // `id` recalculé après la mutation : un `id` faux ferait tomber le refus sur
     // I8, et le test passerait au vert sans jamais exercer I23.

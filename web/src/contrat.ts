@@ -126,7 +126,7 @@ export type Preuve = {
 
 /** Majeurs de schema que ce front sait rendre. contrats.md §5.2. */
 export const SCHEMAS_CONNUS: readonly string[] = [
-  'contrepoint/preuve/1',
+  'contrepoint/preuve/2',
   'contrepoint/instantane/1',
   'contrepoint/eclat-preuves/1',
 ]

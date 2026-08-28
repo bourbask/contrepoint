@@ -1,4 +1,4 @@
-//! PRE-01 à PRE-15 — le registre de preuves : la ligne, sa clé de
+//! PRE-01 à PRE-16 — le registre de preuves : la ligne, sa clé de
 //! déduplication, sa forme canonique et l'ajout seul.
 //!
 //! Spécification : `docs/brique0/contrats.md` §2, §3, §6 et §7.
@@ -24,7 +24,7 @@ fn lignes_de_reference() -> Vec<String> {
         .expect("contrats.md lisible");
     let lignes: Vec<String> = document
         .lines()
-        .filter(|l| l.starts_with(r#"{"schema":"contrepoint/preuve/1""#))
+        .filter(|l| l.starts_with(&format!(r#"{{"schema":"{SCHEMA}""#)))
         .map(str::to_owned)
         .collect();
     assert_eq!(lignes.len(), 5, "le §2.6 publie cinq lignes de référence");
@@ -503,7 +503,7 @@ fn forme_canonique_des_lignes() {
     // porte sur les jonctions, pas sur `contains(": ")` : un libellé légitime
     // contient « législature, unités ».
     for jonction in [
-        r#"{"schema":"contrepoint/preuve/1","id":""#,
+        r#"{"schema":"contrepoint/preuve/2","id":""#,
         r#""famille":"votes","entite":""#,
         r#""echelle":{"id":""#,
         r#""dispersion":{"effectif":"#,
@@ -872,7 +872,7 @@ fn liste_blanche_transcrit_le_schema_publie() {
     // Le producteur est strict : il refuse d'écrire une clé absente du schéma.
     // Si la liste blanche et le schéma divergent, l'un des deux ment.
     let schema: Value = serde_json::from_str(
-        &std::fs::read_to_string(chemin("../schemas/preuve-1.schema.json")).expect("schéma"),
+        &std::fs::read_to_string(chemin("../schemas/preuve-2.schema.json")).expect("schéma"),
     )
     .unwrap();
     let requises = |noeud: &Value| -> Vec<String> {
@@ -1245,4 +1245,96 @@ fn contrat_absent_de_la_ligne_de_preuve() {
             ligne["entite"]
         );
     }
+}
+
+// ---------------------------------------------------------------- PRE-16 ----
+
+/// PRE-16 [C] — une ligne de preuve annonce `contrepoint/preuve/2`, et une
+/// ligne qui annoncerait `/1` est refusée.
+///
+/// Le contrat `0.6.0` retire `contrat` de la ligne : c'est la ligne « champ
+/// supprimé » du §5, qui tarife un `schema` **majeur**. L'exception « aucun
+/// lecteur à protéger », invoquée en `0.2.0` et en `0.3.0`, est éteinte depuis
+/// que le site publie ce format (2026-08-28).
+///
+/// Sans ce test, le majeur se défait en une ligne : remettre `/1` dans [`SCHEMA`]
+/// laisse passer tout le reste de la suite — la valeur n'est comparée à rien —
+/// et republie sous un majeur déjà publié une forme qui n'est plus la sienne.
+#[test]
+fn ligne_annonce_le_majeur_deux() {
+    assert_eq!(
+        SCHEMA, "contrepoint/preuve/2",
+        "PRE-16 : le retrait de `contrat` (contrat 0.6.0) tarife un `schema` majeur (§5)"
+    );
+
+    // Une ligne du majeur précédent est refusée à la lecture : I1 compare
+    // `schema` à la constante, il n'y a aucune tolérance de version.
+    let mut ancienne = ligne_nominale();
+    ancienne["schema"] = json!("contrepoint/preuve/1");
+    ancienne["id"] = json!(identifiant(&ancienne).expect("`id` calculable"));
+    refuse_par(&ancienne, "I1");
+
+    // À l'écriture, le refus n'a pas lieu d'être : `rendre` **repose** `schema`
+    // depuis la constante avant que `verifier` ne passe. Le producteur ne peut
+    // donc pas émettre `/1` du tout, ce qui est plus fort qu'un refus — mais
+    // c'est bien `construire` qu'il faut interroger pour le constater, et non
+    // `verifier`, qui ne voit que ce qu'on lui donne.
+    let ecrite = construire(ancienne).expect("le producteur normalise `schema`");
+    assert!(
+        ecrite.starts_with(&format!(r#"{{"schema":"{SCHEMA}""#)),
+        "PRE-16 : la ligne écrite doit annoncer le majeur courant — {ecrite}"
+    );
+
+    // `schema` n'entre pas dans la clé du §3 : le majeur ne déplace aucun `id`.
+    // Mesuré, pas déduit — sans quoi la bascule aurait ré-émis les 34 lignes.
+    let neuve = ligne_nominale();
+    let mut vieille = neuve.clone();
+    vieille["schema"] = json!("contrepoint/preuve/1");
+    assert_eq!(
+        identifiant(&neuve).expect("`id`"),
+        identifiant(&vieille).expect("`id`"),
+        "PRE-16 : `schema` est hors de la clé de déduplication (§3)"
+    );
+
+    // Les cinq lignes du §2.6, qui sont la spécification, annoncent le majeur.
+    // Le comptage est fait **sur le document**, et non par `lignes_de_reference`,
+    // qui filtre déjà sur [`SCHEMA`] : y boucler serait circulaire, la boucle
+    // serait vide et l'assertion vraie pour rien.
+    let document =
+        std::fs::read_to_string(chemin("../docs/brique0/contrats.md")).expect("contrats.md");
+    let compte = |majeur: &str| -> usize {
+        document
+            .lines()
+            .filter(|l| l.starts_with(&format!(r#"{{"schema":"{majeur}""#)))
+            .count()
+    };
+    assert_eq!(
+        compte(SCHEMA),
+        5,
+        "PRE-16 : le §2.6 doit publier cinq lignes du majeur courant"
+    );
+    assert_eq!(
+        compte("contrepoint/preuve/1"),
+        0,
+        "PRE-16 : le §2.6 publie encore une ligne du majeur précédent"
+    );
+
+    // Les deux schémas formels cohabitent (§5) : le `/2` décrit ce que le
+    // pipeline écrit, le `/1` reste figé pour qui valide un artefact récupéré
+    // avant la bascule. Écraser le `/1` en le rebasculant sur `/2` rendrait ce
+    // fichier inutile et laisserait ce lecteur sans schéma.
+    let const_de = |fichier: &str| -> String {
+        let schema: Value =
+            serde_json::from_str(&std::fs::read_to_string(chemin(fichier)).expect("schéma"))
+                .unwrap();
+        schema["properties"]["schema"]["const"]
+            .as_str()
+            .expect("`const` de `schema`")
+            .to_owned()
+    };
+    assert_eq!(const_de("../schemas/preuve-2.schema.json"), SCHEMA);
+    assert_eq!(
+        const_de("../schemas/preuve-1.schema.json"),
+        "contrepoint/preuve/1"
+    );
 }

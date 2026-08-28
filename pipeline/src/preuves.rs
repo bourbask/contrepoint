@@ -2,7 +2,7 @@
 //! seul**, une ligne = une position mesurée.
 //!
 //! Spécification : `docs/brique0/contrats.md` §2, §3, §6 et §7. Schéma formel :
-//! `schemas/preuve-1.schema.json`.
+//! `schemas/preuve-2.schema.json`.
 //!
 //! **Il n'existe pas de champ de position hors d'une ligne.** [`CLES`] est la
 //! liste close des clés admises, et le producteur refuse d'en écrire une autre
@@ -21,10 +21,15 @@ use serde_json::Value;
 use std::collections::BTreeSet;
 use std::path::Path;
 
-/// `contrepoint/preuve/1`. Le `schema` est **sur la ligne** et pas dans un
+/// `contrepoint/preuve/2`. Le `schema` est **sur la ligne** et pas dans un
 /// en-tête de fichier : un JSONL en ajout seul n'a pas d'en-tête à mettre à
 /// jour, et deux majeurs cohabitent dans le même fichier (§5).
-pub const SCHEMA: &str = "contrepoint/preuve/1";
+///
+/// Le majeur est passé de `/1` à `/2` au contrat `0.6.0` : retirer `contrat` de
+/// la ligne est la ligne « champ supprimé » du §5, qui tarife un `schema`
+/// majeur. Le `/1` reste décrit par `schemas/preuve-1.schema.json`, figé, pour
+/// qui valide un artefact récupéré avant la bascule.
+pub const SCHEMA: &str = "contrepoint/preuve/2";
 
 /// L'ordre des clés du §2.1, qui est aussi l'ordre d'écriture du §7.
 ///

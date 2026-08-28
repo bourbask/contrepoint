@@ -289,6 +289,13 @@ describe('EXP-06 schema_publie_et_verifie_a_la_construction', () => {
 
   test('un majeur de schema inconnu est refuse, jamais rendu en « non mesuré »', () => {
     expect(() => verifierSchemas(manifeste.schemas)).not.toThrow()
+    // Versant front de PRE-16 : le retrait de `contrat` a fait passer la ligne
+    // de preuve a `contrepoint/preuve/2`. Le majeur precedent n'est plus connu
+    // de ce front, et un artefact qui l'annonce est refuse en entier. Sans
+    // cette ligne, remettre `/1` dans SCHEMAS_CONNUS survit a toute la suite :
+    // une liste plus large ne fait echouer aucun autre test.
+    expect(manifeste.schemas).toContain('contrepoint/preuve/2')
+    expect(() => verifierSchemas(['contrepoint/preuve/1'])).toThrow(ContratRefuse)
     expect(() => verifierSchemas([...manifeste.schemas, 'contrepoint/instantane/2']))
       .toThrow(ContratRefuse)
     try {

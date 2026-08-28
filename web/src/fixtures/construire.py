@@ -24,7 +24,7 @@ OUT = f"{W}/web/src/fixtures"
 CON = open(f"{W}/docs/brique0/contrats.md", encoding="utf-8").read()
 
 bloc = CON[CON.index("### 2.6"):CON.index("### 2.7")]
-textes_reels = re.findall(r'^\{"schema":"contrepoint/preuve/1".*\}$', bloc, re.M)
+textes_reels = re.findall(r'^\{"schema":"contrepoint/preuve/2".*\}$', bloc, re.M)
 reelles = {json.loads(t)["id"]: t for t in textes_reels}
 par_cle = {}
 for t in textes_reels:
@@ -277,7 +277,7 @@ empreinte = hashlib.sha256(texte_inst.encode("utf-8")).hexdigest()
 
 manifeste = {
     "schema": "contrepoint/manifeste/1", "contrat": "0.6.0",
-    "schemas": ["contrepoint/preuve/1", "contrepoint/instantane/1", "contrepoint/eclat-preuves/1"],
+    "schemas": ["contrepoint/preuve/2", "contrepoint/instantane/1", "contrepoint/eclat-preuves/1"],
     "date_arretee": "2026-08-27T00:00:00Z",
     "licence": "Licence Ouverte / Open Licence (Etalab)",
     "mention_paternite": mention_paternite(),

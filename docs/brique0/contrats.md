@@ -200,45 +200,75 @@ registre ne bouge que quand une mesure bouge. PRE-15 refuse la réapparition du
 champ dans la ligne, EXP-12 exige sa présence dans le manifeste et son absence
 dans les éclats.
 
-**Ce qu'elle rompt, pour qui, et pourquoi c'est le bon moment.** Un champ
-publié disparaît : c'est la ligne « champ supprimé, renommé, resémantisé » du
-§5, qui tarife un `schema` majeur. `schema` reste pourtant
-`contrepoint/preuve/1`, sous l'exception déjà invoquée en `0.2.0` et `0.3.0` —
-elle existe pour ne jamais mettre en défaut le lecteur d'une ligne **déjà
-publiée**, et le workflow de publication ne sert ce format que depuis
-aujourd'hui. Un `contrepoint/preuve/2` cohabitant avec un `/1` d'un jour
-coûterait plus à un lecteur que le retrait lui-même. Après-demain, la même
-correction ne se paierait plus à ce prix.
+**Ce qu'elle rompt, pour qui, et à quel prix.** Un champ publié disparaît :
+c'est la ligne « champ supprimé, renommé, resémantisé » du §5, qui tarife un
+`schema` majeur. **Le majeur est pris.** La ligne de preuve annonce désormais
+`contrepoint/preuve/2`.
+
+Une première rédaction de cette entrée avait gardé `/1`, sous l'exception
+invoquée en `0.2.0` et en `0.3.0` : « aucun lecteur à protéger ». Cette
+exception ne tient plus. Elle vaut tant qu'aucune ligne n'est publiée, et le
+site publie ce format depuis le **2026-08-28**. Le §5 le disait déjà : « le jour
+où une ligne est publiée, cette exception disparaît ». Garder `/1` aurait été le
+cas exact que la règle interdit — deux formes différentes derrière un même
+majeur, un lecteur mis en défaut sans que rien ne le lui annonce.
+
+Ce que le majeur coûte, et à qui. Un lecteur qui a récupéré un artefact avant
+cette bascule tient des lignes `contrepoint/preuve/1`, et un lecteur qui valide
+contre `/1` **verra ses artefacts d'aujourd'hui refusés** : le `const` du
+schéma ne correspond plus, avant même que `contrat` n'entre en jeu. C'est le
+prix d'un majeur, il est visible et il est dit — c'est exactement ce qu'un
+majeur achète, contre un retrait silencieux qui ne casserait qu'à
+l'interprétation. Ce que le lecteur doit faire : lire `schema` sur la ligne, et
+choisir le schéma en conséquence. Les deux sont publiés — `/1` dans
+[`schemas/preuve-1.schema.json`](../../schemas/preuve-1.schema.json), **figé**
+et conservé pour valider un artefact récupéré avant la bascule, `/2` dans
+[`schemas/preuve-2.schema.json`](../../schemas/preuve-2.schema.json). Le
+manifeste annonce `contrepoint/preuve/2` dans `schemas`, et le front, qui
+compare cette liste à la sienne, refuse l'artefact entier plutôt que de le
+rendre à moitié (§5.2) : un front non redéployé n'affichera aucun marqueur, et
+dira pourquoi.
 
 Concrètement, ce qui casse : un consommateur qui lit `preuve.contrat` ne trouve
-plus rien, et un validateur strict en `additionalProperties: false` sur le
-schéma `0.5.0` refuse — dans l'autre sens, la ligne n'ayant plus le champ. La
+plus rien ; un validateur strict en `additionalProperties: false` sur le schéma
+`0.5.0` refuse — dans l'autre sens, la ligne n'ayant plus le champ ; et un
+validateur `/1` refuse dès le `const` de `schema`. La
 version du format se lit désormais dans `manifeste.contrat` et dans
 `instantane.contrat`. Le front porte le type (`web/src/contrat.ts`) et
 n'affichait le champ nulle part : il lisait déjà `instantane.contrat` pour son
 pied de page.
 
-**Ce qu'elle ne rompt pas, mesuré et non déduit.** Aucun `id` ne change.
-`contrat` n'entre pas dans la clé du §3, et la vérification a été faite en
-comparant aux **artefacts publiés de `develop`** — et non à
+**Ce qu'elle ne rompt pas, mesuré et non déduit.** Aucun `id` ne change. Ni
+`contrat` ni `schema` n'entrent dans la clé du §3, et la vérification a été
+faite en comparant aux **artefacts publiés de `develop`** — et non à
 `data/preuves/positions.jsonl`, qui est en ajout seul et accumule l'historique :
 une construction neuve, registre de preuves vide, rend les **34** mêmes `id`
 dans le **même ordre**, et l'instantané reconstruit cite les **27** mêmes
 `preuve`, dans le même ordre. Les valeurs, les échelles, les bornes et les
 libellés sont inchangés. Le manifeste reste à **1 172 octets** et l'instantané à
-**8 859** : `"0.5.0"` et `"0.6.0"` ont la même longueur ; seule l'empreinte de
-l'instantané déclarée par le manifeste change, puisque son contenu change.
+**8 859** : `"0.5.0"` et `"0.6.0"` ont la même longueur, et
+`contrepoint/preuve/2` la même que `contrepoint/preuve/1` ; seule l'empreinte de
+l'instantané déclarée par le manifeste change, puisque son contenu change. Le
+passage au majeur `/2` n'a déplacé, à lui seul, aucun octet de plus : les 27
+`id` des éclats et les 27 `preuve` de l'instantané sont ceux de `develop`, dans
+le même ordre.
 
 **Les 34 lignes du registre de preuves sont réécrites, pas complétées** — I15
 enfreint **une dernière fois**, comme en `0.4.0` et en `0.5.0`, et pour la
 raison que cette majeure supprime. Leurs `id` sont inchangés et dans le même
 ordre ; seuls les 18 octets de `"contrat":"0.5.0",` disparaissent de chaque
-ligne : **67 001 octets avant, 66 389 après**. Le fichier antérieur n'est donc
-pas un préfixe du nouveau. Comme aux deux bascules précédentes, aucune porte ne
-le signalera — le contrôle 3 du §8.2 compare l'état commité à une construction
-fraîche, jamais deux commits entre eux — et c'est pour cela que c'est écrit ici.
-C'est la **dernière** fois : plus aucune bascule de contrat ne peut désormais
-toucher une ligne de preuve.
+ligne : **67 001 octets avant, 66 389 après**. La bascule de `schema` se fait
+dans la même réécriture et ne coûte rien de plus — `contrepoint/preuve/1` et
+`contrepoint/preuve/2` ont exactement la même longueur, **66 389 octets de part
+et d'autre**, les 34 `id` et leur ordre vérifiés identiques des deux côtés. Le
+fichier antérieur n'est donc pas un préfixe du nouveau. Comme aux deux bascules
+précédentes, aucune porte ne le signalera — le contrôle 3 du §8.2 compare
+l'état commité à une construction fraîche, jamais deux commits entre eux — et
+c'est pour cela que c'est écrit ici.
+C'est la **dernière** fois pour ce motif : plus aucune bascule de `contrat` ne
+peut désormais toucher une ligne de preuve, le champ n'y étant plus. Un majeur
+de `schema`, lui, restera toujours capable de la toucher — c'est ce qu'un majeur
+est, et il se paie au tarif du §5, pas en silence.
 
 En `0.x`, une majeure incrémente le rang mineur : `0.5.0` → `0.6.0`.
 
@@ -262,7 +292,8 @@ estimées.
 
 | Schéma formel | Ce qu'il valide |
 |---|---|
-| `schemas/preuve-1.schema.json` | une ligne du registre, et par `$ref` chaque ligne servie au front |
+| `schemas/preuve-2.schema.json` | une ligne du registre, et par `$ref` chaque ligne servie au front |
+| `schemas/preuve-1.schema.json` | le majeur précédent, **figé** : plus aucun artefact du dépôt ne l'annonce depuis le contrat `0.6.0`, et il reste publié pour valider un artefact récupéré avant cette bascule (§5) |
 | `schemas/manifeste-1.schema.json` | `public/api/index.json` |
 | `schemas/instantane-1.schema.json` | un instantané, marqueurs compris |
 | `schemas/eclat-preuves-1.schema.json` | un éclat de preuves |
@@ -270,7 +301,7 @@ estimées.
 
 JSON Schema 2020-12, `additionalProperties: false` partout : c'est la règle du
 producteur strict du §5.1. Les cinq lignes du §2.6 sont la fixture de ce
-contrôle — elles valident contre `preuve-1.schema.json` et leur `id` se recalcule
+contrôle — elles valident contre `preuve-2.schema.json` et leur `id` se recalcule
 par la commande du §3. Ce que le schéma ne peut pas dire est énoncé dans sa
 `description` et vérifié par le validateur du pipeline : l'ordre des clés (§7),
 le calcul de `id` (§3), les invariants du §6.
@@ -298,7 +329,7 @@ d'observation, à partir d'entrées empreintées. Ordre des clés imposé (§7).
 
 | Champ | Type | Contrainte |
 |---|---|---|
-| `schema` | chaîne | `contrepoint/preuve/1`, littéral |
+| `schema` | chaîne | `contrepoint/preuve/2`, littéral |
 | `id` | chaîne | 64 hexadécimaux minuscules, identifiant de déduplication (§3) |
 | `famille` | énumération | `votes` \| `experts` \| `administratif` |
 | `entite` | chaîne | `id` du registre d'entités : `parti.*`, `coalition.*` ou `groupe.an17.*` |
@@ -499,23 +530,23 @@ un. Le §2.6 étant la fixture du contrôle de schéma, un `id` faux y serait pi
 qu'absent.
 
 ```json
-{"schema":"contrepoint/preuve/1","id":"58dddb470ebac0b3da987e46a74a1bf48b0ebfb6945219f1d10ba1eb3f6466e9","famille":"votes","entite":"groupe.an17.lfi-nfp","valeur":-1.0,"valeur_code":null,"echelle":{"id":"votes_an17_ancre_v1","min":-1.0,"max":1.0,"decimales":2,"libelle":"Votes XVIIe législature, unités médianes ancrées"},"motif_code":null,"motif":null,"dispersion":{"effectif":71,"iqr":0.03,"ecart_type_reechantillonnage":0.0},"observation":{"debut":"2024-10-08","fin":"2026-07-21"},"date_source":"2026-08-27","date_calcul":"2026-08-27T00:00:00Z","methode":{"id":"votes_rang1_ancre","version":"1.0.0","parametres":{"ancre_droite":"groupe.an17.rn","ancre_gauche":"groupe.an17.lfi-nfp","codage":"pour=+1;contre=-1;abstention=0;non_votant=manquant;absent=manquant","filtre_scrutins":"minorite_non_vide","iterations_als":300,"scrutins_ecartes":455,"scrutins_retenus":7979}},"epingles":[],"entrees":[{"source":"an_scrutins_17","url":"https://data.assemblee-nationale.fr/static/openData/repository/17/loi/scrutins/Scrutins.json.zip","producteur":"Assemblée nationale","derniere_mise_a_jour":"2026-08-27","citation":null,"empreinte_sha256":"7bcf6f4ab9f62d1457caeedad42a5a73b7a5e50a879653a19b23c02ff62f344b","empreinte_contenu_sha256":"c8457f346220b5b7fb673bd1f273ef8c3296b7ff2769524bf5024c9d95c7e65c","recupere_le":"2026-08-28"},{"source":"registre_partis","url":"https://raw.githubusercontent.com/bourbask/contrepoint/v0.3.0/data/registre/partis.json","producteur":"Contrepoint","derniere_mise_a_jour":"2026-08-27","citation":null,"empreinte_sha256":"b7bdb819be8b6773a8af5d2a939a78120e710e6f3cf6e86e87db0443168aaf2b","empreinte_contenu_sha256":"b7bdb819be8b6773a8af5d2a939a78120e710e6f3cf6e86e87db0443168aaf2b","recupere_le":"2026-08-27"},{"source":"an_organe","url":"https://data.assemblee-nationale.fr/static/openData/repository/17/amo/tous_acteurs_mandats_organes_xi_legislature/AMO30_tous_acteurs_tous_mandats_tous_organes_historique.json.zip","producteur":"Assemblée nationale","derniere_mise_a_jour":"2026-08-27","citation":null,"empreinte_sha256":"bbecd01274d2bc9f46fcaa276b06868862ae7680131da3162e35b5cbef663061","empreinte_contenu_sha256":"0f49c00a8227d6cb8e658d374bacfec35238fe4e2dd6305f7df6ac4f515c5de6","recupere_le":"2026-08-27"}],"logiciel":{"version":"0.1.0","commit":null}}
+{"schema":"contrepoint/preuve/2","id":"58dddb470ebac0b3da987e46a74a1bf48b0ebfb6945219f1d10ba1eb3f6466e9","famille":"votes","entite":"groupe.an17.lfi-nfp","valeur":-1.0,"valeur_code":null,"echelle":{"id":"votes_an17_ancre_v1","min":-1.0,"max":1.0,"decimales":2,"libelle":"Votes XVIIe législature, unités médianes ancrées"},"motif_code":null,"motif":null,"dispersion":{"effectif":71,"iqr":0.03,"ecart_type_reechantillonnage":0.0},"observation":{"debut":"2024-10-08","fin":"2026-07-21"},"date_source":"2026-08-27","date_calcul":"2026-08-27T00:00:00Z","methode":{"id":"votes_rang1_ancre","version":"1.0.0","parametres":{"ancre_droite":"groupe.an17.rn","ancre_gauche":"groupe.an17.lfi-nfp","codage":"pour=+1;contre=-1;abstention=0;non_votant=manquant;absent=manquant","filtre_scrutins":"minorite_non_vide","iterations_als":300,"scrutins_ecartes":455,"scrutins_retenus":7979}},"epingles":[],"entrees":[{"source":"an_scrutins_17","url":"https://data.assemblee-nationale.fr/static/openData/repository/17/loi/scrutins/Scrutins.json.zip","producteur":"Assemblée nationale","derniere_mise_a_jour":"2026-08-27","citation":null,"empreinte_sha256":"7bcf6f4ab9f62d1457caeedad42a5a73b7a5e50a879653a19b23c02ff62f344b","empreinte_contenu_sha256":"c8457f346220b5b7fb673bd1f273ef8c3296b7ff2769524bf5024c9d95c7e65c","recupere_le":"2026-08-28"},{"source":"registre_partis","url":"https://raw.githubusercontent.com/bourbask/contrepoint/v0.3.0/data/registre/partis.json","producteur":"Contrepoint","derniere_mise_a_jour":"2026-08-27","citation":null,"empreinte_sha256":"b7bdb819be8b6773a8af5d2a939a78120e710e6f3cf6e86e87db0443168aaf2b","empreinte_contenu_sha256":"b7bdb819be8b6773a8af5d2a939a78120e710e6f3cf6e86e87db0443168aaf2b","recupere_le":"2026-08-27"},{"source":"an_organe","url":"https://data.assemblee-nationale.fr/static/openData/repository/17/amo/tous_acteurs_mandats_organes_xi_legislature/AMO30_tous_acteurs_tous_mandats_tous_organes_historique.json.zip","producteur":"Assemblée nationale","derniere_mise_a_jour":"2026-08-27","citation":null,"empreinte_sha256":"bbecd01274d2bc9f46fcaa276b06868862ae7680131da3162e35b5cbef663061","empreinte_contenu_sha256":"0f49c00a8227d6cb8e658d374bacfec35238fe4e2dd6305f7df6ac4f515c5de6","recupere_le":"2026-08-27"}],"logiciel":{"version":"0.1.0","commit":null}}
 ```
 
 ```json
-{"schema":"contrepoint/preuve/1","id":"8fde0f5f78afe28503821f8194a91dca7022105eaaad831bad9b6d4ef8489e2b","famille":"votes","entite":"groupe.an17.rn","valeur":1.0,"valeur_code":null,"echelle":{"id":"votes_an17_ancre_v1","min":-1.0,"max":1.0,"decimales":2,"libelle":"Votes XVIIe législature, unités médianes ancrées"},"motif_code":null,"motif":null,"dispersion":{"effectif":121,"iqr":0.04,"ecart_type_reechantillonnage":0.0},"observation":{"debut":"2024-10-08","fin":"2026-07-21"},"date_source":"2026-08-27","date_calcul":"2026-08-27T00:00:00Z","methode":{"id":"votes_rang1_ancre","version":"1.0.0","parametres":{"ancre_droite":"groupe.an17.rn","ancre_gauche":"groupe.an17.lfi-nfp","codage":"pour=+1;contre=-1;abstention=0;non_votant=manquant;absent=manquant","filtre_scrutins":"minorite_non_vide","iterations_als":300,"scrutins_ecartes":455,"scrutins_retenus":7979}},"epingles":[],"entrees":[{"source":"an_scrutins_17","url":"https://data.assemblee-nationale.fr/static/openData/repository/17/loi/scrutins/Scrutins.json.zip","producteur":"Assemblée nationale","derniere_mise_a_jour":"2026-08-27","citation":null,"empreinte_sha256":"7bcf6f4ab9f62d1457caeedad42a5a73b7a5e50a879653a19b23c02ff62f344b","empreinte_contenu_sha256":"c8457f346220b5b7fb673bd1f273ef8c3296b7ff2769524bf5024c9d95c7e65c","recupere_le":"2026-08-28"},{"source":"registre_partis","url":"https://raw.githubusercontent.com/bourbask/contrepoint/v0.3.0/data/registre/partis.json","producteur":"Contrepoint","derniere_mise_a_jour":"2026-08-27","citation":null,"empreinte_sha256":"b7bdb819be8b6773a8af5d2a939a78120e710e6f3cf6e86e87db0443168aaf2b","empreinte_contenu_sha256":"b7bdb819be8b6773a8af5d2a939a78120e710e6f3cf6e86e87db0443168aaf2b","recupere_le":"2026-08-27"},{"source":"an_organe","url":"https://data.assemblee-nationale.fr/static/openData/repository/17/amo/tous_acteurs_mandats_organes_xi_legislature/AMO30_tous_acteurs_tous_mandats_tous_organes_historique.json.zip","producteur":"Assemblée nationale","derniere_mise_a_jour":"2026-08-27","citation":null,"empreinte_sha256":"bbecd01274d2bc9f46fcaa276b06868862ae7680131da3162e35b5cbef663061","empreinte_contenu_sha256":"0f49c00a8227d6cb8e658d374bacfec35238fe4e2dd6305f7df6ac4f515c5de6","recupere_le":"2026-08-27"}],"logiciel":{"version":"0.1.0","commit":null}}
+{"schema":"contrepoint/preuve/2","id":"8fde0f5f78afe28503821f8194a91dca7022105eaaad831bad9b6d4ef8489e2b","famille":"votes","entite":"groupe.an17.rn","valeur":1.0,"valeur_code":null,"echelle":{"id":"votes_an17_ancre_v1","min":-1.0,"max":1.0,"decimales":2,"libelle":"Votes XVIIe législature, unités médianes ancrées"},"motif_code":null,"motif":null,"dispersion":{"effectif":121,"iqr":0.04,"ecart_type_reechantillonnage":0.0},"observation":{"debut":"2024-10-08","fin":"2026-07-21"},"date_source":"2026-08-27","date_calcul":"2026-08-27T00:00:00Z","methode":{"id":"votes_rang1_ancre","version":"1.0.0","parametres":{"ancre_droite":"groupe.an17.rn","ancre_gauche":"groupe.an17.lfi-nfp","codage":"pour=+1;contre=-1;abstention=0;non_votant=manquant;absent=manquant","filtre_scrutins":"minorite_non_vide","iterations_als":300,"scrutins_ecartes":455,"scrutins_retenus":7979}},"epingles":[],"entrees":[{"source":"an_scrutins_17","url":"https://data.assemblee-nationale.fr/static/openData/repository/17/loi/scrutins/Scrutins.json.zip","producteur":"Assemblée nationale","derniere_mise_a_jour":"2026-08-27","citation":null,"empreinte_sha256":"7bcf6f4ab9f62d1457caeedad42a5a73b7a5e50a879653a19b23c02ff62f344b","empreinte_contenu_sha256":"c8457f346220b5b7fb673bd1f273ef8c3296b7ff2769524bf5024c9d95c7e65c","recupere_le":"2026-08-28"},{"source":"registre_partis","url":"https://raw.githubusercontent.com/bourbask/contrepoint/v0.3.0/data/registre/partis.json","producteur":"Contrepoint","derniere_mise_a_jour":"2026-08-27","citation":null,"empreinte_sha256":"b7bdb819be8b6773a8af5d2a939a78120e710e6f3cf6e86e87db0443168aaf2b","empreinte_contenu_sha256":"b7bdb819be8b6773a8af5d2a939a78120e710e6f3cf6e86e87db0443168aaf2b","recupere_le":"2026-08-27"},{"source":"an_organe","url":"https://data.assemblee-nationale.fr/static/openData/repository/17/amo/tous_acteurs_mandats_organes_xi_legislature/AMO30_tous_acteurs_tous_mandats_tous_organes_historique.json.zip","producteur":"Assemblée nationale","derniere_mise_a_jour":"2026-08-27","citation":null,"empreinte_sha256":"bbecd01274d2bc9f46fcaa276b06868862ae7680131da3162e35b5cbef663061","empreinte_contenu_sha256":"0f49c00a8227d6cb8e658d374bacfec35238fe4e2dd6305f7df6ac4f515c5de6","recupere_le":"2026-08-27"}],"logiciel":{"version":"0.1.0","commit":null}}
 ```
 
 ```json
-{"schema":"contrepoint/preuve/1","id":"32fb76691440af055b9863b258a59c400b00775d7598630c2cdcc1441a192b61","famille":"votes","entite":"groupe.an17.liot","valeur":null,"valeur_code":null,"echelle":{"id":"votes_an17_ancre_v1","min":-1.0,"max":1.0,"decimales":2,"libelle":"Votes XVIIe législature, unités médianes ancrées"},"motif_code":"sous_seuil_de_publication","motif":"Dispersion interne au-delà du seuil publié : IQR 0,6417 pour un maximum de 0,25.","dispersion":{"effectif":20,"iqr":0.64,"ecart_type_reechantillonnage":0.04},"observation":{"debut":"2024-10-08","fin":"2026-07-21"},"date_source":"2026-08-27","date_calcul":"2026-08-27T00:00:00Z","methode":{"id":"votes_rang1_ancre","version":"1.0.0","parametres":{"ancre_droite":"groupe.an17.rn","ancre_gauche":"groupe.an17.lfi-nfp","codage":"pour=+1;contre=-1;abstention=0;non_votant=manquant;absent=manquant","filtre_scrutins":"minorite_non_vide","iterations_als":300,"scrutins_ecartes":455,"scrutins_retenus":7979}},"epingles":[],"entrees":[{"source":"an_scrutins_17","url":"https://data.assemblee-nationale.fr/static/openData/repository/17/loi/scrutins/Scrutins.json.zip","producteur":"Assemblée nationale","derniere_mise_a_jour":"2026-08-27","citation":null,"empreinte_sha256":"7bcf6f4ab9f62d1457caeedad42a5a73b7a5e50a879653a19b23c02ff62f344b","empreinte_contenu_sha256":"c8457f346220b5b7fb673bd1f273ef8c3296b7ff2769524bf5024c9d95c7e65c","recupere_le":"2026-08-28"},{"source":"registre_partis","url":"https://raw.githubusercontent.com/bourbask/contrepoint/v0.3.0/data/registre/partis.json","producteur":"Contrepoint","derniere_mise_a_jour":"2026-08-27","citation":null,"empreinte_sha256":"b7bdb819be8b6773a8af5d2a939a78120e710e6f3cf6e86e87db0443168aaf2b","empreinte_contenu_sha256":"b7bdb819be8b6773a8af5d2a939a78120e710e6f3cf6e86e87db0443168aaf2b","recupere_le":"2026-08-27"},{"source":"an_organe","url":"https://data.assemblee-nationale.fr/static/openData/repository/17/amo/tous_acteurs_mandats_organes_xi_legislature/AMO30_tous_acteurs_tous_mandats_tous_organes_historique.json.zip","producteur":"Assemblée nationale","derniere_mise_a_jour":"2026-08-27","citation":null,"empreinte_sha256":"bbecd01274d2bc9f46fcaa276b06868862ae7680131da3162e35b5cbef663061","empreinte_contenu_sha256":"0f49c00a8227d6cb8e658d374bacfec35238fe4e2dd6305f7df6ac4f515c5de6","recupere_le":"2026-08-27"}],"logiciel":{"version":"0.1.0","commit":null}}
+{"schema":"contrepoint/preuve/2","id":"32fb76691440af055b9863b258a59c400b00775d7598630c2cdcc1441a192b61","famille":"votes","entite":"groupe.an17.liot","valeur":null,"valeur_code":null,"echelle":{"id":"votes_an17_ancre_v1","min":-1.0,"max":1.0,"decimales":2,"libelle":"Votes XVIIe législature, unités médianes ancrées"},"motif_code":"sous_seuil_de_publication","motif":"Dispersion interne au-delà du seuil publié : IQR 0,6417 pour un maximum de 0,25.","dispersion":{"effectif":20,"iqr":0.64,"ecart_type_reechantillonnage":0.04},"observation":{"debut":"2024-10-08","fin":"2026-07-21"},"date_source":"2026-08-27","date_calcul":"2026-08-27T00:00:00Z","methode":{"id":"votes_rang1_ancre","version":"1.0.0","parametres":{"ancre_droite":"groupe.an17.rn","ancre_gauche":"groupe.an17.lfi-nfp","codage":"pour=+1;contre=-1;abstention=0;non_votant=manquant;absent=manquant","filtre_scrutins":"minorite_non_vide","iterations_als":300,"scrutins_ecartes":455,"scrutins_retenus":7979}},"epingles":[],"entrees":[{"source":"an_scrutins_17","url":"https://data.assemblee-nationale.fr/static/openData/repository/17/loi/scrutins/Scrutins.json.zip","producteur":"Assemblée nationale","derniere_mise_a_jour":"2026-08-27","citation":null,"empreinte_sha256":"7bcf6f4ab9f62d1457caeedad42a5a73b7a5e50a879653a19b23c02ff62f344b","empreinte_contenu_sha256":"c8457f346220b5b7fb673bd1f273ef8c3296b7ff2769524bf5024c9d95c7e65c","recupere_le":"2026-08-28"},{"source":"registre_partis","url":"https://raw.githubusercontent.com/bourbask/contrepoint/v0.3.0/data/registre/partis.json","producteur":"Contrepoint","derniere_mise_a_jour":"2026-08-27","citation":null,"empreinte_sha256":"b7bdb819be8b6773a8af5d2a939a78120e710e6f3cf6e86e87db0443168aaf2b","empreinte_contenu_sha256":"b7bdb819be8b6773a8af5d2a939a78120e710e6f3cf6e86e87db0443168aaf2b","recupere_le":"2026-08-27"},{"source":"an_organe","url":"https://data.assemblee-nationale.fr/static/openData/repository/17/amo/tous_acteurs_mandats_organes_xi_legislature/AMO30_tous_acteurs_tous_mandats_tous_organes_historique.json.zip","producteur":"Assemblée nationale","derniere_mise_a_jour":"2026-08-27","citation":null,"empreinte_sha256":"bbecd01274d2bc9f46fcaa276b06868862ae7680131da3162e35b5cbef663061","empreinte_contenu_sha256":"0f49c00a8227d6cb8e658d374bacfec35238fe4e2dd6305f7df6ac4f515c5de6","recupere_le":"2026-08-27"}],"logiciel":{"version":"0.1.0","commit":null}}
 ```
 
 ```json
-{"schema":"contrepoint/preuve/1","id":"4367cde19edba83604ea4e88b557e1491332af708e929a07e5b2aac349173c2b","famille":"experts","entite":"parti.rn","valeur":8.82,"valeur_code":null,"echelle":{"id":"ches_lrgen_0_10","min":0.0,"max":10.0,"decimales":2,"libelle":"CHES 2024, variable lrgen, échelle 0 à 10"},"motif_code":null,"motif":null,"dispersion":null,"observation":{"debut":"2024-01-01","fin":"2024-12-31"},"date_source":"2026-08-04","date_calcul":"2026-08-27T00:00:00Z","methode":{"id":"ches_lrgen","version":"1.0.0","parametres":{"colonne":"lrgen","pays":6,"vague":"2024"}},"epingles":[],"entrees":[{"source":"ches_2024","url":"https://github.com/chesdata/chesdata.github.io/releases/download/ches-europe/CHES_2024_final_v2.csv","producteur":"Chapel Hill Expert Survey","derniere_mise_a_jour":"2026-08-04","citation":"Rovny, Jan, Jonathan Polk, Ryan Bakker, Liesbet Hooghe, Seth Jolly, Gary Marks, Marco Steenbergen, and Milada Anna Vachudova. 2025. \"The 2024 Chapel Hill Expert Survey on political party positioning in Europe: Twenty-five years of party positional data.\" Electoral Studies 97 (October). doi:10.1016/j.electstud.2025.102981","empreinte_sha256":"1c1ec0532afa2a0a13317122cbbe40eb9ff35425191892d1fff24fbef6acc6a8","empreinte_contenu_sha256":"1c1ec0532afa2a0a13317122cbbe40eb9ff35425191892d1fff24fbef6acc6a8","recupere_le":"2026-08-28"},{"source":"registre_partis","url":"https://raw.githubusercontent.com/bourbask/contrepoint/v0.3.0/data/registre/partis.json","producteur":"Contrepoint","derniere_mise_a_jour":"2026-08-27","citation":null,"empreinte_sha256":"b7bdb819be8b6773a8af5d2a939a78120e710e6f3cf6e86e87db0443168aaf2b","empreinte_contenu_sha256":"b7bdb819be8b6773a8af5d2a939a78120e710e6f3cf6e86e87db0443168aaf2b","recupere_le":"2026-08-27"}],"logiciel":{"version":"0.1.0","commit":null}}
+{"schema":"contrepoint/preuve/2","id":"4367cde19edba83604ea4e88b557e1491332af708e929a07e5b2aac349173c2b","famille":"experts","entite":"parti.rn","valeur":8.82,"valeur_code":null,"echelle":{"id":"ches_lrgen_0_10","min":0.0,"max":10.0,"decimales":2,"libelle":"CHES 2024, variable lrgen, échelle 0 à 10"},"motif_code":null,"motif":null,"dispersion":null,"observation":{"debut":"2024-01-01","fin":"2024-12-31"},"date_source":"2026-08-04","date_calcul":"2026-08-27T00:00:00Z","methode":{"id":"ches_lrgen","version":"1.0.0","parametres":{"colonne":"lrgen","pays":6,"vague":"2024"}},"epingles":[],"entrees":[{"source":"ches_2024","url":"https://github.com/chesdata/chesdata.github.io/releases/download/ches-europe/CHES_2024_final_v2.csv","producteur":"Chapel Hill Expert Survey","derniere_mise_a_jour":"2026-08-04","citation":"Rovny, Jan, Jonathan Polk, Ryan Bakker, Liesbet Hooghe, Seth Jolly, Gary Marks, Marco Steenbergen, and Milada Anna Vachudova. 2025. \"The 2024 Chapel Hill Expert Survey on political party positioning in Europe: Twenty-five years of party positional data.\" Electoral Studies 97 (October). doi:10.1016/j.electstud.2025.102981","empreinte_sha256":"1c1ec0532afa2a0a13317122cbbe40eb9ff35425191892d1fff24fbef6acc6a8","empreinte_contenu_sha256":"1c1ec0532afa2a0a13317122cbbe40eb9ff35425191892d1fff24fbef6acc6a8","recupere_le":"2026-08-28"},{"source":"registre_partis","url":"https://raw.githubusercontent.com/bourbask/contrepoint/v0.3.0/data/registre/partis.json","producteur":"Contrepoint","derniere_mise_a_jour":"2026-08-27","citation":null,"empreinte_sha256":"b7bdb819be8b6773a8af5d2a939a78120e710e6f3cf6e86e87db0443168aaf2b","empreinte_contenu_sha256":"b7bdb819be8b6773a8af5d2a939a78120e710e6f3cf6e86e87db0443168aaf2b","recupere_le":"2026-08-27"}],"logiciel":{"version":"0.1.0","commit":null}}
 ```
 
 ```json
-{"schema":"contrepoint/preuve/1","id":"bc4e6cb448438201e8723f8a56cb65dbbe0cfbecfa1b0b0bd94932a4653c3f13","famille":"administratif","entite":"coalition.nfp","valeur":null,"valeur_code":"UG","echelle":{"id":"nuance_leg2024","min":null,"max":null,"decimales":null,"libelle":"Ministère de l'intérieur — code de nuance, législatives 2024"},"motif_code":null,"motif":null,"dispersion":null,"observation":{"debut":"2024-06-30","fin":"2024-07-07"},"date_source":"2024-07-10","date_calcul":"2026-08-27T00:00:00Z","methode":{"id":"nuance_constatee","version":"1.0.0","parametres":{"colonne":"Nuance candidat","reference_grille":"IOMA2415630C du 2024-06-11","tour":"2"}},"epingles":[],"entrees":[{"source":"registre_partis","url":"https://raw.githubusercontent.com/bourbask/contrepoint/v0.3.0/data/registre/partis.json","producteur":"Contrepoint","derniere_mise_a_jour":"2026-08-27","citation":null,"empreinte_sha256":"b7bdb819be8b6773a8af5d2a939a78120e710e6f3cf6e86e87db0443168aaf2b","empreinte_contenu_sha256":"b7bdb819be8b6773a8af5d2a939a78120e710e6f3cf6e86e87db0443168aaf2b","recupere_le":"2026-08-27"},{"source":"nuance_leg2024","url":"https://static.data.gouv.fr/resources/elections-legislatives-des-30-juin-et-7-juillet-2024-resultats-definitifs-du-2nd-tour/20240710-170536/resultats-definitifs-par-region.csv","producteur":"Ministère de l'intérieur","derniere_mise_a_jour":"2024-07-10","citation":null,"empreinte_sha256":"f8552401cffade4397fa501f161c961d377d629235d9f9a813ecb11ad5ba0c50","empreinte_contenu_sha256":"f8552401cffade4397fa501f161c961d377d629235d9f9a813ecb11ad5ba0c50","recupere_le":"2026-08-28"}],"logiciel":{"version":"0.1.0","commit":null}}
+{"schema":"contrepoint/preuve/2","id":"bc4e6cb448438201e8723f8a56cb65dbbe0cfbecfa1b0b0bd94932a4653c3f13","famille":"administratif","entite":"coalition.nfp","valeur":null,"valeur_code":"UG","echelle":{"id":"nuance_leg2024","min":null,"max":null,"decimales":null,"libelle":"Ministère de l'intérieur — code de nuance, législatives 2024"},"motif_code":null,"motif":null,"dispersion":null,"observation":{"debut":"2024-06-30","fin":"2024-07-07"},"date_source":"2024-07-10","date_calcul":"2026-08-27T00:00:00Z","methode":{"id":"nuance_constatee","version":"1.0.0","parametres":{"colonne":"Nuance candidat","reference_grille":"IOMA2415630C du 2024-06-11","tour":"2"}},"epingles":[],"entrees":[{"source":"registre_partis","url":"https://raw.githubusercontent.com/bourbask/contrepoint/v0.3.0/data/registre/partis.json","producteur":"Contrepoint","derniere_mise_a_jour":"2026-08-27","citation":null,"empreinte_sha256":"b7bdb819be8b6773a8af5d2a939a78120e710e6f3cf6e86e87db0443168aaf2b","empreinte_contenu_sha256":"b7bdb819be8b6773a8af5d2a939a78120e710e6f3cf6e86e87db0443168aaf2b","recupere_le":"2026-08-27"},{"source":"nuance_leg2024","url":"https://static.data.gouv.fr/resources/elections-legislatives-des-30-juin-et-7-juillet-2024-resultats-definitifs-du-2nd-tour/20240710-170536/resultats-definitifs-par-region.csv","producteur":"Ministère de l'intérieur","derniere_mise_a_jour":"2024-07-10","citation":null,"empreinte_sha256":"f8552401cffade4397fa501f161c961d377d629235d9f9a813ecb11ad5ba0c50","empreinte_contenu_sha256":"f8552401cffade4397fa501f161c961d377d629235d9f9a813ecb11ad5ba0c50","recupere_le":"2026-08-28"}],"logiciel":{"version":"0.1.0","commit":null}}
 ```
 
 Ce que ces cinq lignes couvrent : une valeur d'ancre exacte, une seconde ancre
@@ -754,6 +785,10 @@ mention de paternité. Elles se remesurent par
 stat -c%s public/api/index.json public/api/instantanes/an17-2026-07-21.json
 ```
 
+L'exemple qui suit est celui du contrat `0.4.0`, laissé tel quel : ses lignes
+portaient encore `contrat` et annonçaient `contrepoint/preuve/1`. Le manifeste
+publié aujourd'hui porte `"contrat":"0.6.0"` et annonce `contrepoint/preuve/2`.
+
 `instantanes[0].empreinte_sha256` vaut `9df80a9d…`, et
 `instantanes[0].octets` vaut 8 625 : les deux ont été recalculés sur le fichier
 reconstruit le 2026-08-28 et **coïncident**. L'`A VERIFIER` que ce paragraphe
@@ -918,11 +953,16 @@ Les deux lignes de renommage d'échelle et de clé obligatoire du registre sont
 celles de la majeure `0.3.0` ; les deux qui les précèdent, celles de `0.2.0`. La
 ligne « changement d'ancre » n'a pas encore été empruntée : elle est écrite
 maintenant parce que c'est le mouvement que le découplage du §2.3 rend possible,
-et qu'il vaut mieux le tarifer avant qu'il arrive. Le `schema` reste
-`contrepoint/preuve/1` parce qu'aucune ligne n'est publiée : la règle « champ
-rendu obligatoire ⟹ `/2` » existe pour qu'un lecteur d'une ligne déjà publiée ne
-soit jamais mis en défaut, et il n'y a aucun lecteur à protéger. Le jour où une
-ligne est publiée, cette exception disparaît.
+et qu'il vaut mieux le tarifer avant qu'il arrive.
+
+La ligne « champ supprimé, renommé, resémantisé » a été empruntée au contrat
+`0.6.0`, avec le retrait de `contrat` : la ligne de preuve annonce
+`contrepoint/preuve/2`. Les majeures `0.2.0` et `0.3.0` avaient gardé `/1` sous
+l'exception « aucune ligne n'est publiée, donc aucun lecteur à protéger », et ce
+paragraphe annonçait sa fin : « le jour où une ligne est publiée, cette
+exception disparaît ». Le site publie ce format depuis le 2026-08-28 ; ce jour
+est arrivé, et l'exception est **éteinte**. Toute rupture ultérieure de cette
+ligne du tableau se paie désormais en majeur de `schema`, sans dérogation.
 
 Un `schema` majeur ne se rétropropage pas : le registre étant en ajout seul,
 `contrepoint/preuve/1` et `contrepoint/preuve/2` **cohabitent** dans le même
