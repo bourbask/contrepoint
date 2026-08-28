@@ -753,19 +753,36 @@ fn entree_registre(empreinte: &str, date_registre: &str) -> Value {
 ///
 /// Un `id` qui bouge quand la date bouge est un défaut de la clé du §3.
 fn diff_hors_date_calcul(a: &Path, b: &Path) -> Result<(), String> {
-    /// Neutralise les deux seuls champs que la date est autorisée à changer.
-    fn neutraliser(valeur: &mut Value) {
+    /// Neutralise ce que la date est autorisée à changer.
+    ///
+    /// Les deux champs de date, et **une seule** empreinte : celle que le
+    /// manifeste porte pour chaque instantané. Un instantané contient sa
+    /// `date_arretee`, donc son condensat bouge avec elle — mécaniquement, pas
+    /// par contamination. Ce n'est pas un trou dans le contrôle : le fichier
+    /// d'instantané est lui-même comparé, dates neutralisées, par la boucle
+    /// appelante. Si son contenu avait bougé pour une autre raison, il serait
+    /// signalé là.
+    ///
+    /// Aucune autre empreinte n'est neutralisée. Celles des sources et les `id`
+    /// des lignes de preuve doivent rester identiques : un `id` qui bouge quand
+    /// la date bouge est un défaut de la clé du §3, et c'est précisément ce que
+    /// ce contrôle existe pour voir.
+    fn neutraliser(valeur: &mut Value, dans_instantanes: bool) {
         match valeur {
             Value::Object(objet) => {
                 for (cle, v) in objet.iter_mut() {
                     if cle == "date_calcul" || cle == "date_arretee" {
                         *v = Value::String("<date>".to_owned());
+                    } else if dans_instantanes && cle == "empreinte_sha256" {
+                        *v = Value::String("<condensat de l'instantané>".to_owned());
                     } else {
-                        neutraliser(v);
+                        neutraliser(v, dans_instantanes || cle == "instantanes");
                     }
                 }
             }
-            Value::Array(elements) => elements.iter_mut().for_each(neutraliser),
+            Value::Array(elements) => elements
+                .iter_mut()
+                .for_each(|e| neutraliser(e, dans_instantanes)),
             _ => {}
         }
     }
@@ -794,7 +811,7 @@ fn diff_hors_date_calcul(a: &Path, b: &Path) -> Result<(), String> {
             for ligne in texte.lines() {
                 let mut valeur: Value = serde_json::from_str(ligne)
                     .map_err(|e| format!("{} : {e}", relatif.display()))?;
-                neutraliser(&mut valeur);
+                neutraliser(&mut valeur, false);
                 neuf.push_str(&serde_json::to_string(&valeur).map_err(|e| e.to_string())?);
                 neuf.push('\n');
             }
