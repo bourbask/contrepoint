@@ -24,22 +24,22 @@ votes publics, jeux de données académiques cités. Utile seule.
 
 ### v0.1 — la matrice de votes
 
-- [ ] Ingestion des scrutins nominatifs, AN open data (JSON, licence Etalab)
-- [ ] Matrice `député × scrutin`, codage pour / contre / abstention / absent
-- [ ] **Absent ≠ abstention.** L'absence est une donnée manquante, jamais une position
-- [ ] **Aucun seuil de participation** — mesuré injustifiable, aucune rupture ne désigne de valeur et un seuil relevé dégrade la séparation des blocs ([ADR 0003](docs/adr/0003-arbitrages-de-coherence.md) §2)
-- [ ] Filtre unique : un scrutin sans minorité enregistrée n'entre pas dans la matrice — `min(pour, contre) ≥ 1`. **455 scrutins écartés sur 8 434**, dont les **23 motions de censure** en totalité (l'article 49-2 ne fait voter qu'un camp) ; **7 979 retenus**
-- [ ] `nombreVotants` publié par scrutin, avec le décompte — jamais employé comme porte d'entrée dans la matrice
-- [ ] Rattachement des députés à leur groupe **avec période de validité** (les changements de groupe en cours de mandature sont fréquents) : le groupe vient du **bloc de ventilation du scrutin**, daté par construction ; AMO30 sert de recours pour les blocs `organeRef: "PO0"` et de source des périodes de validité ([ADR 0003](docs/adr/0003-arbitrages-de-coherence.md) §1)
+- [x] Ingestion des scrutins nominatifs, AN open data (JSON, licence Etalab)
+- [x] Matrice `député × scrutin`, codage pour / contre / abstention / absent
+- [x] **Absent ≠ abstention.** L'absence est une donnée manquante, jamais une position
+- [x] **Aucun seuil de participation** — mesuré injustifiable, aucune rupture ne désigne de valeur et un seuil relevé dégrade la séparation des blocs ([ADR 0003](docs/adr/0003-arbitrages-de-coherence.md) §2)
+- [x] Filtre unique : un scrutin sans minorité enregistrée n'entre pas dans la matrice — `min(pour, contre) ≥ 1`. **455 scrutins écartés sur 8 434**, dont les **23 motions de censure** en totalité (l'article 49-2 ne fait voter qu'un camp) ; **7 979 retenus**
+- [x] `nombreVotants` publié par scrutin, avec le décompte — jamais employé comme porte d'entrée dans la matrice
+- [x] Rattachement des députés à leur groupe **avec période de validité** (les changements de groupe en cours de mandature sont fréquents) : le groupe vient du **bloc de ventilation du scrutin**, daté par construction ; AMO30 sert de recours pour les blocs `organeRef: "PO0"` et de source des périodes de validité ([ADR 0003](docs/adr/0003-arbitrages-de-coherence.md) §1)
 
 Sortie visible : le décompte des scrutins retenus et écartés, et pourquoi.
 
 ### v0.2 — l'axe issu des votes
 
-- [ ] Estimation de position **sur les seules cellules observées** : moindres carrés alternés de rang 1 avec constante par scrutin. L'ACP et l'analyse des correspondances sont écartées — elles exigent une matrice complète, et 77 % des cellules sont manquantes ([ADR 0003](docs/adr/0003-arbitrages-de-coherence.md), [docs/methode.md](docs/methode.md) §2)
-- [ ] Fixation du signe de l'axe par deux points de repère connus, pour que « gauche » soit stable d'une exécution à l'autre
-- [ ] Agrégation au niveau du parti
-- [ ] Dispersion intra-groupe publiée, pas cachée : **écart interquartile et écart-type de rééchantillonnage**. Jamais la variance — illisible sur un axe sans unité — jamais l'étendue : un minimum et un maximum sont les coordonnées de deux membres identifiables ([ADR 0003](docs/adr/0003-arbitrages-de-coherence.md) §3)
+- [x] Estimation de position **sur les seules cellules observées** : moindres carrés alternés de rang 1 avec constante par scrutin. L'ACP et l'analyse des correspondances sont écartées — elles exigent une matrice complète, et 77 % des cellules sont manquantes ([ADR 0003](docs/adr/0003-arbitrages-de-coherence.md), [docs/methode.md](docs/methode.md) §2)
+- [x] Fixation du signe de l'axe par deux points de repère connus, pour que « gauche » soit stable d'une exécution à l'autre
+- [x] Agrégation au niveau du parti
+- [x] Dispersion intra-groupe publiée, pas cachée : **écart interquartile et écart-type de rééchantillonnage**. Jamais la variance — illisible sur un axe sans unité — jamais l'étendue : un minimum et un maximum sont les coordonnées de deux membres identifiables ([ADR 0003](docs/adr/0003-arbitrages-de-coherence.md) §3)
 
 **Limite méthodologique à énoncer sur le site, pas à découvrir plus tard :** la
 discipline de vote est quasi totale à l'Assemblée. L'axe issu des scrutins
@@ -50,9 +50,10 @@ sera pas affiché comme tel.
 
 ### v0.3 — les autres familles de mesure
 
-- [ ] CHES, toutes les vagues 1999 → 2024 (axes gauche-droite, économique, sociétal, UE)
+- [x] CHES **vague 2024, axe `lrgen` seul** — 10 partis français appariés par le registre, citation portée mot pour mot dans chaque ligne (FAM-01 à FAM-10)
+- [ ] CHES, les vagues **1999 → 2019** du fichier `ches_trend`, et les axes **économique, sociétal, UE**. La source est récupérée et déclarée au registre ; aucune ligne n'en sort encore. Chaque axe est une échelle de plus dans la table close du §2.3 du contrat, donc une mineure par axe
 - ~~Manifesto Project — score RILE issu des programmes~~ — **hors v0** ([ADR 0000](docs/adr/0000-perimetre-brique0.md) §1) : l'accès exige une inscription manuelle, ce qui viole la contrainte « rien qui exige une action manuelle récurrente ». Reste une source d'identifiants dans le registre, établie à la main et datée
-- [ ] Nuancier du ministère de l'Intérieur, avec la date de la circulaire et l'issue des recours
+- [x] Nuancier du ministère de l'Intérieur, avec la date de la circulaire et l'issue des recours
 - ~~ParlGov pour les résultats électoraux et les compositions gouvernementales~~ — **hors v0** : aucun écran ne les consomme. Reste une table de correspondance employée hors pipeline
 
 ### v0.4 — le registre d'entités *(le vrai travail, et le contrat des briques suivantes)*
@@ -67,10 +68,10 @@ partout ensuite.
 
 ### v0.5 — le registre de preuves
 
-- [ ] JSONL en ajout seul, une ligne par position mesurée
-- [ ] Chaque ligne porte : entité, valeur, méthode, source, date de la source, date de calcul
-- [ ] Idempotent, dédupliqué par identifiant
-- [ ] Rejouable : la reconstruction complète depuis les sources brutes donne le même fichier
+- [x] JSONL en ajout seul, une ligne par position mesurée
+- [x] Chaque ligne porte : entité, valeur, méthode, source, date de la source, date de calcul
+- [x] Idempotent, dédupliqué par identifiant
+- [x] Rejouable : la reconstruction complète depuis les sources brutes donne le même fichier
 
 Même mécanisme que le `trend_ledger.jsonl` du pipeline de veille, y compris la
 possibilité de reconstituer l'historique par minage des révisions git.
@@ -84,9 +85,10 @@ possibilité de reconstituer l'historique par minage des révisions git.
 
 ### v0.7 — publication
 
-- [x] Dépôt public, cron hebdomadaire — **exécuté le 2026-08-27**, archives déposées en release. GitHub Pages : reste à basculer la source sur Actions
+- [x] Dépôt public, cron hebdomadaire — **exécuté le 2026-08-27**, archives déposées en release
+- [x] GitHub Pages, source sur Actions — **premier déploiement le 2026-08-28** depuis `develop`, `http://www.bourbasquetkev.in/contrepoint/` répond 200, manifeste `0.4.0` servi avec ses trois familles
 - [x] Suite de tests hors ligne, zéro jeton, zéro réseau
-- [ ] Page de méthode et procédure de correction accessibles depuis chaque écran
+- [x] Page de méthode et procédure de correction accessibles depuis chaque écran — pied de page permanent : *Méthode*, *Utilisation*, *Signaler une erreur*. **Ces liens pointent `blob/main` et sont morts tant que `main` ne porte pas `docs/` : ils se réparent à la première fusion, pas avant**
 - [ ] Entrée « Contrepoint » dans la navbar du site personnel, en redirection
 - [x] Aucune promotion
 
