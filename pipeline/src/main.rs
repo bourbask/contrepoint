@@ -32,7 +32,7 @@ use contrepoint::preuves::{ajouter, confronter_registre, construire, verifier};
 use contrepoint::registre::{confronter, valider_texte};
 use contrepoint::{uid, un_ou_plusieurs};
 use serde_json::{Value, json};
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 use std::path::{Path, PathBuf};
 
 /// Version du contrat de sortie qui produit ces lignes (ADR 0000 §6).
@@ -71,6 +71,34 @@ fn main() -> std::process::ExitCode {
 }
 
 fn executer() -> Result<(), String> {
+    // La sous-commande du contrôle 2 de §8.2. Elle n'existait pas : le workflow
+    // l'appelait, `argument` ne lit que les options nommées, et le binaire
+    // reconstruisait tout en silence avant de rendre 0. Le contrôle 2 n'a donc
+    // jamais rien vérifié — une porte qui ne peut pas échouer.
+    let mots: Vec<String> = std::env::args().skip(1).collect();
+    match mots.first().map(String::as_str) {
+        Some("diff-hors-date_calcul") => {
+            let a = mots
+                .get(1)
+                .ok_or("diff-hors-date_calcul : premier dossier attendu")?;
+            let b = mots
+                .get(2)
+                .ok_or("diff-hors-date_calcul : second dossier attendu")?;
+            return diff_hors_date_calcul(Path::new(a), Path::new(b));
+        }
+        // Un mot inconnu est une **erreur**, pas une construction. C'est la
+        // racine du défaut : le binaire ne lisait que les options nommées, donc
+        // `contrepoint diff-hors-date_calcul a c` reconstruisait tout et rendait
+        // 0. Le contrôle 2 du §8.2 passait au vert sans rien comparer.
+        Some(inconnu) if !inconnu.starts_with("--") && inconnu != "construire" => {
+            return Err(format!(
+                "sous-commande inconnue « {inconnu} » — attendu `construire` ou \
+                 `diff-hors-date_calcul`"
+            ));
+        }
+        _ => {}
+    }
+
     let date_calcul = std::env::var("CONTREPOINT_DATE_CALCUL").map_err(|_| {
         "CONTREPOINT_DATE_CALCUL absente. La date de calcul est une entrée du pipeline, \
          jamais une lecture d'horloge (contrats.md §8.1) : elle n'a pas de valeur par défaut."
@@ -384,10 +412,27 @@ fn executer() -> Result<(), String> {
                 .to_owned(),
     };
     let instantane = construire_instantane(&description, CONTRAT, &toutes, &registre)?;
+    // Table producteur -> licence, dérivée des descripteurs de cache. Une
+    // source absente du cache n'y entre pas, et n'a produit aucune ligne.
+    let mut licences: std::collections::BTreeMap<String, String> =
+        std::collections::BTreeMap::new();
+    for entree in [
+        Some(&scrutins),
+        Some(&amo30),
+        ches.as_ref(),
+        nuances.as_ref(),
+    ]
+    .into_iter()
+    .flatten()
+    {
+        licences.insert(entree.producteur.clone(), entree.licence.clone());
+    }
+
     let manifeste = construire_manifeste(
         CONTRAT,
         &[(description.clone(), instantane.clone())],
         &toutes,
+        &licences,
     )?;
     let eclats = construire_eclats(&toutes, std::slice::from_ref(&instantane))?;
 
@@ -607,6 +652,10 @@ struct EntreeDeCache {
     forme: String,
     url: String,
     producteur: String,
+    /// La licence que **ce producteur** publie, telle que le descripteur la
+    /// porte. Elle n'est jamais devinée ni recopiée d'une source sur une
+    /// autre : CHES n'en publie aucune (RG-76, REC-07).
+    licence: String,
     empreinte_archive: String,
     empreinte_contenu: String,
     date_source: String,
@@ -659,6 +708,7 @@ fn entree_de_cache(cache: &Path, source: &str) -> Result<EntreeDeCache, String> 
             forme: lire("forme")?,
             url: lire("url")?,
             producteur: lire("producteur")?,
+            licence: lire("licence")?,
             empreinte_archive: lire("empreinte_sha256")?,
             empreinte_contenu: lire("empreinte_contenu_sha256")?,
             date_source: lire("date_source")?,
@@ -695,6 +745,77 @@ fn entree_registre(empreinte: &str, date_registre: &str) -> Value {
         "empreinte_contenu_sha256": empreinte,
         "recupere_le": date_registre,
     })
+}
+
+/// Contrôle 2 du §8.2 : deux arborescences produites avec des dates de calcul
+/// différentes ne diffèrent **que** par `date_calcul` et les `date_arretee`
+/// dérivés. Tout le reste — les `id` en premier — doit être identique.
+///
+/// Un `id` qui bouge quand la date bouge est un défaut de la clé du §3.
+fn diff_hors_date_calcul(a: &Path, b: &Path) -> Result<(), String> {
+    /// Neutralise les deux seuls champs que la date est autorisée à changer.
+    fn neutraliser(valeur: &mut Value) {
+        match valeur {
+            Value::Object(objet) => {
+                for (cle, v) in objet.iter_mut() {
+                    if cle == "date_calcul" || cle == "date_arretee" {
+                        *v = Value::String("<date>".to_owned());
+                    } else {
+                        neutraliser(v);
+                    }
+                }
+            }
+            Value::Array(elements) => elements.iter_mut().for_each(neutraliser),
+            _ => {}
+        }
+    }
+
+    let relatifs = |racine: &Path| -> BTreeSet<PathBuf> {
+        fichiers_json(racine)
+            .into_iter()
+            .filter_map(|c| c.strip_prefix(racine).ok().map(Path::to_path_buf))
+            .collect()
+    };
+    let (da, db) = (relatifs(a), relatifs(b));
+    let mut ecarts = Vec::new();
+    for manquant in da.symmetric_difference(&db) {
+        ecarts.push(format!("présent d'un seul côté : {}", manquant.display()));
+    }
+
+    for relatif in da.intersection(&db) {
+        // Les lignes du registre de preuves sont un JSONL : chaque ligne est un
+        // document, et les comparer en bloc masquerait laquelle diverge.
+        let (mut ta, mut tb) = (
+            std::fs::read_to_string(a.join(relatif)).map_err(|e| e.to_string())?,
+            std::fs::read_to_string(b.join(relatif)).map_err(|e| e.to_string())?,
+        );
+        for texte in [&mut ta, &mut tb] {
+            let mut neuf = String::new();
+            for ligne in texte.lines() {
+                let mut valeur: Value = serde_json::from_str(ligne)
+                    .map_err(|e| format!("{} : {e}", relatif.display()))?;
+                neutraliser(&mut valeur);
+                neuf.push_str(&serde_json::to_string(&valeur).map_err(|e| e.to_string())?);
+                neuf.push('\n');
+            }
+            *texte = neuf;
+        }
+        if ta != tb {
+            ecarts.push(format!(
+                "{} diffère hors date_calcul et date_arretee",
+                relatif.display()
+            ));
+        }
+    }
+
+    if ecarts.is_empty() {
+        println!("contrôle 2 : {} fichiers, aucun écart hors date", da.len());
+        return Ok(());
+    }
+    Err(format!(
+        "contrôle 2 du §8.2 — la date de calcul a contaminé autre chose qu'elle-même :\n  {}",
+        ecarts.join("\n  ")
+    ))
 }
 
 // ------------------------------------------------------------------ outils --

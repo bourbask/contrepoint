@@ -565,6 +565,7 @@ pub fn construire_manifeste(
     contrat: &str,
     instantanes: &[(Description, String)],
     lignes: &[String],
+    licences: &BTreeMap<String, String>,
 ) -> Result<String, String> {
     let mesures = mesures(lignes)?;
 
@@ -606,10 +607,25 @@ pub fn construire_manifeste(
             "mention de paternité : aucune entrée amont dans les lignes référencées".to_owned(),
         );
     }
-    let mention = format!(
-        "{} — Licence Ouverte v1.0 — données du {derniere}",
-        producteurs.iter().cloned().collect::<Vec<_>>().join(", ")
-    );
+    // La licence est celle **de chaque producteur**, jamais une licence
+    // recopiée de l'un sur l'autre. Deux des quatre sources ne sont pas de
+    // l'Assemblée : CHES ne publie aucune licence, et le fichier du ministère
+    // est en v2.0. Attribuer une Licence Ouverte v1.0 aux trois est une fausse
+    // attribution, pas une approximation (RG-76, REC-07).
+    //
+    // Une licence absente de la table est une **erreur bloquante** : mieux vaut
+    // un pipeline qui s'arrête qu'un manifeste qui revendique au hasard.
+    let mut fragments = Vec::new();
+    for producteur in &producteurs {
+        let licence = licences.get(producteur).ok_or_else(|| {
+            format!(
+                "mention de paternité : aucune licence connue pour « {producteur} » — \
+                 une licence ne se devine pas"
+            )
+        })?;
+        fragments.push(format!("{producteur} — {licence}"));
+    }
+    let mention = format!("{} — données du {derniere}", fragments.join(" ; "));
 
     let mut liste = Vec::new();
     for (description, vue) in instantanes {

@@ -205,6 +205,40 @@ instantane = {
                      "motif": "Entité absente des quatre sources d'identifiants et de la grille de nuances, au 2026-08-27."}],
 }
 
+# La mention est DERIVEE des producteurs amont des lignes livrees, jamais
+# ecrite en dur. Ecrite en dur, elle nommait la seule Assemblee nationale alors
+# que les fixtures portent des lignes CHES et des lignes de nuance : une
+# sous-attribution, symetrique de la fausse attribution que REC-07 refuse.
+# Chaque producteur porte SA licence : CHES n'en publie aucune.
+LICENCES = {
+    "Assemblee nationale": "Licence Ouverte v1.0",
+    "Assemblée nationale": "Licence Ouverte v1.0",
+    "Chapel Hill Expert Survey": "aucune licence publiée, citation exigée",
+    "Ministère de l'intérieur": "Licence Ouverte v2.0",
+}
+
+
+def mention_paternite():
+    producteurs, derniere = set(), ""
+    for texte in lignes.values():
+        for entree in json.loads(texte)["entrees"]:
+            if entree["source"] == "registre_partis":
+                continue          # fichier du projet, pas une source amont
+            producteurs.add(entree["producteur"])
+            derniere = max(derniere, entree["derniere_mise_a_jour"])
+    fragments = []
+    for producteur in sorted(producteurs):
+        if producteur not in LICENCES:
+            raise SystemExit(
+                f"mention de paternite : aucune licence connue pour « {producteur} »"
+            )
+        fragments.append(f"{producteur} — {LICENCES[producteur]}")
+    mention = " ; ".join(fragments) + f" — données du {derniere}"
+    if len(mention) > 200:
+        raise SystemExit(f"mention de paternite : {len(mention)} caracteres pour 200 au plus (I20)")
+    return mention
+
+
 def bornes_declarees(echelle_id):
     """Bornes de graduation d'une echelle, lues sur les lignes de preuve emises.
 
@@ -228,7 +262,7 @@ manifeste = {
     "schemas": ["contrepoint/preuve/1", "contrepoint/instantane/1", "contrepoint/eclat-preuves/1"],
     "date_arretee": "2026-08-27T00:00:00Z",
     "licence": "Licence Ouverte / Open Licence (Etalab)",
-    "mention_paternite": "Assemblée nationale — Licence Ouverte v1.0 — données du 2026-08-27",
+    "mention_paternite": mention_paternite(),
     # min, max et decimales sont RECOPIES du champ `echelle` des lignes de preuve
     # de la famille, jamais derives des valeurs publiees : une derivation
     # enverrait la plus petite valeur publiee au pole de l'echelle (contrats.md

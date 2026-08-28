@@ -20,6 +20,7 @@ use contrepoint::export::{
 };
 use contrepoint::preuves::construire;
 use serde_json::{Value, json};
+use std::collections::BTreeMap;
 
 fn chemin(relatif: &str) -> std::path::PathBuf {
     std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join(relatif)
@@ -228,6 +229,23 @@ fn instantane() -> String {
 
 // ---------------------------------------------------------------- EXP-01 ----
 
+/// Les licences telles que les descripteurs de cache les portent. CHES n'en
+/// publie **aucune** : la nommer « Licence Ouverte » serait la fausse
+/// attribution que REC-07 refuse.
+fn licences() -> BTreeMap<String, String> {
+    [
+        ("Assemblée nationale", "Licence Ouverte v1.0"),
+        (
+            "Chapel Hill Expert Survey",
+            "aucune licence publiée, citation exigée",
+        ),
+        ("Ministère de l'intérieur", "Licence Ouverte v2.0"),
+    ]
+    .into_iter()
+    .map(|(p, l)| (p.to_owned(), l.to_owned()))
+    .collect()
+}
+
 #[test]
 fn trois_marqueurs_trois_echelles_nommees() {
     // EXP-01 [C] — chaque marqueur porte sa famille, son échelle nommée et sa
@@ -276,8 +294,13 @@ fn aucune_comparaison_inter_legislature() {
     // EXP-02 [C] — I18. Aucun champ d'écart, de ratio ni de flèche entre deux
     // législatures, deux dates ou deux instantanés.
     let vue = instantane();
-    let manifeste = construire_manifeste("0.3.0", &[(description(), vue.clone())], &lignes())
-        .expect("manifeste");
+    let manifeste = construire_manifeste(
+        "0.3.0",
+        &[(description(), vue.clone())],
+        &lignes(),
+        &licences(),
+    )
+    .expect("manifeste");
     for artefact in [&vue, &manifeste] {
         let racine: Value = serde_json::from_str(artefact).unwrap();
         assert!(
@@ -297,6 +320,7 @@ fn aucune_comparaison_inter_legislature() {
         "0.3.0",
         &[(description(), vue.clone()), (seconde, vue)],
         &lignes(),
+        &licences(),
     )
     .unwrap();
     let racine: Value = serde_json::from_str(&deux).unwrap();
@@ -419,8 +443,13 @@ fn lexique_interdit_absent_de_lexport() {
     // EXP-05 [C] — I14 et RG-112. Le grep de la definition of done porte sur le
     // diff : un terme introduit par une donnée plutôt que par du code y échappe.
     let vue = instantane();
-    let manifeste =
-        construire_manifeste("0.3.0", &[(description(), vue.clone())], &lignes()).unwrap();
+    let manifeste = construire_manifeste(
+        "0.3.0",
+        &[(description(), vue.clone())],
+        &lignes(),
+        &licences(),
+    )
+    .unwrap();
     let eclats = construire_eclats(&lignes(), std::slice::from_ref(&vue)).unwrap();
 
     // Les termes sont assemblés et non écrits en clair : `scripts/lexique.sh`
@@ -515,8 +544,13 @@ fn schema_publie_et_verifie_a_la_construction() {
         }
     };
     ordre_ecrit(&vue, &attendues("instantane-1", &[]));
-    let manifeste =
-        construire_manifeste("0.3.0", &[(description(), vue.clone())], &lignes()).unwrap();
+    let manifeste = construire_manifeste(
+        "0.3.0",
+        &[(description(), vue.clone())],
+        &lignes(),
+        &licences(),
+    )
+    .unwrap();
     ordre_ecrit(&manifeste, &attendues("manifeste-1", &[]));
 
     // Un artefact qui ne correspond pas au schéma publié échoue bruyamment.
@@ -612,8 +646,13 @@ fn aucun_orphelin_dans_les_deux_sens() {
     // est référencé par au moins un marqueur.
     let lignes = lignes();
     let vue = instantane();
-    let manifeste =
-        construire_manifeste("0.3.0", &[(description(), vue.clone())], &lignes).unwrap();
+    let manifeste = construire_manifeste(
+        "0.3.0",
+        &[(description(), vue.clone())],
+        &lignes,
+        &licences(),
+    )
+    .unwrap();
     let eclats = construire_eclats(&lignes, std::slice::from_ref(&vue)).unwrap();
 
     let racine: Value = serde_json::from_str(&vue).unwrap();
@@ -654,7 +693,13 @@ fn date_arretee_derivee_et_jamais_saisie() {
     let vue: Value = serde_json::from_str(&instantane()).unwrap();
     assert_eq!(vue["date_arretee"], CALCUL);
     let manifeste: Value = serde_json::from_str(
-        &construire_manifeste("0.3.0", &[(description(), instantane())], &lignes()).unwrap(),
+        &construire_manifeste(
+            "0.3.0",
+            &[(description(), instantane())],
+            &lignes(),
+            &licences(),
+        )
+        .unwrap(),
     )
     .unwrap();
     assert_eq!(manifeste["date_arretee"], CALCUL);
@@ -669,8 +714,13 @@ fn date_arretee_derivee_et_jamais_saisie() {
     let lignes = lignes();
     let eclats = construire_eclats(&lignes, std::slice::from_ref(&vue_texte)).unwrap();
     for saisie in ["manifeste", "instantane"] {
-        let mut manifeste_faux =
-            construire_manifeste("0.3.0", &[(description(), vue_texte.clone())], &lignes).unwrap();
+        let mut manifeste_faux = construire_manifeste(
+            "0.3.0",
+            &[(description(), vue_texte.clone())],
+            &lignes,
+            &licences(),
+        )
+        .unwrap();
         let mut instantane_faux = vue_texte.clone();
         let cible = if saisie == "manifeste" {
             &mut manifeste_faux
@@ -698,7 +748,13 @@ fn date_arretee_derivee_et_jamais_saisie() {
     let mut trop_long: Value = serde_json::from_str(&vue_texte).unwrap();
     trop_long["ancrage"]["note"] = json!("é".repeat(201));
     let refus = verifier_artefacts(
-        &construire_manifeste("0.3.0", &[(description(), vue_texte.clone())], &lignes).unwrap(),
+        &construire_manifeste(
+            "0.3.0",
+            &[(description(), vue_texte.clone())],
+            &lignes,
+            &licences(),
+        )
+        .unwrap(),
         &[trop_long.to_string()],
         &eclats,
         &lignes,
@@ -717,13 +773,39 @@ fn date_arretee_derivee_et_jamais_saisie() {
     // date est la plus récente de leurs `derniere_mise_a_jour`.
     assert_eq!(
         mention,
-        "Assemblée nationale, Chapel Hill Expert Survey — Licence Ouverte v1.0 — données du 2026-08-27"
+        "Assemblée nationale — Licence Ouverte v1.0 ; Chapel Hill Expert Survey — aucune licence \
+         publiée, citation exigée — données du 2026-08-27"
     );
     assert!(
         !mention.contains("Contrepoint"),
         "le registre du projet n'est pas une source amont"
     );
-    assert!(mention.chars().count() <= 200, "I20");
+
+    // REC-07 — chaque producteur porte **sa** licence. La forme précédente
+    // joignait les producteurs par une virgule et suffixait une seule licence :
+    // elle attribuait la Licence Ouverte v1.0 à CHES, qui n'en publie aucune, et
+    // au ministère, dont le fichier est en v2.0. Une égalité de chaîne seule
+    // avait laissé passer ce défaut — d'où la propriété, vérifiée en plus.
+    for (producteur, attendue) in licences() {
+        if !mention.contains(&producteur) {
+            continue;
+        }
+        let apres = &mention[mention.find(&producteur).unwrap() + producteur.len()..];
+        let fragment = apres.split(" ; ").next().unwrap_or(apres);
+        assert!(
+            fragment.contains(&attendue),
+            "REC-07 : « {producteur} » doit porter sa propre licence « {attendue} », \
+             obtenu « {fragment} »"
+        );
+    }
+    assert!(
+        !mention.contains("Chapel Hill Expert Survey — Licence Ouverte"),
+        "REC-07 : CHES ne publie aucune licence — la nommer est une fausse attribution (RG-76)"
+    );
+    assert!(
+        mention.chars().count() <= 200,
+        "I20 : `mention_paternite` n'est pas exceptée du plafond"
+    );
     assert_eq!(
         manifeste["licence"],
         "Licence Ouverte / Open Licence (Etalab)"
@@ -757,8 +839,13 @@ fn chaque_famille_du_manifeste_porte_les_bornes_de_son_echelle() {
     // rendent la moyenne entre familles visuellement dessinable.
     let lignes = lignes();
     let vue = instantane();
-    let manifeste_texte =
-        construire_manifeste("0.3.0", &[(description(), vue.clone())], &lignes).unwrap();
+    let manifeste_texte = construire_manifeste(
+        "0.3.0",
+        &[(description(), vue.clone())],
+        &lignes,
+        &licences(),
+    )
+    .unwrap();
     let manifeste: Value = serde_json::from_str(&manifeste_texte).unwrap();
     let bornes: Vec<(&str, Value, Value, Value)> = manifeste["familles"]
         .as_array()
@@ -815,7 +902,7 @@ fn chaque_famille_du_manifeste_porte_les_bornes_de_son_echelle() {
     divergente["echelle"]["max"] = json!(2.0);
     let mut deux = lignes.clone();
     deux.push(divergente.to_string());
-    let erreur = construire_manifeste("0.3.0", &[(description(), vue)], &deux)
+    let erreur = construire_manifeste("0.3.0", &[(description(), vue)], &deux, &licences())
         .expect_err("deux échelles divergentes pour une famille sont un refus");
     assert!(erreur.contains("divergentes"), "{erreur}");
 }
@@ -891,8 +978,13 @@ fn regle_de_construction_des_bandes() {
 fn aucun_identifiant_dacteur_dans_un_artefact() {
     // I13 — `grep -E '\bPA[0-9]{4,}\b'` sur les artefacts publiés est vide.
     let vue = instantane();
-    let manifeste =
-        construire_manifeste("0.3.0", &[(description(), vue.clone())], &lignes()).unwrap();
+    let manifeste = construire_manifeste(
+        "0.3.0",
+        &[(description(), vue.clone())],
+        &lignes(),
+        &licences(),
+    )
+    .unwrap();
     let eclats = construire_eclats(&lignes(), std::slice::from_ref(&vue)).unwrap();
     for artefact in [&vue, &manifeste].into_iter().chain(eclats.values()) {
         for fenetre in artefact.as_bytes().windows(6) {
@@ -913,8 +1005,13 @@ fn artefact_fautif_refuse_bruyamment() {
     // liste blanche des clés, tous les quatre neutralisés sans conséquence.
     let lignes = lignes();
     let vue = instantane();
-    let manifeste =
-        construire_manifeste("0.3.0", &[(description(), vue.clone())], &lignes).unwrap();
+    let manifeste = construire_manifeste(
+        "0.3.0",
+        &[(description(), vue.clone())],
+        &lignes,
+        &licences(),
+    )
+    .unwrap();
     let eclats = construire_eclats(&lignes, std::slice::from_ref(&vue)).unwrap();
     assert!(
         verifier_artefacts(&manifeste, std::slice::from_ref(&vue), &eclats, &lignes).is_empty()

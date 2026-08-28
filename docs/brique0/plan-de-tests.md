@@ -277,6 +277,8 @@ fichier fautif universel : un test qui échoue pour deux raisons ne dit laquelle
 | REG-21 [C] | `au_plus_une_ancre_par_pole_et_par_date` (V24) | deux groupes portant `ancre_axe.pole = "gauche"` sur des périodes qui se chevauchent ; les deux mêmes sur périodes disjointes | Refus, puis acceptation | Deux ancres du même pôle à la même date rendent la transformation d'ancrage non définie : le pipeline choisirait selon l'ordre de lecture du fichier, et deux exécutions donneraient deux axes. Test **inécrivable avant** le contrat `0.3.0`, le registre n'ayant pas le champ |
 | REG-22 [C] | `ancre_manquante_arrete_le_pipeline` (V25) | registre sans ancre `droite` valide à la date d'agrégation | Échec bruyant ; aucune ligne `votes` émise, aucune ancre de remplacement choisie | RG-31. Une substitution silencieuse d'ancre change l'échelle de toutes les positions publiées sans changer leur identifiant d'échelle — le défaut exact que le découplage de contrats.md §2.3 rend visible. Test **inécrivable avant** le contrat `0.3.0` |
 
+| REG-23 [C] | `echantillon_et_registre_declarent_les_memes_sources` | `docs/brique0/echantillons/registre-l17.json` et `data/registre/partis.json` | Les deux déclarent les mêmes `url`, `empreinte_sha256`, `remarque` et `licence` par source | La bascule du nuancier vers le fichier régional du 2nd tour (RG-111, qui écarte un fichier portant des noms de candidats) a été appliquée au registre et pas à l'échantillon. Celui-ci a gardé l'empreinte de la source nominative et « 22 codes » au lieu de 17. Aucun test ne comparait les deux : le défaut était muet, et l'échantillon renvoyait un reproducteur vers le fichier écarté |
+
 REG-21 et REG-22 sont les deux tests que le blocage 3 de positionnement.md §11
 laissait inécrivables : sans le champ `ancre_axe`, il n'existait rien à déclarer,
 donc rien à contredire. REG-11b est le test de l'exception nommée à V13, qui n'a
@@ -429,7 +431,7 @@ première ligne d'implémentation.
 | **8** | L'ancrage | EST-08, EST-09, EST-10, EST-11, EST-12, EST-17 | Un axe où LFI-NFP vaut −1 et RN +1, ancres lues dans le registre, pipeline qui s'arrête si l'ancre manque |
 | **9** | L'agrégation et la règle de non-publication | AGR-01 → AGR-12 | Les bandes de partis avec médiane, IQR, écart-type de rééchantillonnage, effectif, date — et NI et LIOT en « non mesuré » avec leur raison. La première sortie qui ressemble au produit |
 | **10** | Les alarmes | EST-15, EST-16 | Deux corpus synthétiques dégradés qui font passer la famille « votes » en « non mesuré ». Le risque accepté de l'ADR 0000 §8 devient un comportement observable |
-| **11** | Le registre d'entités | REG-01 → REG-22 | Un validateur qui refuse vingt-deux fichiers fautifs et accepte l'extrait. Une PR de correction du registre devient possible |
+| **11** | Le registre d'entités | REG-01 → REG-23 | Un validateur qui refuse vingt-deux fichiers fautifs et accepte l'extrait. Une PR de correction du registre devient possible |
 | **12** | Le registre de preuves | PRE-01 → PRE-13 | Le JSONL en ajout seul, rejouable, idempotent. Le contrat des briques 1-3 existe |
 | **13** | L'export et le front | EXP-01 → EXP-08 | Le graphe de la roadmap v0.6, sur fixtures |
 | **14** | Le niveau 2 | Contrôles 8, 9, 10, 11 de positionnement.md §9, sur archive en cache | Les chiffres du corpus réel retrouvés par l'implémentation Rust, aux tolérances du §4. C'est ici, et seulement ici, que 0,591 et 0,652 sont vérifiés |

@@ -214,12 +214,58 @@ tests_ignores() {
   fi
 }
 
+
+# ---- porte 4 : la taille du registre citée dans la documentation ------------
+#
+# `data/registre/partis.json` voit sa taille citée dans trois documents. Elle a
+# été fausse trois fois : 42 972 pour un fichier de 42 970, puis 42 970 après
+# une bascule d'URL qui l'avait mis à 42 961, puis encore après la correction de
+# l'empreinte du nuancier. C'est le seul chiffre du dépôt qui bouge à chaque
+# correction du registre, et personne ne pense à le suivre.
+#
+# La porte ne regarde **que** les lignes qui nomment `partis.json` : une première
+# version, qui balayait toutes les tailles de la documentation, signalait
+# vingt-sept lignes justes. Une porte qui crie faux se fait désactiver.
+#
+# L'empreinte n'est volontairement pas contrôlée ici : REG-23 la compare entre
+# l'échantillon et le registre, et l'invariant I3 la confronte à la source à
+# chaque exécution du pipeline. Un troisième motif, forcément approximatif sur
+# de la prose, n'ajouterait que du bruit.
+taille_du_registre() {
+  printf '\n── porte 4 : taille du registre citée dans la documentation\n'
+  local fichier=data/registre/partis.json
+  if [ ! -f "$fichier" ]; then
+    signaler "$fichier absent — la porte ne peut rien affirmer"
+    return
+  fi
+  local octets attendu code=0 lignes r
+  octets=$(LC_ALL=C wc -c < "$fichier" | tr -d ' ')
+  # La prose groupe les milliers par une espace ordinaire, insécable ou fine.
+  attendu="${octets:0:2}[  ]?${octets:2}"
+
+  lignes=$(grep -rn "partis\.json" docs/ 2>/dev/null) || code=$?
+  if [ "$code" -gt 1 ]; then
+    signaler "grep en erreur — la porte n'a rien pu affirmer"
+    return
+  fi
+  r=$(printf '%s\n' "$lignes" \
+        | grep -E "[0-9]{2}[  ]?[0-9]{3} (o|octets)" \
+        | grep -vE "$attendu (o|octets)" || true)
+  if [ -n "$r" ]; then
+    signaler "taille citée pour partis.json qui n'est pas la sienne ($octets octets) :"
+    printf '%s\n' "$r" | cut -c1-150 | sed 's/^/      /'
+  else
+    echo "  ✓ toute taille citée pour partis.json vaut $octets octets"
+  fi
+}
+
 case "${1:-tout}" in
   identifiants)   identifiants ;;
   invariants)     invariants ;;
   tests-ignores)  tests_ignores ;;
-  tout)           identifiants; echo; invariants; echo; tests_ignores ;;
-  *) echo "usage: $0 [identifiants|invariants|tests-ignores|tout]" >&2; exit 2 ;;
+  registre)       taille_du_registre ;;
+  tout)           identifiants; echo; invariants; echo; tests_ignores; echo; taille_du_registre ;;
+  *) echo "usage: $0 [identifiants|invariants|tests-ignores|registre|tout]" >&2; exit 2 ;;
 esac
 
 echo
