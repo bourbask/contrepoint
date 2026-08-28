@@ -61,7 +61,7 @@ l'affichage (definition-of-done.md §12).
 | score, note, indice, cote | valeur, position |
 | position consolidée, synthèse, moyenne des familles, position globale, consensus | *aucun objet de ce nom n'existe ; les trois familles ne sont jamais moyennées* |
 | vrai / faux positionnement, position correcte | position issue de telle famille, à telle date |
-| centre, neutre, n.d., case vide | non mesuré, avec son `motif_code` |
+| centre, neutre, n.d., case vide, tiret muet | **position non publiée** quand `motif_code` vaut `sous_seuil_de_publication` — la mesure existe, ses chiffres sont publiés avec le motif ; **non mesuré** quand aucune valeur n'existe (`hors_source`, `aucune_mesure`) |
 | variance intra-groupe *(comme quantité publiée)* | dispersion intra-groupe : écart interquartile, écart-type de rééchantillonnage |
 | étendue, minimum, maximum d'un groupe | *(rien — une borne d'étendue est la coordonnée d'un membre identifiable)* |
 | part de variance expliquée *(comme critère de publication)* | critère de séparation des axes, `s2/s1` |
