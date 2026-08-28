@@ -12,9 +12,10 @@
 //     GV-10 refuse toute longueur geometrique derivee de `dispersion`, et une
 //     tete posee dans une gouttiere se lit encore comme un defaut d'alignement
 //     qu'on aura envie de « corriger » sur l'axe (GV-08) ;
-//   - un code de nuance n'a ni min, ni max, ni decimales : il prend une
-//     pastille, jamais une abscisse (GV-09). Le libelle du marqueur, qui nomme
-//     son producteur, precede le code dans l'ordre du DOM (GV-16).
+//   - un code de nuance n'a ni min, ni max, ni decimales, et n'a AUCUN ORDRE :
+//     il entre dans un repertoire, jamais dans une abscisse ni dans une rangee
+//     (GV-09). Le libelle du marqueur, qui nomme son producteur, precede le
+//     code dans l'ordre du DOM (GV-16).
 //
 // Le decalage des deux graduations est delibere (GV-03) : il est le controle,
 // pas un defaut de mise en page.
@@ -23,6 +24,38 @@ import type { JSX } from 'react'
 import type { Instantane, Manifeste } from './contrat.ts'
 import type { Disposition, Forme, Voix } from './graphe.ts'
 import { direAbsence } from './graphe.ts'
+import { PHRASES, couleurIdentite, natureEntite } from './presentation.ts'
+
+/** Largeur de la colonne du carre d'identite, dans le SVG. Le nom s'y indente
+ *  toujours, que le carre soit peint ou non : une entite sans couleur declaree
+ *  ne doit pas se distinguer par un alignement. */
+const COLONNE_IDENTITE = 16
+
+/** Le carre d'identite, dans le SVG. `style` et non `fill` : la regle
+ *  `svg.partition rect { fill: none }` gagnerait contre un attribut de
+ *  presentation et effacerait la couleur. Le contour vient de la feuille de
+ *  style, et il est le meme pour les onze. */
+function CarreSvg({ entite, x, y }: { entite: string; x: number; y: number }): JSX.Element | null {
+  const srgb = couleurIdentite(entite)
+  if (srgb === null) return null
+  return <rect className="identite" x={x} y={y} width={10} height={10} style={{ fill: srgb }} />
+}
+
+/** Le meme carre, hors du SVG. */
+function Carre({ entite }: { entite: string }): JSX.Element | null {
+  const srgb = couleurIdentite(entite)
+  if (srgb === null) return null
+  return <span className="identite" style={{ background: srgb }} aria-hidden="true" />
+}
+
+/** La nature de l'entite, hors du SVG. */
+export function Nature({ entite }: { entite: string }): JSX.Element | null {
+  const nature = natureEntite(entite)
+  if (nature === null) return null
+  return <span className="nature"> · {nature}</span>
+}
+
+export { Carre }
 
 type Props = {
   manifeste: Manifeste
@@ -92,15 +125,25 @@ function Ligne({
   // la ligne suivante, peint apres, leur coupe les jambages.
   const yNom = etroit ? voix.y + 18 : cy - 3
   const yValeur = etroit ? voix.y + 34 : cy + 1
+  const nom = disposition.marge + COLONNE_IDENTITE
+  // Un groupe parlementaire n'est pas un parti (methode.md §4), et rien a
+  // l'ecran ne le disait : « Gauche Democrate et Republicaine » est un groupe,
+  // « Parti socialiste » un parti mesure sur les votes du groupe SOC. La nature
+  // vient du prefixe de l'identifiant, contractuel (ton.md §3), et se pose sur
+  // la seconde ligne — posee en suffixe du nom, elle mordait sur la graduation.
+  // Le libelle du marqueur reste apres elle quand il n'est pas deja au pied.
+  const nature = natureEntite(voix.entite, true)
+  const dessous = [nature, seul ? null : voix.marqueur.libelle].filter((t) => t !== null)
   return (
     <g className={`ligne${nue ? ' ligne--nue' : ''} marqueur--${voix.rang}`} {...proprietesVoix(voix, onPreuve)}>
       <rect className="fond" x={0} y={voix.y} width={largeur} height={voix.hauteur} />
-      <text className="titre" x={disposition.marge} y={yNom}>
+      <CarreSvg entite={voix.entite} x={disposition.marge} y={yNom - 9} />
+      <text className="titre" x={nom} y={yNom}>
         {voix.libelleEntite}
       </text>
-      {!seul && (
-        <text className="sigle" x={disposition.marge} y={yNom + (etroit ? 16 : 15)}>
-          {voix.marqueur.libelle}
+      {dessous.length > 0 && (
+        <text className="sigle" x={nom} y={yNom + (etroit ? 16 : 15)}>
+          {dessous.join(' · ')}
         </text>
       )}
       <line className="portee" x1={portee.debut} y1={cy} x2={portee.fin} y2={cy} />
@@ -128,7 +171,11 @@ function Retenue({
   return (
     <div className="retenue" {...proprietesVoix(voix, onPreuve)}>
       <div className="retenue__tete">
-        <p className="retenue__nom">{voix.libelleEntite}</p>
+        <p className="retenue__nom">
+          <Carre entite={voix.entite} />
+          {voix.libelleEntite}
+          <Nature entite={voix.entite} />
+        </p>
         <span className="retenue__etat">{direAbsence(voix.marqueur.motif_code)}</span>
       </div>
       <p className="retenue__compte">
@@ -200,8 +247,12 @@ export function Partition({ manifeste, instantane, disposition, onPreuve }: Prop
                   onPreuve={onPreuve}
                 />
               ))}
+              {/* Le pied nommait l'echelle par son identifiant de contrat —
+                  `votes_an17_ancre_v1`. Il la nomme desormais en francais ;
+                  l'identifiant reste a la legende, ou il est etiquete comme
+                  tel. Aucun nombre ici hors des bornes declarees (GV-01). */}
               <text className="echelle" x={disposition.marge} y={p.yPied}>
-                Échelle {p.echelle.id}
+                {PHRASES[p.famille]?.echelle ?? p.echelle.id}
               </text>
             </g>
           )
@@ -227,18 +278,33 @@ export function Partition({ manifeste, instantane, disposition, onPreuve }: Prop
           <h3>{familleNuance.libelle}</h3>
           {/* GV-16 : le producteur nomme precede le code dans l'ordre du DOM. */}
           <p className="sous-titre">
-            {nuances[0]?.marqueur.libelle} · Code de nuance, sans échelle graduée.
+            {nuances[0]?.marqueur.libelle} ·{' '}
+            {PHRASES[familleNuance.id]?.quoi ?? 'Code sans échelle graduée.'}
           </p>
-          <ul className={`pastilles marqueur--${nuances[0]?.rang ?? 0}`}>
+          {/* Une RANGEE de pastilles se lit comme un axe. Les codes sortaient
+              dans l'ordre du contrat — FI · SOC · HOR · LR · RN · ENS · UG —
+              qui est, pour les cinq premiers, l'ordre des votes de gauche a
+              droite ; alignes, ils enoncaient une gauche et une droite, et
+              placaient le Nouveau Front populaire a droite du Rassemblement
+              national. La nuance n'a aucun ordre (GV-09).
+              La forme retenue est un INDEX : une colonne, le nom d'abord, le
+              code ferre a droite. Il n'y a plus de rangee ou lire un axe. */}
+          <dl className="nuancier">
             {nuances.map((v) => (
-              <li className="pastille" key={v.entite}>
-                <span className="pastille__code" {...proprietesVoix(v, onPreuve)}>
-                  {v.valeur}
-                </span>
-                <span className="pastille__nom">{v.libelleEntite}</span>
-              </li>
+              <div className={`nuancier__entree marqueur--${v.rang}`} key={v.entite}>
+                <dt>
+                  <Carre entite={v.entite} />
+                  {v.libelleEntite}
+                  <Nature entite={v.entite} />
+                </dt>
+                <dd>
+                  <span className="nuancier__code" {...proprietesVoix(v, onPreuve)}>
+                    {v.valeur}
+                  </span>
+                </dd>
+              </div>
             ))}
-          </ul>
+          </dl>
         </>
       )}
     </>

@@ -3,7 +3,7 @@
 //
 // Aucun appel reseau hors de `public/api/`. Aucun calcul sur les valeurs.
 
-import { useCallback, useEffect, useRef, useState, type JSX } from 'react'
+import { useCallback, useEffect, useRef, useState, type JSX, type Ref } from 'react'
 import {
   ContratRefuse,
   cheminEclat,
@@ -14,7 +14,8 @@ import {
   type Preuve as LignePreuve,
 } from './contrat.ts'
 import { disposer, formaterValeur } from './graphe.ts'
-import { Partition } from './Partition.tsx'
+import { Carre, Nature, Partition } from './Partition.tsx'
+import { PHRASES } from './presentation.ts'
 import { Preuve, type EtatPreuve } from './Preuve.tsx'
 
 const API = `${import.meta.env.BASE_URL}api/`
@@ -124,13 +125,45 @@ export function App(): JSX.Element {
 
   const { manifeste, instantane } = chargement
   const disposition = disposer(manifeste, instantane, largeur)
-  const arret = instantane.date_arretee.slice(0, 10)
 
+  return (
+    <>
+      <Page
+        manifeste={manifeste}
+        instantane={instantane}
+        disposition={disposition}
+        cadre={cadre}
+        onPreuve={ouvrirPreuve}
+      />
+      <Preuve etat={preuve} onFermer={() => setPreuve(null)} />
+    </>
+  )
+}
+
+/** La page rendue, sans etat ni reseau : une fonction du contrat vers du DOM.
+ *  Separee de `App` pour qu'elle soit rendue hors ligne par
+ *  `renderToStaticMarkup`, donc rasterisable et REGARDABLE (scripts/apercu.sh).
+ *  Le dialogue de preuve, lui, est un etat : il reste dans `App`. */
+export function Page({
+  manifeste,
+  instantane,
+  disposition,
+  cadre,
+  onPreuve,
+}: {
+  manifeste: Manifeste
+  instantane: Instantane
+  disposition: ReturnType<typeof disposer>
+  cadre?: Ref<HTMLDivElement>
+  onPreuve?: (id: string) => void
+}): JSX.Element {
+  const arret = instantane.date_arretee.slice(0, 10)
   return (
     <main className="page">
       <Marque />
       <p className="these">
-        Trois familles de mesure par entité, affichées côte à côte, jamais moyennées.
+        Trois façons de situer un parti — ses votes, l'avis de politologues, son code
+        administratif — affichées côte à côte, jamais moyennées.
       </p>
 
       <div className="bandeau">
@@ -146,10 +179,14 @@ export function App(): JSX.Element {
       <section>
         <h2>Familles de mesure et échelles</h2>
         <dl className="familles">
+          {/* La legende portait l'identifiant de contrat de l'echelle —
+              `votes_an17_ancre_v1`, `ches_lrgen_0_10` —, qui ne dit ni ce qui
+              a ete mesure, ni sur quoi. Elle porte une phrase ; l'identifiant
+              reste dans la preuve, ou il est nomme avec son libelle. */}
           {manifeste.familles.map((f, rang) => (
             <div className={`famille marqueur--${rang}`} key={f.id}>
               <dt>{f.libelle}</dt>
-              <dd>{f.echelle}</dd>
+              <dd className="quoi">{PHRASES[f.id]?.quoi ?? f.echelle}</dd>
               <dd className="graduation">
                 {f.min === null || f.max === null || f.decimales === null
                   ? 'aucune borne publiée'
@@ -162,6 +199,10 @@ export function App(): JSX.Element {
           Autant de graduations que de familles : aucune valeur n'est convertie d'une échelle vers
           une autre.
         </p>
+        <p className="note">
+          Le carré porte la couleur déclarée par l'organisation (Wikidata P465) ; elle nomme, et ne
+          mesure rien. Un groupe parlementaire n'en a pas : ce n'est pas un parti.
+        </p>
       </section>
 
       <section>
@@ -172,7 +213,7 @@ export function App(): JSX.Element {
             manifeste={manifeste}
             instantane={instantane}
             disposition={disposition}
-            onPreuve={ouvrirPreuve}
+            {...(onPreuve === undefined ? {} : { onPreuve })}
           />
         </div>
 
@@ -182,7 +223,11 @@ export function App(): JSX.Element {
             {instantane.sans_mesure.map((e) => (
               <div className="retenue" key={e.entite}>
                 <div className="retenue__tete">
-                  <p className="retenue__nom">{e.libelle}</p>
+                  <p className="retenue__nom">
+                    <Carre entite={e.entite} />
+                    {e.libelle}
+                    <Nature entite={e.entite} />
+                  </p>
                   <span className="retenue__etat">Aucune famille ne porte de valeur</span>
                 </div>
                 <p className="retenue__motif">{e.motif}</p>
@@ -212,8 +257,6 @@ export function App(): JSX.Element {
           Données arrêtées le {arret} · instantané {instantane.id} · contrat {instantane.contrat}
         </p>
       </footer>
-
-      <Preuve etat={preuve} onFermer={() => setPreuve(null)} />
     </main>
   )
 }

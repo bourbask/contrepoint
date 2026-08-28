@@ -105,6 +105,52 @@ a:focus-visible { outline: 2px solid var(--encre); outline-offset: 2px; }
 .marqueur--3 { color: var(--f-3); --famille: var(--f-3); }
 .marqueur--4 { color: var(--f-4); --famille: var(--f-4); }
 
+/* ---- Identite d'une organisation, et nature d'une entite -----------------
+ *
+ * LA COULEUR D'IDENTITE NE VA JAMAIS SUR LE MARQUEUR. La teinte du marqueur
+ * encode la FAMILLE de mesure (EXP-08, `--f-N`, indexee sur le rang) ; poser
+ * une seconde grille de couleur sur le meme glyphe detruit les deux. L'identite
+ * ne se pose que sur l'etiquette de l'entite, dans un carre qui ne porte aucun
+ * texte.
+ *
+ * ELLE N'EST JAMAIS SEULE PORTEUSE. Le nom de l'organisation est toujours a
+ * cote du carre, en toutes lettres : rien ne se lit par la teinte seule, et un
+ * lecteur qui ne distingue pas deux rouges lit la meme chose que les autres.
+ *
+ * LA REGLE DE CONTRASTE, valable pour les onze couleurs du fichier et pour les
+ * deux papiers : le carre porte un CONTOUR `--regle` d'un pixel, et sa
+ * lisibilite ne depend que de ce contour. C'est la seule regle qui tienne sans
+ * exception — #FFF100 (Place publique) disparait sur papier clair, #00205B
+ * (Renaissance) disparait sur papier sombre, et aucun choix de fond ne sauve
+ * les deux. Aucune de ces couleurs ne sert de fond derriere du texte, ni de
+ * couleur de texte : leur contraste avec l'encre n'a donc pas a etre tenu.
+ *
+ * La couleur arrive par un `style` en ligne, jamais par un selecteur : aucune
+ * regle de cette feuille ne nomme une entite (GV-13, C13).
+ */
+
+/* `span.identite` et non `.identite` : `width` et `height` sont des proprietes
+   de GEOMETRIE en SVG 2, et la regle gagnerait contre les attributs du rect. */
+span.identite {
+  display: inline-block;
+  width: 0.62em;
+  height: 0.62em;
+  margin-right: 0.45em;
+  vertical-align: baseline;
+  border: 1px solid var(--regle);
+}
+.partition .identite { stroke: var(--regle); stroke-width: 1; }
+
+/* La nature — parti, coalition, groupe parlementaire — se lit avec le nom et
+   jamais a sa place : le nom reste le porteur. */
+.nature {
+  font-family: var(--mono);
+  font-size: var(--t-appareil);
+  letter-spacing: 0.02em;
+  color: var(--encre-pale);
+}
+svg.partition .nature { font-size: 13px; fill: var(--encre-pale); }
+
 /* ---- Rubriques et sections : un seul rythme ------------------------------ */
 
 section { margin-top: var(--e5); }
@@ -188,7 +234,15 @@ h3 { margin-top: var(--e4); margin-bottom: var(--e2); letter-spacing: 0.1em; }
   font-variant-numeric: tabular-nums;
   overflow-wrap: anywhere;
 }
-.famille .graduation { color: var(--encre); }
+.famille .quoi {
+  font-family: var(--serif);
+  font-size: 0.9375rem;
+  letter-spacing: 0;
+  line-height: 1.4;
+  color: var(--encre);
+  text-transform: none;
+}
+.famille .graduation { color: var(--encre-pale); }
 
 /* ---- La partition --------------------------------------------------------
  * Tout remplissage est declare : un <rect> sans `fill` est peint en NOIR, et
@@ -318,33 +372,47 @@ svg.partition .valeur {
   font-size: var(--t-appareil);
   color: var(--encre-pale);
 }
-.pastilles {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
-  gap: var(--e2);
+/* Le nuancier est un REPERTOIRE, jamais une rangee.
+ *
+ * Les codes sortaient alignes sur une ligne, dans l'ordre du contrat, qui est
+ * pour ses cinq premieres entrees l'ordre des votes de gauche a droite. Une
+ * rangee horizontale se lit comme un axe : le Nouveau Front populaire y
+ * apparaissait a droite du Rassemblement national. La nuance administrative
+ * n'a ni min, ni max, ni ordre (GV-09) — c'est un code de depouillement.
+ *
+ * D'ou la forme : UNE COLONNE, une entree par ligne, le nom en tete et le code
+ * ferre a droite — la forme d'un index, que personne ne lit comme un axe. Deux
+ * colonnes avaient ete essayees puis retirees : elles remettaient un code a
+ * droite d'un autre, et l'adjacence n'y veut rien dire.
+ */
+.nuancier {
+  max-width: var(--mesure);
   margin: var(--e3) 0 0;
-  padding: 0;
-  list-style: none;
 }
-.pastille { text-align: center; }
-.pastille__code {
-  display: block;
-  padding: 0.3rem 0;
+.nuancier__entree {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--e2);
+  break-inside: avoid;
+  padding: var(--e1) 0;
+  border-bottom: var(--filet);
+}
+.nuancier dt { font-size: var(--t-valeur); line-height: 1.35; }
+.nuancier dd { margin: 0; flex: none; }
+.nuancier__code {
+  display: inline-block;
+  padding: 0.1rem 0.45rem;
   border: var(--filet);
   background: var(--papier-systeme);
   font-family: var(--mono);
   font-size: var(--t-valeur);
   font-weight: 500;
+  letter-spacing: 0.06em;
   color: currentColor;
   cursor: pointer;
 }
-.pastille__code:focus-visible { outline: 2px solid var(--encre); outline-offset: 2px; }
-.pastille__nom {
-  display: block;
-  margin-top: var(--e1);
-  font-size: var(--t-appareil);
-  color: var(--encre-pale);
-}
+.nuancier__code:focus-visible { outline: 2px solid var(--encre); outline-offset: 2px; }
 
 /* ---- Preuve -------------------------------------------------------------- */
 
