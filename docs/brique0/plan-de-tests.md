@@ -484,7 +484,7 @@ porte, le travail qui l'exécute — ou pourquoi elle ne peut pas encore l'être
 | Porte | Travail de `ci.yml` | État |
 |---|---|---|
 | Porte 1 — identifiants de test déclarés | `portes` → `./scripts/portes-de-ci.sh identifiants` | **Active.** S'applique par préfixe, dès que la suite de ce préfixe existe. Au 2026-08-27 : `REC` et `ADA`, soit dix identifiants écrits ; les 92 autres sont annoncés « en attente », pas passés sous silence |
-| Porte 2 — branches ≥ 90 % sur `matrice` et `estimateur` | `couverture-et-determinisme` | **Squelette**, gardé par `hashFiles('pipeline/src/main.rs')`. Le module n'existe pas ; la commande `cargo llvm-cov --branch` et le seuil sont écrits |
+| Porte 2 — couverture de **lignes** sur `matrice` et `estimateur` | `couverture-et-determinisme` | **Active.** La couverture de **branches** exigerait `-Z coverage-options=branch`, donc le compilateur *nightly* : l'épingler contredirait la reproductibilité que l'ADR 0001 impose, *nightly* étant une cible mouvante. Le seuil de branches reste **déclaré et non tenu**, et c'est dit ici plutôt que masqué par un drapeau qui échoue |
 | Porte 3 — lignes ≥ 70 % sur le binaire | `couverture-et-determinisme` | **Squelette**, même garde, même commande |
 | Lexique sur le diff | `garde-fous` → `./scripts/lexique.sh code` et `docs` | **Active** depuis l'origine |
 | Deux exécutions consécutives, artefacts identiques | `couverture-et-determinisme` | **Squelette.** C'est le contrôle 1 de contrats.md §8.2 ; il exige le binaire `contrepoint` |
@@ -530,7 +530,7 @@ rien couvre 100 % des lignes. Ce que le projet doit garantir n'est pas un taux,
 c'est une liste — celle de definition-of-done.md §9, de positionnement.md §9 et
 des 25 règles du registre. Une liste se vérifie exactement ; un taux s'approche.
 
-### Porte 2 — couverture de branches ≥ 90 % sur deux modules
+### Porte 2 — couverture sur deux modules (lignes ; branches hors de portée sur stable)
 
 Sur `matrice` (codage, filtre) et sur `estimateur` (ancrage, alarmes)
 uniquement.
