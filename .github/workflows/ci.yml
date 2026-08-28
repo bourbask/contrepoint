@@ -247,11 +247,22 @@ jobs:
       # contrats.md §8.2 — les trois contrôles de non-régression du déterminisme.
       # Repris mot pour mot du contrat : idempotence, isolement de l'horloge,
       # ajout seul. Ils exigent le binaire `contrepoint`, qui n'existe pas.
+      # Les trois contrôles exigent le cache des archives, que la CI de PR ne
+      # télécharge pas — 40 Mo par exécution pour un contrôle qui porte sur le
+      # corpus, pas sur le diff. Leur place est le pipeline hebdomadaire, où le
+      # cache existe. Ici, le travail dit ce qu'il n'a PAS vérifié plutôt que de
+      # passer au vert en silence.
       - name: déterminisme — les trois contrôles du contrat
         if: steps.exists.outputs.yes == 'true'
         working-directory: pipeline
         run: |
           set -euo pipefail
+          if [ ! -d ../data/cache ]; then
+            echo "::notice::déterminisme non vérifié ici : le cache des archives est absent."
+            echo "Les trois contrôles du contrat §8.2 tournent dans pipeline.yml, où le"
+            echo "cache existe. Cette exécution n'affirme rien à leur sujet."
+            exit 0
+          fi
           cargo build --locked --release
           bin=target/release/contrepoint
           D=2026-08-27T00:00:00Z
