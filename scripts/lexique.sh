@@ -68,12 +68,26 @@ PROHIBITION='aucun|jamais|interdit|proscrit|ne (le |la |les )?(sert|fait|fera|pr
 # trois ne sont pas la même chose.
 # `code=$?` sur la même ligne ne protège pas : avec `set -e`, l'affectation qui
 # échoue tue le script avant. Le `|| code=$?` en fait une commande composée.
-code=0
-brut=$(grep -inE -- "$motifs" "${LISIBLES[@]}") || code=$?
-if [ "$code" -gt 1 ]; then
-  echo "::error::grep en erreur (code $code) — le contrôle de lexique n'a rien pu affirmer"
-  exit 1
-fi
+#
+# Toute la liste d'un coup dépasse `ARG_MAX` dès qu'un grand répertoire non
+# suivi traîne dans l'arbre — mesuré le 2026-08-28 sur 23 000 fichiers à chemin
+# long, où le contrôle rendait 126 et n'affirmait plus rien. Le découpage est
+# fait ici et non par `xargs`, qui rend 123 dès qu'une invocation rend entre 1
+# et 125 : « rien trouvé » et « grep en erreur » y deviendraient le même code.
+LOT=400
+brut=""
+n=0
+while [ "$n" -lt "${#LISIBLES[@]}" ]; do
+  code=0
+  partiel=$(grep -inE -- "$motifs" "${LISIBLES[@]:n:LOT}") || code=$?
+  if [ "$code" -gt 1 ]; then
+    echo "::error::grep en erreur (code $code) — le contrôle de lexique n'a rien pu affirmer"
+    exit 1
+  fi
+  [ -n "$partiel" ] && brut+="$partiel"$'\n'
+  n=$((n + LOT))
+done
+brut="${brut%$'\n'}"
 violations=$(printf '%s' "$brut" | grep -ivE "$PROHIBITION" || true)
 if [ -n "$violations" ]; then
   echo "$violations"
