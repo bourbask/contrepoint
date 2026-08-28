@@ -15,6 +15,26 @@
 //! deux membres identifiables du groupe, réidentifiables en une exécution sur
 //! un groupe de neuf membres. Ils ne sont ni publiés ni calculés, et ce module
 //! n'a aucun emplacement d'où ils pourraient fuir.
+//!
+//! `A VERIFIER` — deux angles morts connus du rempart anti-fuite, ouverts au
+//! 2026-08-28 :
+//!
+//! - **AGR-01 ne lit que la chaîne rendue par [`rendre`], et n'y cherche que
+//!   des noms interdits connus.** Une borne publiée sous un nom anodin passe,
+//!   et une trace écrite sur la sortie d'erreur n'entre dans aucune assertion.
+//!   Le `Debug` manuel de [`Membre`] ferme le cas du formatage (AGR-11) ; les
+//!   deux autres restent. Ce qui les fermerait : une porte de CI qui grep les
+//!   artefacts publiés — elle existe déjà, `scripts/portes-de-ci.sh invariants`
+//!   — étendue à la sortie d'erreur du binaire, et un contrat de nommage des
+//!   colonnes vérifié plutôt qu'une liste noire.
+//! - **[`agreger`] accepte encore une position brute.** Rien dans le type de
+//!   [`Membre::position`] n'exige qu'elle soit passée par
+//!   [`crate::estimateur::ancrer_sur_groupes`] : la fonction d'ancrage est
+//!   désormais dans la bibliothèque et sous test (EST-17), mais un futur
+//!   appelant peut toujours la contourner. Ce qui le fermerait : un type
+//!   `PositionAncree` que seul l'ancrage construit, et que `Membre` exige.
+//!   Écarté ce cycle — un enveloppeur pour un seul appelant est une
+//!   abstraction que rien n'exerce encore.
 
 use crate::estimateur::mediane;
 use serde_json::Value;
@@ -54,12 +74,26 @@ pub const DISPERSION_REECHANTILLONNAGE: &str = "dispersion_de_reechantillonnage"
 /// Un député rattaché à son groupe daté, avec sa position sur l'axe ancré.
 /// Cette structure est une **entrée de calcul** : elle ne sort d'aucune
 /// fonction de rendu.
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 pub struct Membre {
     pub acteur: String,
     pub groupe: String,
     pub votes_exprimes: usize,
     pub position: f64,
+}
+
+/// `Debug` **manuel, sans la position**. Le `Debug` dérivé appariait l'acteur
+/// et sa coordonnée sur l'axe : un `dbg!` ou un `{:?}` dans une trace suffisait
+/// à publier une coordonnée individuelle (ADR 0000 §2, RG-41). Le rempart
+/// AGR-01 ne couvre que la chaîne rendue ; celui-ci couvre le formatage.
+impl std::fmt::Debug for Membre {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("Membre")
+            .field("acteur", &self.acteur)
+            .field("groupe", &self.groupe)
+            .field("votes_exprimes", &self.votes_exprimes)
+            .finish_non_exhaustive()
+    }
 }
 
 /// Ce qui s'affiche pour un groupe : une mesure, ou une absence dite.
@@ -200,9 +234,14 @@ fn publier(membres: &[Membre], reechantillons: &[Vec<f64>], retenus: &[usize]) -
     }
 }
 
-/// Médiane et écart interquartile. Les quartiles sont les charnières de Tukey,
-/// avec la médiane basse de l'estimateur des deux côtés : **un seul estimateur
-/// de position dans toute la chaîne**, celui qui définit déjà l'ancrage.
+/// Médiane et écart interquartile. Les quartiles sont ceux des **moitiés
+/// exclusives, médiane basse** : la moitié basse et la moitié haute ne se
+/// recouvrent pas, et chacune rend sa médiane basse — **un seul estimateur de
+/// position dans toute la chaîne**, celui qui définit déjà l'ancrage.
+///
+/// Ce ne sont **pas** les charnières de Tukey, qui incluent la médiane dans
+/// les deux moitiés sur un effectif impair. L'estimateur retenu est légitime ;
+/// c'est le nom qui était faux, corrigé le 2026-08-28.
 ///
 /// Aucune autre statistique d'ordre n'est calculée. En deçà de six membres, Q1
 /// est le minimum : l'IQR y porterait la coordonnée d'un membre identifiable

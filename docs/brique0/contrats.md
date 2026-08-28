@@ -84,7 +84,7 @@ et ne portent **aucune valeur qui ne soit d'abord une ligne du registre** — un
 marqueur sans ligne ne s'affiche pas (docs/definition-of-done.md, point 15).
 
 Ce que le front télécharge pour afficher le graphe complet : de l'ordre de
-**11 Ko** — manifeste **935 octets**, mesuré sur le manifeste du §4.1 après cette
+**11 Ko** — manifeste **1 044 octets**, mesuré sur le manifeste du §4.1 après cette
 majeure, instantané 10 064 octets avant elle, pour 16 bandes et 32 marqueurs. La
 taille de l'instantané est **`A VERIFIER`** : `votes_an17_ancre_v1` compte sept
 caractères de plus que l'identifiant qu'il remplace, et chaque marqueur de la
@@ -496,7 +496,7 @@ désormais `ancre_axe`.
 | `date_arretee` | maximum des `date_calcul` des lignes référencées. **Dérivé, jamais saisi** |
 | `licence` | `Licence Ouverte / Open Licence (Etalab)` |
 | `mention_paternite` | `Assemblée nationale — Licence Ouverte v1.0 — données du 2026-08-27`. **Dérivée**, jamais saisie : `producteur` et `derniere_mise_a_jour` de l'entrée amont des lignes référencées (§2.1) |
-| `familles` | tableau `{id, libelle, echelle, min, max, decimales}` — la légende, close, dans l'ordre d'affichage. `min`, `max` et `decimales` sont **recopiés** de `echelle.*` des lignes de preuve de la famille, jamais dérivés des valeurs observées ; `null` pour une famille sans graduation (`administratif` porte un code). Deux lignes d'une même famille qui déclarent des échelles divergentes arrêtent la construction : ce n'est pas un arbitrage à rendre |
+| `familles` | tableau `{id, libelle, echelle, min, max, decimales}` — la légende, close, dans l'ordre d'affichage, et les **bornes déclarées** de chaque graduation, recopiées de `echelle.min` / `echelle.max` / `echelle.decimales` des lignes de preuve de la famille ; les trois valent `null` pour une famille sans échelle graduée |
 | `instantanes` | tableau `{id, chambre, legislature, date, url, empreinte_sha256, octets, bandes}` |
 | `preuves` | `{racine, eclats, fonction}` — où sont les preuves et comment en dériver le chemin |
 
@@ -504,12 +504,18 @@ Le manifeste ne porte **aucune valeur mesurée**. Il porte de quoi choisir un
 fichier et de quoi afficher le bandeau de date exigé par ROADMAP.md v0.7, dérivé
 sans saisie humaine (ADR 0000 §6, conséquences).
 
-Le manifeste réel de la v0, **935 octets** avant que `familles[]` ne porte ses
-bornes — 928 avant le contrat `0.3.0`, plus les sept caractères que
-`votes_an17_ancre_v1` ajoute à `familles[0].echelle` ; `contrat` n'y change rien,
-les versions ayant toutes cinq caractères. Depuis que `familles[]` porte ses
-bornes, il fait **1 044 octets**, mesurés par `stat -c%s` sur le manifeste
-reconstruit le 2026-08-28. En
+Les bornes sont **déclarées, jamais dérivées des valeurs publiées**. Dérivées,
+la plus petite valeur publiée d'une famille tomberait à l'origine de sa
+graduation : la valeur `0.82` de `parti.lfi`, sur une échelle qui va de 0 à 10,
+s'affichait au pôle d'un axe où elle est à 8,2 % de la course. L'ajout des trois
+champs est une **mineure** : aucun identifiant de ligne n'en dépend, la clé de
+déduplication du §3 ne les lit pas.
+
+Le manifeste réel de la v0, **1 044 octets** — 935 avant les trois bornes, plus
+les 109 caractères que `min`, `max` et `decimales` ajoutent aux trois familles ;
+928 avant le contrat `0.3.0`, plus les sept caractères que
+`votes_an17_ancre_v1` ajoute à `familles[0].echelle` ;
+`contrat` n'y change rien, les versions ayant toutes cinq caractères. En
 revanche `instantanes[0].empreinte_sha256` porte l'empreinte d'un instantané dont
 le contenu vient de changer, les `preuve` de ses marqueurs ayant été recalculés :
 la valeur `c23fc935…` ci-dessous est **`A VERIFIER`**, à recalculer par
@@ -783,7 +789,7 @@ contrepoint diff-hors-date_calcul /tmp/a /tmp/c        # vide
 #    et : mêmes id, même nombre de lignes, mêmes valeurs
 
 # 3. Ajout seul — l'existant est un préfixe du nouveau
-head -c $(stat -c%s data/preuves/positions.jsonl) /tmp/a/data/preuves/positions.jsonl \
+head -c $(stat -c%s data/preuves/positions.jsonl) /tmp/a/positions.jsonl \
   | cmp - data/preuves/positions.jsonl                 # identiques
 ```
 

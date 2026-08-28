@@ -69,6 +69,33 @@
     "marqueur": {
       "type": "object",
       "additionalProperties": false,
+      "allOf": [
+        {
+          "description": "I6 — valeur et code jamais tous deux présents. Recopié de preuve-1.schema.json : l'instantané est le seul fichier que le front lit, un marqueur qui passe ici sans passer là s'afficherait « non mesuré » sans motif.",
+          "not": {
+            "properties": {
+              "valeur": { "type": "number" },
+              "valeur_code": { "type": "string" }
+            },
+            "required": ["valeur", "valeur_code"]
+          }
+        },
+        {
+          "description": "I6 — absence dite : ni valeur ni code implique motif_code et motif.",
+          "if": {
+            "properties": { "valeur": { "type": "null" }, "valeur_code": { "type": "null" } }
+          },
+          "then": {
+            "properties": {
+              "motif_code": { "type": "string" },
+              "motif": { "type": "string", "minLength": 1 }
+            }
+          },
+          "else": {
+            "properties": { "motif_code": { "type": "null" }, "motif": { "type": "null" } }
+          }
+        }
+      ],
       "required": ["famille", "echelle", "valeur", "valeur_code", "libelle", "motif_code", "motif", "dispersion", "preuve"],
       "description": "Une famille, une échelle, une valeur. Chaque marqueur a sa propre graduation ; aucune graduation commune, donc aucun écart entre familles à calculer.",
       "properties": {

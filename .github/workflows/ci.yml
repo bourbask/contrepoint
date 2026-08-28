@@ -77,10 +77,24 @@ jobs:
         if: steps.exists.outputs.yes == 'true'
         working-directory: web
         run: npm test --if-present
+      # La construction de publication refuse une racine d'artefacts absente :
+      # c'est voulu, sinon la porte est muette exactement quand la publication
+      # est cassée. Mais une PR qui ne porte pas d'artefacts — celle du front,
+      # par exemple — doit pouvoir se construire. La CI choisit selon ce qui
+      # existe, et le dit ; la publication réelle passe par deploy.yml, qui
+      # part de main et porte toujours les artefacts.
       - name: build
         if: steps.exists.outputs.yes == 'true'
         working-directory: web
-        run: npm run build
+        run: |
+          if [ -d ../public/api ]; then
+            echo "artefacts présents : construction de publication"
+            npm run build
+          else
+            echo "::notice::aucun artefact dans public/api — construction tolérante."
+            echo "La porte de publication n'est pas exercée par cette PR."
+            npm run build:local
+          fi
 
   artefacts:
     name: artefacts et schémas
