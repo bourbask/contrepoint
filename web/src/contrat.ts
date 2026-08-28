@@ -17,7 +17,21 @@ export type Marqueur = {
   preuve: string
 }
 
-export type Bande = { id: string; libelle: string; marqueurs: Marqueur[] }
+/** Un parti que le registre retient pour un groupe. Deux champs, aucun
+ *  effectif : le nombre de membres qui le declarent n'existe qu'en prose dans
+ *  le registre, et un nombre tire d'une phrase serait fabrique. */
+export type PartiDeclare = { entite: string; libelle: string }
+
+export type Bande = {
+  id: string
+  libelle: string
+  /** Partis abrites par ce groupe, ABSENT sur une bande de parti et sur un
+   *  groupe dont le registre ne retient aucun parti. Le nom dit ce que le
+   *  front doit redire au lecteur : la liste est un extrait, jamais la
+   *  composition complete d'un groupe. contrats.md §4.2. */
+  composition_partielle?: PartiDeclare[]
+  marqueurs: Marqueur[]
+}
 
 export type SansMesure = {
   entite: string

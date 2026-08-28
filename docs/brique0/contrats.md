@@ -91,6 +91,85 @@ front lit déjà au lieu de les dériver. Un validateur strict sur l'énumérati
 `motif_code` doit en revanche être mis à jour — `aucune_mesure` est une valeur
 de plus. C'est déclaré ici plutôt que découvert à la lecture.
 
+**Contrat 0.5.0 — mineure.** Un champ ajouté à l'instantané :
+`bandes[].composition_partielle`, la liste des partis qu'un groupe abrite.
+
+**Ce qu'il publie.** Un tableau de `{entite, libelle}`, recopié du champ
+`composition` du registre d'entités (registre-entites.md §3.7), sur la bande
+d'un **groupe** et sur elle seule. Le site ne montrait que le nom du groupe :
+quelqu'un a cherché les communistes et les écologistes sans les trouver, alors
+que le PCF siège à *Gauche Démocrate et Républicaine* et les écologistes à
+*Écologiste et Social*. Le fait vivait dans le registre, lu par le seul
+pipeline, et rien dans `public/api/` ne le portait.
+
+**Pourquoi « partielle » est dans le nom du champ.** La composition du registre
+est un **extrait**, pas un inventaire : `groupe.an17.gdr` n'y porte que le PCF
+quand sa `remarque` dit « 7 autres partis ultramarins déclarés par ses membres,
+hors périmètre de cet extrait ». Publier « GDR est composé du Parti communiste
+français » serait faux par omission. Le nom de la clé le dit dans l'artefact
+lui-même, la `description` du schéma le développe, et le front l'écrit en
+toutes lettres sous le graphe. Une demi-vérité sur un site de preuve est pire
+qu'un silence.
+
+**Aucun effectif, et c'est délibéré.** « 9 membres en cours déclarent PCF »
+n'existe que dans le champ `remarque` du registre, **en prose**. Aucun champ
+structuré ne le porte. L'extraire d'une phrase pour le publier comme donnée
+fabriquerait une valeur que rien n'a mesurée — c'est la faute que le §2.4 et
+l'ADR 0003 §3 ont déjà coûté. La composition publiée ne porte donc que des
+noms, la porte du §6 refuse toute clé étrangère et **tout nombre** qui s'y
+glisserait (EXP-11), et l'instantané reste sans nombre atteignable hors d'un
+marqueur (I11).
+
+**Où le champ est absent, et pourquoi absent plutôt que vide.** Sur une bande
+de parti, qui n'a pas de composition. Sur une bande de **coalition** — le
+registre en porte pourtant une pour `coalition.nfp`, cinq partis : une alliance
+électorale n'est pas un organe de chambre, et ce champ ne dit que le second.
+Sur un groupe dont le registre ne retient aucun parti — EPR, DEM, LIOT, NI.
+Un tableau vide s'y lirait « ce groupe n'abrite aucun parti », ce que la source
+ne dit pas : LIOT porte « 12 membres déclarent RPS, 6 UDIE, 3 autres partis ».
+
+**Ce que cette mineure ne rompt pas, mesuré et non déduit.** Aucun `id` ne
+change. `composition_partielle` est un champ de l'**instantané**, pas de la
+ligne de preuve, et la clé du §3 ne lit ni l'un ni l'autre. Vérifié en
+comparant les **artefacts publiés de `develop`** — et non
+`data/preuves/positions.jsonl`, qui est en ajout seul et accumule l'historique :
+une construction neuve, registre de preuves vide, rend les **34** mêmes lignes
+dans le même ordre et **octet pour octet** que le fichier commité, et
+l'instantané reconstruit cite les **27** mêmes `preuve` que celui de `develop`,
+dans le même ordre. Les bornes, les valeurs, les échelles et les libellés sont
+inchangés. L'instantané publié passe de **8 623 à 8 859 octets** : les deux
+compositions de la XVIIe législature, et rien d'autre.
+
+**Ce qu'elle rompt.** Deux choses, écrites parce que la règle 3 de l'ADR 0000 §6
+exige qu'une rupture soit écrite.
+
+1. **Un consommateur strict de l'instantané refuse la clé nouvelle.** C'est le
+   §5.1 : le producteur est strict, le consommateur tolérant. Un lecteur qui
+   valide `bandes[]` en `additionalProperties: false` contre le schéma
+   `0.4.0` échoue ; `schemas/instantane-1.schema.json` déclare le champ, le
+   front en porte le type. `schema` reste `contrepoint/instantane/1` : rien
+   n'est supprimé, renommé ni resémantisé, et un lecteur qui ignore la clé lit
+   le même graphe qu'avant.
+2. **Les 34 lignes du registre de preuves sont réécrites, pas complétées** —
+   I15 enfreint une fois, comme au contrat `0.4.0` et pour la même raison :
+   `contrat` figure dans la ligne sans entrer dans la clé du §3. Leurs `id`
+   sont inchangés — mesuré, les 34 sont identiques des deux côtés, dans le même
+   ordre — et seule la valeur `"0.4.0"` y devient `"0.5.0"` : **67 001 octets
+   avant, 67 001 après**. Le fichier antérieur n'est donc pas un préfixe du
+   nouveau. Sans cette réécriture, I8 arrête le pipeline, et c'est ainsi qu'elle
+   a été découverte plutôt que supposée : deux lignes de même `id` et de
+   contenus différents. Comme en `0.4.0`, aucune porte ne le signalera — le
+   contrôle 3 du §8.2 compare l'état commité à une construction fraîche, jamais
+   deux commits entre eux.
+
+Les cinq lignes du §2.6 sont laissées telles qu'elles ont été écrites sous le
+contrat `0.4.0` : elles documentent la forme d'une ligne et le recalcul de son
+`id`, que la version du contrat ne change pas.
+
+Le tarif est celui de la ligne « ajout d'un champ optionnel » du §5 :
+`schema` inchangé, `contrat` mineure, `id` inchangé, le front l'ignore s'il ne
+le connaît pas. En `0.x`, `0.4.0` → `0.5.0`.
+
 Schémas formels : [`schemas/`](../../schemas/). Toutes les valeurs d'exemple
 sont réelles, reprises de [positionnement.md](positionnement.md),
 [ingestion-votes.md](ingestion-votes.md) et
@@ -630,7 +709,7 @@ l'écrire.
 | `date` | date de référence de l'agrégation — les groupes dont la période ne la couvre pas sont absents (ingestion-votes.md §8) |
 | `date_arretee` | `date_calcul` maximale des lignes référencées par cet instantané |
 | `ancrage` | `{famille, ancre_gauche, ancre_droite, note}` — `note` ≤ 140 caractères |
-| `bandes` | tableau `{id, libelle, marqueurs}` |
+| `bandes` | tableau `{id, libelle, marqueurs}`, plus `composition_partielle` sur la bande d'un groupe |
 | `sans_mesure` | tableau `{entite, libelle, motif_code, motif}` |
 
 Un marqueur : `famille`, `echelle`, `valeur`, `valeur_code`, `libelle` (≤ 40
@@ -667,6 +746,21 @@ Les deux `preuve` ci-dessus sont les `id` recalculés du §2.6 : un `id` fait
 64 caractères hexadécimaux quelle que soit sa valeur, un recalcul d'`id` laisse
 donc la taille de l'instantané inchangée et son empreinte non.
 
+`composition_partielle` est la liste des partis que le registre d'entités
+retient pour un **groupe**, recopiée de son champ `composition`, sous la forme
+`{entite, libelle}`. Elle est **absente** — et non vide — d'une bande de parti,
+d'une bande de coalition et d'un groupe dont le registre ne retient aucun parti.
+Elle est **partielle**, et son nom le dit : le registre est un extrait, GDR n'y
+porte que le PCF quand ses membres déclarent aussi sept partis ultramarins hors
+périmètre. Elle ne porte **aucun effectif** : le nombre de membres qui déclarent
+un parti n'existe que dans le champ `remarque` du registre, en prose, et un
+nombre tiré d'une phrase serait fabriqué. Le §6 refuse toute autre clé et tout
+nombre qui s'y glisserait.
+
+```json
+{"id":"groupe.an17.gdr","libelle":"Gauche Démocrate et Républicaine","composition_partielle":[{"entite":"parti.pcf","libelle":"Parti communiste français"}],"marqueurs":[…]}
+```
+
 **Taille mesurée avant le contrat `0.3.0` : 10 064 octets** pour 16 bandes et
 32 marqueurs, la XVIIe législature complète. Le renommage de l'échelle, lui,
 allonge le fichier de sept octets par marqueur `votes` : la nouvelle taille est
@@ -683,6 +777,13 @@ Déterministe, calculée par le pipeline, jamais par le front :
    Le libellé d'une bande est le `nom` du registre s'il tient en 40 caractères (ADR 0000 §5), sinon le `sigle` — cas de `LIOT`, dont le nom en compte 48.
 4. Une bande est aussi créée pour un groupe dont le seul marqueur porte `motif_code = sous_seuil_de_publication` : la mesure existe, sa non-publication est le résultat et il s'affiche.
 5. Une entité dont **aucun** marqueur ne porte de valeur et dont aucun ne porte `sous_seuil_de_publication` n'a pas de bande : elle est listée dans `sans_mesure`. Cas réel : Place publique, absente des quatre sources d'identifiants et de la grille de nuances.
+
+6. La bande d'un groupe porte `composition_partielle` dès que le registre
+   retient au moins un parti pour lui, à la date de l'instantané : `ECOS` (les
+   Écologistes et le PCF) et `GDR` (le PCF). Aucune autre bande ne la porte, et
+   la règle 3 reste ce qui empêche d'attribuer à ECOLO les votes de 5 députés
+   communistes — nommer un parti sur la bande d'un groupe n'est pas y poser sa
+   mesure.
 
 Résultat en v0 : 9 bandes de parti, 5 bandes de groupe, 2 bandes de coalition,
 1 entité sans mesure. La règle 2 est ce qui empêche une bande de parti de porter

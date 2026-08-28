@@ -77,7 +77,13 @@ const CLES_MARQUEUR: &[&str] = &[
     "dispersion",
     "preuve",
 ];
-const CLES_BANDE: &[&str] = &["id", "libelle", "marqueurs"];
+const CLES_BANDE: &[&str] = &["id", "libelle", "composition_partielle", "marqueurs"];
+const CLES_COMPOSITION: &[&str] = &["entite", "libelle"];
+/// Les clés que le schéma publié déclare **facultatives**. `cles_exactes` les
+/// accepte absentes, jamais inconnues : `composition_partielle` ne se pose que
+/// sur la bande d'un groupe dont le registre retient au moins un parti, et une
+/// bande de parti n'a pas de composition à porter.
+const CLES_FACULTATIVES: &[&str] = &["composition_partielle"];
 const CLES_ANCRAGE: &[&str] = &["famille", "ancre_gauche", "ancre_droite", "note"];
 const CLES_SANS_MESURE: &[&str] = &["entite", "libelle", "motif_code", "motif"];
 const CLES_FAMILLE: &[&str] = &["id", "libelle", "echelle", "min", "max", "decimales"];
@@ -121,6 +127,7 @@ fn ordre_de(cle: &str) -> &'static [&'static str] {
         "bandes" => CLES_BANDE,
         "marqueurs" => CLES_MARQUEUR,
         "sans_mesure" => CLES_SANS_MESURE,
+        "composition_partielle" => CLES_COMPOSITION,
         "familles" => CLES_FAMILLE,
         "instantanes" => CLES_INSTANTANE_LISTE,
         "preuves" => CLES_PREUVES,
@@ -371,6 +378,45 @@ pub fn construire_instantane(
                 .push(id.to_owned());
         }
     }
+    // La composition **publiée** : les partis que le registre retient pour un
+    // groupe, sous leur nom. Elle ne se pose que sur la bande d'un groupe —
+    // celle d'un parti n'a pas de composition — et elle est absente quand le
+    // registre n'en retient aucun (EPR, DEM, LIOT, NI), plutôt que présente et
+    // vide, qui se lirait « ce groupe n'abrite aucun parti ».
+    //
+    // Deux choses qu'elle ne porte pas, délibérément :
+    //
+    //   - **aucun effectif**. Le nombre de membres qui déclarent un parti
+    //     n'existe que dans le champ `remarque` du registre, en prose. Le
+    //     tirer d'une phrase pour le publier comme donnée fabriquerait une
+    //     valeur que rien n'a mesurée ;
+    //   - **aucune prétention à l'exhaustivité**. Le registre est un EXTRAIT :
+    //     GDR ne porte que le PCF quand ses membres déclarent aussi sept partis
+    //     ultramarins hors périmètre. C'est le nom de la clé qui le dit, dans
+    //     l'artefact lui-même, et non une phrase du front.
+    let composition_publiee = |entite: &str| -> Option<Value> {
+        let groupe = cherche(registre, entite).filter(|_| entite.starts_with("groupe."))?;
+        let partis: Vec<Value> = groupe["composition"]
+            .as_array()
+            .map(Vec::as_slice)
+            .unwrap_or_default()
+            .iter()
+            .filter(|c| {
+                // Une adhésion close avant la date de l'instantané n'est plus
+                // une composition : la publier daterait de l'an dernier.
+                c["debut"]
+                    .as_str()
+                    .is_none_or(|d| d <= description.date.as_str())
+                    && c["fin"]
+                        .as_str()
+                        .is_none_or(|f| f >= description.date.as_str())
+            })
+            .filter_map(|c| c["entite"].as_str())
+            .map(|parti| json!({"entite": parti, "libelle": libelle_de_bande(registre, parti)}))
+            .collect();
+        (!partis.is_empty()).then_some(Value::Array(partis))
+    };
+
     let bande_de = |entite: &str| -> String {
         let Some(groupe) = cherche(registre, entite).filter(|_| entite.starts_with("groupe."))
         else {
@@ -436,15 +482,15 @@ pub fn construire_instantane(
             .iter()
             .find(|(_, m)| m["famille"] == "votes")
             .and_then(|(_, m)| m["valeur"].as_f64());
-        bandes.push((
-            position,
-            id.clone(),
-            serde_json::json!({
-                "id": id,
-                "libelle": libelle_de_bande(registre, id),
-                "marqueurs": marqueurs.into_iter().map(|(_, m)| m).collect::<Vec<_>>(),
-            }),
-        ));
+        let mut bande = serde_json::json!({
+            "id": id,
+            "libelle": libelle_de_bande(registre, id),
+            "marqueurs": marqueurs.into_iter().map(|(_, m)| m).collect::<Vec<_>>(),
+        });
+        if let (Some(partis), Some(objet)) = (composition_publiee(id), bande.as_object_mut()) {
+            objet.insert("composition_partielle".to_owned(), partis);
+        }
+        bandes.push((position, id.clone(), bande));
     }
     // §4.3 règle 5, appliquée au **registre** et pas aux seules entités mesurées :
     // une entité qui ne porte aucune ligne de preuve n'a pas de marqueur, donc
@@ -860,6 +906,25 @@ pub fn verifier_artefacts(
             .unwrap_or_default()
         {
             cles_exactes(bande, CLES_BANDE, "une bande", &mut refus);
+            // La composition publiée ne porte QUE des noms. Le nombre de
+            // membres qui déclarent un parti n'existe qu'en prose dans le
+            // registre : l'y faire entrer, sous quelque clé que ce soit,
+            // publierait une valeur tirée d'une phrase. La porte refuse la clé
+            // inconnue et le nombre, pas seulement l'un des deux.
+            for parti in bande["composition_partielle"]
+                .as_array()
+                .map(Vec::as_slice)
+                .unwrap_or_default()
+            {
+                cles_exactes(parti, CLES_COMPOSITION, "un parti déclaré", &mut refus);
+                for (cle, valeur) in parti.as_object().into_iter().flatten() {
+                    if valeur.is_number() {
+                        refus.push(format!(
+                            "I11 : nombre `{cle}` dans `composition_partielle` — un effectif n'y a pas d'emplacement"
+                        ));
+                    }
+                }
+            }
             // I11 — aucun nombre atteignable depuis `bandes[]` hors d'un
             // `marqueurs[]`, hors `effectif`.
             for (cle, valeur) in bande.as_object().into_iter().flatten() {
@@ -967,7 +1032,7 @@ fn cles_exactes(objet: &Value, attendues: &[&str], ou: &str, refus: &mut Vec<Str
         }
     }
     for attendue in attendues {
-        if !map.contains_key(*attendue) {
+        if !map.contains_key(*attendue) && !CLES_FACULTATIVES.contains(attendue) {
             refus.push(format!("clé `{attendue}` absente de {ou}"));
         }
     }

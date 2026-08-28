@@ -25,6 +25,25 @@ export function natureEntite(id: string, court = false): string | null {
   return null
 }
 
+/** Les partis qu'un groupe abrite, en une ligne.
+ *
+ *  Le site n'affichait que le nom du groupe : quelqu'un qui cherche les
+ *  communistes ou les écologistes ne les trouvait pas, alors que le PCF siège
+ *  à « Gauche Démocrate et Républicaine » et les écologistes à « Écologiste et
+ *  Social ». La composition vivait dans le registre, lu par le seul pipeline.
+ *
+ *  « extrait » n'est pas une précaution de style. La composition du registre
+ *  EST un extrait : GDR n'y porte que le PCF quand ses membres déclarent aussi
+ *  sept partis ultramarins hors périmètre. Publier la liste sans le dire
+ *  serait faux par omission, et le champ publié porte ce mot dans son nom.
+ *
+ *  Aucun effectif : le nombre de membres qui déclarent un parti n'existe que
+ *  dans une phrase du registre, et un nombre tiré d'une phrase est fabriqué. */
+export function direComposition(partis: { libelle: string }[]): string | null {
+  if (partis.length === 0) return null
+  return `abrite (extrait) : ${partis.map((p) => p.libelle).join(', ')}`
+}
+
 /** Couleur d'identité déclarée par l'organisation, récupérée de Wikidata
  *  (propriété P465, CC0) par `scripts/couleurs-identite.sh`. Aucune n'est
  *  choisie ici.

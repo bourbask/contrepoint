@@ -41,6 +41,20 @@
         "properties": {
           "id": { "$ref": "preuve-1.schema.json#/properties/entite" },
           "libelle": { "type": "string", "minLength": 1, "maxLength": 40 },
+          "composition_partielle": {
+            "type": "array",
+            "minItems": 1,
+            "description": "Les partis que le registre d'entités retient pour ce groupe, recopiés de son champ `composition` (registre-entites.md §3.7), qui les tient des mandats PARPOL déclarés par les membres (source `an_parpol_mandats`). PARTIELLE, et le nom de la clé le dit : le registre est un EXTRAIT, jamais la composition complète d'un groupe — `groupe.an17.gdr` n'y porte que le PCF quand ses membres déclarent aussi sept partis ultramarins hors périmètre. La clé est ABSENTE d'une bande de parti, qui n'a pas de composition, et d'un groupe dont le registre ne retient aucun parti (EPR, DEM, LIOT, NI) — absente plutôt que vide, un tableau vide se lisant « ce groupe n'abrite aucun parti ». Aucun effectif n'y figure : le nombre de membres qui déclarent un parti n'existe qu'en prose, dans le champ `remarque` du registre, et l'extraire d'une phrase publierait une valeur fabriquée.",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["entite", "libelle"],
+              "properties": {
+                "entite": { "$ref": "preuve-1.schema.json#/properties/entite" },
+                "libelle": { "type": "string", "minLength": 1, "maxLength": 40 }
+              }
+            }
+          },
           "marqueurs": {
             "type": "array",
             "minItems": 1,

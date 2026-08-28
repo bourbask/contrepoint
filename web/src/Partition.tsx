@@ -24,7 +24,7 @@ import type { JSX } from 'react'
 import type { Instantane, Manifeste } from './contrat.ts'
 import type { Disposition, Forme, Voix } from './graphe.ts'
 import { direAbsence } from './graphe.ts'
-import { PHRASES, couleurIdentite, natureEntite } from './presentation.ts'
+import { PHRASES, couleurIdentite, direComposition, natureEntite } from './presentation.ts'
 
 /** Largeur de la colonne du carre d'identite, dans le SVG. Le nom s'y indente
  *  toujours, que le carre soit peint ou non : une entite sans couleur declaree
@@ -146,6 +146,15 @@ function Ligne({
           {dessous.join(' · ')}
         </text>
       )}
+      {/* Un groupe n'est pas un parti, et son nom ne dit pas qui il abrite :
+          personne ne cherchait les communistes a « Gauche Democrate et
+          Republicaine ». Les partis declares se posent donc sous le nom, et le
+          mot « extrait » y est parce que la liste du registre en est un. */}
+      {voix.yComposition !== null && (
+        <text className="composition" x={nom} y={voix.yComposition}>
+          {direComposition(voix.composition)}
+        </text>
+      )}
       <line className="portee" x1={portee.debut} y1={cy} x2={portee.fin} y2={cy} />
       <TeteDeNote forme={voix.forme} x={voix.x} y={cy} />
       <text className="valeur" x={largeur} y={yValeur} textAnchor="end">
@@ -182,6 +191,9 @@ function Retenue({
         {voix.marqueur.libelle}
         {voix.dispersionDite === null ? '' : ` · ${voix.dispersionDite}`}
       </p>
+      {voix.composition.length > 0 && (
+        <p className="composition">{direComposition(voix.composition)}</p>
+      )}
       {voix.marqueur.motif !== null && <p className="retenue__motif">{voix.marqueur.motif}</p>}
     </div>
   )
@@ -263,6 +275,17 @@ export function Partition({ manifeste, instantane, disposition, onPreuve }: Prop
         Les axes ne partagent ni origine ni largeur : les échelles sont disjointes, et le décalage
         est délibéré.
       </p>
+
+      {/* La liste des partis abrités ne se lit pas comme une composition
+          complète : le registre n'en retient qu'une part, et un groupe qui
+          n'affiche aucun parti n'est pas un groupe qui n'en abrite aucun. */}
+      {toutes.some((v) => v.composition.length > 0) && (
+        <p className="note-axes">
+          « Abrite » nomme les partis déclarés par les membres d'un groupe, tels que le registre
+          les retient : c'est un extrait, jamais la composition complète. Un groupe en abrite
+          d'autres que ceux qui sont nommés, et aucun effectif n'est publié.
+        </p>
+      )}
 
       {retenues.length > 0 && (
         <>
