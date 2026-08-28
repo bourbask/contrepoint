@@ -347,7 +347,7 @@ chiffre que le dépôt déclare périmé (défaut A9 de l'audit).
 
 ### position
 
-**Définition.** Le mot `position` ne s'emploie jamais nu. Quatre concepts.
+**Définition.** Le mot `position` ne s'emploie jamais nu. Cinq concepts.
 
 | Désignation | Concept | Emplois |
 |---|---|---|
@@ -355,14 +355,21 @@ chiffre que le dépôt déclare périmé (défaut A9 de l'audit).
 | **position estimée** | coordonnée d'un acteur sur l'axe, non publiable individuellement | **13** |
 | **position publiée** | valeur d'un groupe dans un artefact, avec sa date et sa famille de mesure ; forme canonique **positionnement daté** | **7** |
 | **position majoritaire** | sens majoritaire d'un groupe sur un scrutin | **5** |
+| **position non publiée** | mesure calculée dont la position n'est pas publiée, la dispersion ou l'effectif étant hors des conditions de publication ; s'énonce avec le chiffre mesuré et le seuil en regard | **2** (LIOT, NI, instantané `an17-2026-07-21`) |
 
 Le total de 293 occurrences du mot inclut ses emplois ordinaires et le nom du
-document `positionnement.md` ; seuls les 33 emplois qualifiés ci-dessus sont
+document `positionnement.md` ; seuls les 35 emplois qualifiés ci-dessus sont
 techniques.
 
 **Ce que ce n'est pas.** Une position n'est ni une note, ni un rang, ni un
 classement. `docs/ton.md` §3 canonise « position » et « positionnement daté »
 pour le seul résultat publié.
+
+Et une **position non publiée** n'est pas une position **manquante** : la ligne
+de preuve existe, elle porte sa méthode, ses entrées et ses empreintes, et elle
+se vérifie comme n'importe quelle autre. Seule la valeur est retenue, avec les
+chiffres qui justifient qu'elle le soit. Les confondre revient à présenter un
+refus motivé comme un trou dans les données.
 
 ---
 
