@@ -13,7 +13,7 @@ import {
   type Manifeste,
   type Preuve as LignePreuve,
 } from './contrat.ts'
-import { disposer } from './graphe.ts'
+import { disposer, formaterValeur } from './graphe.ts'
 import { Partition } from './Partition.tsx'
 import { Preuve, type EtatPreuve } from './Preuve.tsx'
 
@@ -31,24 +31,22 @@ type Chargement =
   | { etat: 'refus'; message: string }
   | { etat: 'pret'; manifeste: Manifeste; instantane: Instantane }
 
-/** Marque : trois voix reliees par une accolade, en petit. */
+/** Marque : les glyphes de famille relies par une accolade. La marque EST la
+ *  legende — les memes trois formes se retrouvent sur les panneaux. Les `fill`
+ *  restent en attribut de presentation : aucune regle CSS ne porte sur
+ *  `rect`, `circle` ou `path` nus, sinon elle gagnerait contre eux et
+ *  effacerait la cle. */
 function Marque(): JSX.Element {
   return (
-    <div className="marque">
-      <svg className="marque__cle" width="34" height="40" aria-hidden="true">
-        <path className="accolade" d="M13,6C6.7,8 13,16 6,20C13,24 6.7,32 13,34" fill="none" />
-        <g className="v0">
-          <path className="tete tete--pleine" d="M22,3.6L26.2,9L22,14.4L17.8,9Z" fill="currentColor" />
-        </g>
-        <g className="v1">
-          <circle className="tete tete--creuse" cx="22" cy="20" r="4.4" />
-        </g>
-        <g className="v2">
-          <rect className="tete tete--pleine" x="18" y="27" width="8" height="8" fill="currentColor" />
-        </g>
+    <header className="marque">
+      <svg className="marque__cle" width="30" height="42" viewBox="0 0 30 42" aria-hidden="true" focusable="false">
+        <path d="M8 3 C3 3 7 19 1 21 C7 23 3 39 8 39" fill="none" stroke="var(--regle)" strokeWidth="1.2" />
+        <rect x="18.6" y="7.6" width="6.8" height="6.8" fill="var(--f-0)" />
+        <path d="M22 17.6 L26.4 22 L22 26.4 L17.6 22 Z" fill="var(--f-1)" />
+        <rect x="18.6" y="28.6" width="6.8" height="6.8" fill="none" stroke="var(--f-2)" strokeWidth="1.4" />
       </svg>
       <h1>Contrepoint</h1>
-    </div>
+    </header>
   )
 }
 
@@ -132,60 +130,87 @@ export function App(): JSX.Element {
     <main className="page">
       <Marque />
       <p className="these">
-        Trois mesures de position par entité — votes, experts, administration —, affichées côte à
-        côte et jamais moyennées.
+        Trois familles de mesure par entité, affichées côte à côte, jamais moyennées.
       </p>
 
-      <p className="bandeau">
+      <div className="bandeau">
         <span>Données arrêtées le {arret}</span>
         <span>
           {instantane.chambre} · XVII<sup>e</sup> législature · au {instantane.date}
         </span>
-        <span>{disposition.systemes.length} entités</span>
-      </p>
-
-      <div ref={cadre}>
-        <Partition
-          manifeste={manifeste}
-          instantane={instantane}
-          disposition={disposition}
-          onPreuve={ouvrirPreuve}
-        />
+        <span>
+          <a href="https://github.com/bourbask/contrepoint/issues">Signaler une erreur</a>
+        </span>
       </div>
 
-      <p className="these">{instantane.ancrage.note}</p>
+      <section>
+        <h2>Familles de mesure et échelles</h2>
+        <dl className="familles">
+          {manifeste.familles.map((f, rang) => (
+            <div className={`famille marqueur--${rang}`} key={f.id}>
+              <dt>{f.libelle}</dt>
+              <dd>{f.echelle}</dd>
+              <dd className="graduation">
+                {f.min === null || f.max === null || f.decimales === null
+                  ? 'aucune borne publiée'
+                  : `graduée de ${formaterValeur(f.min, f.decimales, f.min < 0)} à ${formaterValeur(f.max, f.decimales, f.min < 0)}`}
+              </dd>
+            </div>
+          ))}
+        </dl>
+        <p className="note">
+          Autant de graduations que de familles : aucune valeur n'est convertie d'une échelle vers
+          une autre.
+        </p>
+      </section>
 
-      {instantane.sans_mesure.length > 0 && (
-        <section className="sans-mesure">
-          <h2>Entités sans mesure</h2>
-          <dl>
+      <section>
+        <h2>Positions publiées, par famille</h2>
+        <p className="bloc">{instantane.ancrage.note}</p>
+        <div ref={cadre}>
+          <Partition
+            manifeste={manifeste}
+            instantane={instantane}
+            disposition={disposition}
+            onPreuve={ouvrirPreuve}
+          />
+        </div>
+
+        {instantane.sans_mesure.length > 0 && (
+          <>
+            <h3>Entités sans mesure — {instantane.sans_mesure.length}</h3>
             {instantane.sans_mesure.map((e) => (
-              <div key={e.entite}>
-                <dt>{e.libelle}</dt>
-                <dd>{e.motif}</dd>
+              <div className="retenue" key={e.entite}>
+                <div className="retenue__tete">
+                  <p className="retenue__nom">{e.libelle}</p>
+                  <span className="retenue__etat">Aucune famille ne porte de valeur</span>
+                </div>
+                <p className="retenue__motif">{e.motif}</p>
               </div>
             ))}
-          </dl>
-        </section>
-      )}
+          </>
+        )}
+      </section>
 
       <footer className="pied">
-        <h2>Source et licence</h2>
         <p>{manifeste.mention_paternite}</p>
-        <p>{manifeste.licence}</p>
+        <p className="licences">Code AGPL-3.0-only · Données {manifeste.licence}</p>
         <ul>
           <li>
             <a href="https://github.com/bourbask/contrepoint/blob/main/docs/methode.md">Méthode</a>
           </li>
           <li>
             <a href="https://github.com/bourbask/contrepoint/blob/main/docs/utilisation.md">
-              Comment se lit le graphe
+              Lecture du graphe
             </a>
           </li>
           <li>
             <a href="https://github.com/bourbask/contrepoint/issues">Signaler une erreur</a>
           </li>
         </ul>
+        <p className="pied__date">
+          Données arrêtées le {arret} · instantané {instantane.id} · contrat {instantane.contrat}
+        </p>
       </footer>
 
       <Preuve etat={preuve} onFermer={() => setPreuve(null)} />

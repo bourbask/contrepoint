@@ -2,18 +2,27 @@
 // graphiques ne sait afficher trois marqueurs que le projet refuse de moyenner,
 // et l'ordre du DOM doit rester sous controle pour la lecture au clavier.
 //
-// La forme vient du contrepoint : un SYSTEME par entite, une VOIX par famille,
-// chaque voix sur sa portee et sa propre graduation. Une voix sans mesure porte
-// une PAUSE — le signe qui, en musique, note un silence voulu plutot qu'une
-// mesure laissee vide. Cette pause se pose dans la GOUTTIERE, a gauche de toute
-// graduation : posee sur l'axe, elle enoncerait une position que la donnee
-// refuse de publier, et la mention en italique ne la rattraperait pas — l'oeil
-// lit la position avant la legende.
+// Un PANNEAU par echelle graduee, une ligne par entite mesuree, et rien
+// d'autre dans le SVG. Ce qui n'a pas de graduation n'entre pas dans le
+// dessin :
+//
+//   - une position retenue (LIOT, NI) se dit en toutes lettres, avec son
+//     chiffre et son seuil en regard. Le rendu precedent en dessinait un
+//     intervalle ouvert dont la longueur valait l'IQR a l'echelle de l'axe :
+//     GV-10 refuse toute longueur geometrique derivee de `dispersion`, et une
+//     tete posee dans une gouttiere se lit encore comme un defaut d'alignement
+//     qu'on aura envie de « corriger » sur l'axe (GV-08) ;
+//   - un code de nuance n'a ni min, ni max, ni decimales : il prend une
+//     pastille, jamais une abscisse (GV-09). Le libelle du marqueur, qui nomme
+//     son producteur, precede le code dans l'ordre du DOM (GV-16).
+//
+// Le decalage des deux graduations est delibere (GV-03) : il est le controle,
+// pas un defaut de mise en page.
 
 import type { JSX } from 'react'
 import type { Instantane, Manifeste } from './contrat.ts'
 import type { Disposition, Forme, Voix } from './graphe.ts'
-import { FORMES } from './graphe.ts'
+import { direAbsence } from './graphe.ts'
 
 type Props = {
   manifeste: Manifeste
@@ -22,235 +31,216 @@ type Props = {
   onPreuve?: (id: string) => void
 }
 
-/** Accolade de systeme : deux courbes qui se rejoignent en pointe a mi-hauteur. */
-function accolade(x: number, y0: number, y1: number, l = 7): string {
-  const ym = (y0 + y1) / 2
-  return (
-    `M${x + l},${y0}C${x + l * 0.1},${y0 + 2} ${x + l},${ym - l} ${x},${ym}` +
-    `C${x + l},${ym + l} ${x + l * 0.1},${y1 - 2} ${x + l},${y1}`
-  )
-}
-
 /** Tetes de note. Chaque famille en a une distincte : la couleur ne porte rien seule. */
-function TeteDeNote({ forme }: { forme: Forme }): JSX.Element {
+function TeteDeNote({ forme, x, y }: { forme: Forme; x: number; y: number }): JSX.Element {
   switch (forme) {
     case 'losange':
-      return <path className="tete tete--pleine" d="M0,-5.4L4.2,0L0,5.4L-4.2,0Z" />
+      return <path className="tete tete--pleine" d={`M${x},${y - 6}L${x + 6},${y}L${x},${y + 6}L${x - 6},${y}Z`} />
     case 'cercle':
-      return <circle className="tete tete--creuse" r="4.4" />
+      return <circle className="tete tete--pleine" cx={x} cy={y} r={5} />
     case 'carre':
-      return <rect className="tete tete--pleine" x="-4" y="-4" width="8" height="8" />
+      return <rect className="tete tete--pleine" x={x - 5} y={y - 5} width={10} height={10} />
     case 'triangle':
-      return <path className="tete tete--pleine" d="M0,-5.4L4.9,4L-4.9,4Z" />
+      return <path className="tete tete--pleine" d={`M${x},${y - 6}L${x + 5.5},${y + 4.5}L${x - 5.5},${y + 4.5}Z`} />
     default:
-      return <path className="tete tete--creuse" d="M-4.2,-4.2L4.2,4.2M-4.2,4.2L4.2,-4.2" />
+      return <path className="tete tete--creuse" d={`M${x - 4.5},${y - 4.5}L${x + 4.5},${y + 4.5}M${x - 4.5},${y + 4.5}L${x + 4.5},${y - 4.5}`} />
   }
 }
 
-/** Pause : le silence est note, il n'est pas une mesure laissee vide. */
-function Pause(): JSX.Element {
-  return <rect className="pause" x="-6" y="-4.5" width="12" height="4.5" />
+/** Ce qui rend une voix atteignable : un clic, une touche, une phrase lue. */
+function proprietesVoix(
+  voix: Voix,
+  onPreuve: ((id: string) => void) | undefined,
+): Record<string, unknown> {
+  const activer = (): void => onPreuve?.(voix.marqueur.preuve)
+  return {
+    tabIndex: 0,
+    role: 'button',
+    'aria-label': voix.etiquette,
+    onClick: activer,
+    onKeyDown: (e: { key: string; preventDefault: () => void }) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault()
+        activer()
+      }
+    },
+  }
 }
 
-function Marqueur({
+/** Une ligne d'entite dans un panneau gradue. */
+function Ligne({
   voix,
-  idMotif,
+  disposition,
+  seul,
+  nue,
   onPreuve,
 }: {
   voix: Voix
-  idMotif: string | undefined
+  disposition: Disposition
+  /** Le libelle du marqueur est-il le meme sur tout le panneau ? Alors il est
+   *  deja au pied, et le repeter dix fois est du bruit. */
+  seul: boolean
+  /** Une ligne sur deux reste sur le papier : le fond alterne se pose sur
+   *  l'autre. Rien n'y est indexe sur la valeur. */
+  nue: boolean
   onPreuve: ((id: string) => void) | undefined
 }): JSX.Element {
-  const yLigne = voix.y + 30
-  // Le cote d'ecriture se decide sur la plage de CETTE voix, jamais sur une
-  // plage commune : il n'y en a pas.
-  const versGauche =
-    voix.portee !== null && voix.x > (voix.portee.debut + voix.portee.fin) / 2
-  const activer = (): void => onPreuve?.(voix.marqueur.preuve)
+  const { etroit, largeur } = disposition
+  const portee = voix.portee as { debut: number; fin: number }
+  const cy = voix.yTete
+  // Le nom et son sigle tiennent dans la ligne : deposes plus bas, le fond de
+  // la ligne suivante, peint apres, leur coupe les jambages.
+  const yNom = etroit ? voix.y + 18 : cy - 3
+  const yValeur = etroit ? voix.y + 34 : cy + 1
   return (
-    <g
-      className={`marqueur marqueur--${voix.rang} marqueur--${voix.etat}`}
-      tabIndex={0}
-      role="button"
-      aria-label={voix.etiquette}
-      {...(idMotif === undefined ? {} : { 'aria-describedby': idMotif })}
-      onClick={activer}
-      onKeyDown={(e) => {
-        if (e.key === 'Enter' || e.key === ' ') {
-          e.preventDefault()
-          activer()
-        }
-      }}
-    >
-      <rect className="cible" x={voix.x - 17} y={yLigne - 13} width={34} height={26} rx={3} />
-      <g transform={`translate(${voix.x},${yLigne})`}>
-        {voix.etat === 'non_mesuree' ? <Pause /> : <TeteDeNote forme={voix.forme} />}
-      </g>
-      {voix.valeur !== null && (
-        <text
-          className="valeur"
-          x={versGauche ? voix.x - 11 : voix.x + 11}
-          y={yLigne + 4}
-          textAnchor={versGauche ? 'end' : 'start'}
-        >
-          {voix.valeur}
+    <g className={`ligne${nue ? ' ligne--nue' : ''} marqueur--${voix.rang}`} {...proprietesVoix(voix, onPreuve)}>
+      <rect className="fond" x={0} y={voix.y} width={largeur} height={voix.hauteur} />
+      <text className="titre" x={disposition.marge} y={yNom}>
+        {voix.libelleEntite}
+      </text>
+      {!seul && (
+        <text className="sigle" x={disposition.marge} y={yNom + (etroit ? 16 : 15)}>
+          {voix.marqueur.libelle}
         </text>
       )}
-      {voix.etat === 'non_mesuree' && (
-        <text className="valeur valeur--absente" x={voix.x + 13} y={yLigne + 4}>
-          non mesuré
+      <line className="portee" x1={portee.debut} y1={cy} x2={portee.fin} y2={cy} />
+      <TeteDeNote forme={voix.forme} x={voix.x} y={cy} />
+      <text className="valeur" x={largeur} y={yValeur} textAnchor="end">
+        {voix.valeur}
+      </text>
+      {voix.dispersion !== null && voix.yDispersion !== null && (
+        <text className="dispersion" x={largeur} y={voix.yDispersion} textAnchor="end">
+          {voix.dispersion}
         </text>
       )}
     </g>
   )
 }
 
-export function Partition({ manifeste, instantane, disposition, onPreuve }: Props): JSX.Element {
-  const { marge, bord } = disposition
-  const graduees = new Set(disposition.echelles.flatMap((e) => e.familles))
+/** Un bloc de texte pour ce qui n'a pas de graduation : nom, etat, chiffres, motif. */
+function Retenue({
+  voix,
+  onPreuve,
+}: {
+  voix: Voix
+  onPreuve: ((id: string) => void) | undefined
+}): JSX.Element {
+  return (
+    <div className="retenue" {...proprietesVoix(voix, onPreuve)}>
+      <div className="retenue__tete">
+        <p className="retenue__nom">{voix.libelleEntite}</p>
+        <span className="retenue__etat">{direAbsence(voix.marqueur.motif_code)}</span>
+      </div>
+      <p className="retenue__compte">
+        {voix.marqueur.libelle}
+        {voix.dispersionDite === null ? '' : ` · ${voix.dispersionDite}`}
+      </p>
+      {voix.marqueur.motif !== null && <p className="retenue__motif">{voix.marqueur.motif}</p>}
+    </div>
+  )
+}
 
-  // ---- Lecture : la graduation de chaque echelle, tracee une seule fois ----
-  const lignes: JSX.Element[] = []
-  let yl = 26
-  for (const e of disposition.echelles) {
-    const familles = manifeste.familles.filter((f) => e.familles.includes(f.id))
-    lignes.push(
-      <g className="lecture" key={e.id}>
-        {familles.map((f) => {
-          const rang = manifeste.familles.indexOf(f)
-          return (
-            <g className={`marqueur--${rang}`} key={f.id}>
-              <g transform={`translate(${marge + 6},${yl - 4})`}>
-                <TeteDeNote forme={FORMES[rang] as Forme} />
-              </g>
-              <text className="famille" x={marge + 20} y={yl}>
-                {f.libelle}
-              </text>
-            </g>
-          )
-        })}
-        <line className="portee" x1={e.debut} y1={yl + 18} x2={e.fin} y2={yl + 18} />
-        {e.bornes.map((b) => (
-          <g key={b.libelle}>
-            <line className="barre" x1={b.x} y1={yl + 12} x2={b.x} y2={yl + 24} />
-            <text
-              className="graduation"
-              x={b.x}
-              y={yl + 38}
-              textAnchor={b.x > (e.debut + e.fin) / 2 ? 'end' : 'start'}
-            >
-              {b.libelle}
-            </text>
-          </g>
-        ))}
-      </g>,
-    )
-    yl += 58
-  }
-  for (const f of manifeste.familles.filter((f) => !graduees.has(f.id))) {
-    const rang = manifeste.familles.indexOf(f)
-    lignes.push(
-      <g className={`lecture marqueur--${rang}`} key={f.id}>
-        <g transform={`translate(${marge + 6},${yl - 4})`}>
-          <TeteDeNote forme={FORMES[rang] as Forme} />
-        </g>
-        <text className="famille" x={marge + 20} y={yl}>
-          {f.libelle}
-        </text>
-        <text className="note" x={marge + 20} y={yl + 17}>
-          Code de nuance, sans échelle graduée.
-        </text>
-      </g>,
-    )
-    yl += 44
-  }
+export function Partition({ manifeste, instantane, disposition, onPreuve }: Props): JSX.Element {
+  const toutes = disposition.systemes.flatMap((s) => s.voix)
+  const retenues = toutes.filter((v) => v.etat === 'non_mesuree')
+  const nuances = toutes.filter((v) => v.etat === 'sans_graduation')
+  const familleNuance = manifeste.familles.find((f) => f.id === nuances[0]?.famille)
 
   return (
     <>
-      <svg
-        className="lecture-svg"
-        width={disposition.largeur}
-        height={yl}
-        role="group"
-        aria-label={`Lecture des ${manifeste.familles.length} familles de mesure, au ${instantane.date}.`}
-      >
-        <text className="entete" x={marge} y={14}>
-          Lecture
-        </text>
-        {lignes}
-      </svg>
-
       <svg
         className="partition"
         width={disposition.largeur}
         height={disposition.hauteur}
         role="group"
-        aria-label={`Positions de ${disposition.systemes.length} entités, au ${instantane.date}.`}
+        aria-label={`Positions publiées par famille, au ${instantane.date}.`}
       >
-        {disposition.systemes.map((s) => (
-          <g className="systeme" key={s.id}>
-            <rect className="fond" x={0} y={s.y} width={disposition.largeur} height={s.hauteur} />
-            <path
-              className="accolade"
-              d={accolade(8, s.y + 22, s.y + s.hauteur - 18)}
-              fill="none"
-            />
-            <text className="titre" x={marge} y={s.y + 18}>
-              {s.libelle}
-            </text>
-            {!disposition.etroit && (
-              <text className="entite" x={bord} y={s.y + 18} textAnchor="end">
-                {s.id}
+        {disposition.panneaux.map((p) => {
+          const seul = new Set(p.lignes.map((v) => v.marqueur.libelle)).size === 1
+          return (
+            <g className={`panneau marqueur--${p.rang}`} key={p.echelle.id}>
+              <text className="famille" x={disposition.marge} y={p.yTitre}>
+                {p.libelleFamille}
               </text>
-            )}
-            {s.voix.map((v) => {
-              const idMotif = v.marqueur.motif === null ? undefined : `motif-${s.id}-${v.famille}`
-              return (
-                <g className="voix" key={v.famille}>
-                  <text className="famille" x={marge} y={v.y + 13}>
-                    {v.marqueur.libelle}
+              {/* Exactement deux barres de graduation, aux bornes declarees. */}
+              <line
+                className="axe"
+                x1={p.echelle.debut}
+                y1={p.yAxe}
+                x2={p.echelle.fin}
+                y2={p.yAxe}
+              />
+              {p.echelle.bornes.map((b, i) => (
+                <g key={b.libelle}>
+                  <line className="tick" x1={b.x} y1={p.yAxe - 5} x2={b.x} y2={p.yAxe + 1} />
+                  <text
+                    className="graduation"
+                    x={b.x}
+                    y={p.yAxe - 10}
+                    textAnchor={i === 0 ? 'start' : 'end'}
+                  >
+                    {b.libelle}
                   </text>
-                  {v.dispersion !== null && v.yDispersion !== null && (
-                    <text
-                      className="dispersion"
-                      x={disposition.etroit ? marge : bord}
-                      y={v.yDispersion}
-                      textAnchor={disposition.etroit ? 'start' : 'end'}
-                    >
-                      {v.dispersion}
-                    </text>
-                  )}
-                  {v.portee !== null && (
-                    <line
-                      className="portee"
-                      x1={v.portee.debut}
-                      y1={v.y + 30}
-                      x2={v.portee.fin}
-                      y2={v.y + 30}
-                    />
-                  )}
-                  <Marqueur voix={v} idMotif={idMotif} onPreuve={onPreuve} />
-                  {v.marqueur.motif !== null && (
-                    <text
-                      className="motif"
-                      id={idMotif}
-                      x={marge}
-                      y={v.y + v.hauteur - 6}
-                    >
-                      {v.marqueur.motif}
-                    </text>
-                  )}
-                  {v.etat === 'sans_graduation' && (
-                    <text className="note" x={v.x + 13 + 26} y={v.y + 34}>
-                      sans échelle graduée
-                    </text>
-                  )}
+                  <line
+                    className="borne"
+                    x1={b.x}
+                    y1={p.hautLignes}
+                    x2={b.x}
+                    y2={p.basLignes}
+                  />
                 </g>
-              )
-            })}
-          </g>
-        ))}
+              ))}
+              {p.lignes.map((v, i) => (
+                <Ligne
+                  key={v.entite}
+                  voix={v}
+                  disposition={disposition}
+                  seul={seul}
+                  nue={i % 2 === 1}
+                  onPreuve={onPreuve}
+                />
+              ))}
+              <text className="echelle" x={disposition.marge} y={p.yPied}>
+                Échelle {p.echelle.id}
+              </text>
+            </g>
+          )
+        })}
       </svg>
+
+      <p className="note-axes">
+        Les axes ne partagent ni origine ni largeur : les échelles sont disjointes, et le décalage
+        est délibéré.
+      </p>
+
+      {retenues.length > 0 && (
+        <>
+          <h3>Mesuré, non publié</h3>
+          {retenues.map((v) => (
+            <Retenue key={`${v.entite}-${v.famille}`} voix={v} onPreuve={onPreuve} />
+          ))}
+        </>
+      )}
+
+      {nuances.length > 0 && familleNuance !== undefined && (
+        <>
+          <h3>{familleNuance.libelle}</h3>
+          {/* GV-16 : le producteur nomme precede le code dans l'ordre du DOM. */}
+          <p className="sous-titre">
+            {nuances[0]?.marqueur.libelle} · Code de nuance, sans échelle graduée.
+          </p>
+          <ul className={`pastilles marqueur--${nuances[0]?.rang ?? 0}`}>
+            {nuances.map((v) => (
+              <li className="pastille" key={v.entite}>
+                <span className="pastille__code" {...proprietesVoix(v, onPreuve)}>
+                  {v.valeur}
+                </span>
+                <span className="pastille__nom">{v.libelleEntite}</span>
+              </li>
+            ))}
+          </ul>
+        </>
+      )}
     </>
   )
 }
