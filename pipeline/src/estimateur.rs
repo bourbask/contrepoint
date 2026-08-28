@@ -22,6 +22,7 @@
 //!   exécutions, aucune égale au séquentiel (ADR 0001 §1.6). Toutes les sommes
 //!   d'ici sont séquentielles.
 
+use crate::agregation::VOTES_MINIMAUX;
 use serde_json::Value;
 use std::collections::BTreeSet;
 
@@ -426,6 +427,56 @@ pub fn ancrer(
         .iter()
         .map(|x| (2.0 * x - mediane_gauche - mediane_droite) / amplitude)
         .collect())
+}
+
+/// Ancrage affine sur les **médianes des deux groupes ancres**, l'unique
+/// chemin par lequel une position brute devient une position publiable.
+///
+/// `groupes[n]` et `votes_exprimes[n]` décrivent l'acteur de `positions[n]` :
+/// les trois tranches sont parallèles, dans l'ordre canonique de la matrice.
+///
+/// La médiane d'ancrage porte sur **le même ensemble que la médiane publiée** :
+/// les membres au-delà de `VOTES_MINIMAUX`. Sans cette coïncidence, la valeur
+/// publiée pour une ancre n'est plus exactement ±1 — mesuré à +1,0002 pour
+/// l'ancre droite le 2026-08-28. positionnement.md §5 ne dit pas sur quel
+/// ensemble la médiane d'ancrage se calcule : c'est l'`A VERIFIER` de ce cycle.
+///
+/// Cette fonction vivait dans `examples/verification-corpus.rs`, hors de
+/// portée de la CI. Elle est ici pour qu'un test la retienne, et pour que
+/// l'agrégation n'ait qu'une seule source de positions ancrées.
+///
+/// Un groupe d'ancrage sans aucun membre au-delà du seuil est une **erreur
+/// bloquante**, comme une ancre absente du registre.
+pub fn ancrer_sur_groupes(
+    positions: &[f64],
+    groupes: &[&str],
+    votes_exprimes: &[usize],
+    gauche: &str,
+    droite: &str,
+) -> Result<Vec<f64>, String> {
+    if groupes.len() != positions.len() || votes_exprimes.len() != positions.len() {
+        return Err(format!(
+            "tranches désalignées : {} positions, {} groupes, {} décomptes de votes",
+            positions.len(),
+            groupes.len(),
+            votes_exprimes.len()
+        ));
+    }
+    let mediane_de = |cherche: &str| -> Result<f64, String> {
+        let valeurs: Vec<f64> = positions
+            .iter()
+            .enumerate()
+            .filter(|(n, _)| groupes[*n] == cherche && votes_exprimes[*n] >= VOTES_MINIMAUX)
+            .map(|(_, x)| *x)
+            .collect();
+        mediane(&valeurs).ok_or_else(|| {
+            format!(
+                "groupe d'ancrage {cherche} sans membre au-delà de {VOTES_MINIMAUX} votes \
+                 exprimés : l'axe ne peut pas être ancré"
+            )
+        })
+    };
+    ancrer(positions, mediane_de(gauche)?, mediane_de(droite)?)
 }
 
 /// Les deux ancres déclarées dans le registre d'entités à la date donnée :

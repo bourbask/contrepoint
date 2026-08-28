@@ -17,6 +17,7 @@
 use crate::preuves::{ECHELLES, date_arretee};
 use crate::sha256::empreinte;
 use serde_json::Value;
+use serde_json::json;
 use std::collections::{BTreeMap, BTreeSet};
 
 /// La légende, close, dans l'ordre d'affichage. Le front la lit au lieu de
@@ -26,11 +27,7 @@ use std::collections::{BTreeMap, BTreeSet};
 pub const FAMILLES: [(&str, &str, &str); 3] = [
     ("votes", "Votes nominatifs", "votes_an17_ancre_v1"),
     ("experts", "Enquête d'experts", "ches_lrgen_0_10"),
-    (
-        "administratif",
-        "Nuance — Ministère de l'intérieur",
-        "nuance_leg2024",
-    ),
+    ("administratif", "Nuance administrative", "nuance_leg2024"),
 ];
 
 /// Le libellé d'un marqueur, par famille. Quarante caractères au plus
@@ -83,7 +80,7 @@ const CLES_MARQUEUR: &[&str] = &[
 const CLES_BANDE: &[&str] = &["id", "libelle", "marqueurs"];
 const CLES_ANCRAGE: &[&str] = &["famille", "ancre_gauche", "ancre_droite", "note"];
 const CLES_SANS_MESURE: &[&str] = &["entite", "libelle", "motif_code", "motif"];
-const CLES_FAMILLE: &[&str] = &["id", "libelle", "echelle"];
+const CLES_FAMILLE: &[&str] = &["id", "libelle", "echelle", "min", "max", "decimales"];
 const CLES_INSTANTANE_LISTE: &[&str] = &[
     "id",
     "chambre",
@@ -206,6 +203,18 @@ fn ecrire(
         }
         autre => sortie.push_str(&serde_json::to_string(autre).unwrap_or_default()),
     }
+}
+
+/// Les bornes déclarées d'une échelle nommée : `min`, `max`, `decimales`, tels
+/// que la table close du §2.3 les fixe. `None` quand l'identifiant n'est pas de
+/// la table ; `null` en JSON quand l'échelle n'est pas graduée — la famille
+/// `administratif` porte un code, pas une position, et une valeur de
+/// remplissage y dessinerait une graduation qui n'existe pas.
+fn bornes_declarees(echelle: &str) -> Option<(Value, Value, Value)> {
+    ECHELLES
+        .iter()
+        .find(|(id, ..)| *id == echelle)
+        .map(|(_, min, max, decimales, _)| (json!(min), json!(max), json!(decimales)))
 }
 
 /// Le nombre de décimales d'une échelle nommée. Les valeurs sont **recopiées**
@@ -437,6 +446,49 @@ pub fn construire_instantane(
             }),
         ));
     }
+    // §4.3 règle 5, appliquée au **registre** et pas aux seules entités mesurées :
+    // une entité qui ne porte aucune ligne de preuve n'a pas de marqueur, donc
+    // aucun marqueur ne porte de valeur — elle est dite dans `sans_mesure`. Sans
+    // ce passage elle disparaît de l'instantané sans motif, ce qui est une
+    // absence comblée par un vide.
+    let dites: BTreeSet<String> = bandes
+        .iter()
+        .map(|(_, id, _)| id.clone())
+        .chain(
+            sans_mesure
+                .iter()
+                .filter_map(|e| e["entite"].as_str().map(str::to_owned)),
+        )
+        .collect();
+    for entite in registre["entites"]
+        .as_array()
+        .map(Vec::as_slice)
+        .unwrap_or_default()
+    {
+        let Some(id) = entite["id"].as_str() else {
+            continue;
+        };
+        if !(id.starts_with("parti.") || id.starts_with("coalition.")) || dites.contains(id) {
+            continue;
+        }
+        if entite["debut"]
+            .as_str()
+            .is_some_and(|d| d > description.date.as_str())
+            || entite["fin"]
+                .as_str()
+                .is_some_and(|f| f < description.date.as_str())
+        {
+            continue;
+        }
+        sans_mesure.push(serde_json::json!({
+            "entite": id,
+            "libelle": libelle_de_bande(registre, id),
+            "motif_code": "hors_source",
+            "motif": "Aucune ligne de preuve ne porte cette entité : aucune famille de mesure ne l'a produite.",
+        }));
+    }
+    sans_mesure.sort_by(|a, b| a["entite"].as_str().cmp(&b["entite"].as_str()));
+
     // §7 — `bandes` par valeur du marqueur `votes` puis par `id`. Une bande sans
     // marqueur `votes` n'a pas de position : elle vient après, par `id`.
     bandes.sort_by(|a, b| match (a.0, b.0) {
@@ -576,6 +628,59 @@ pub fn construire_manifeste(
         }));
     }
 
+    // Chaque famille du manifeste porte les bornes de **son** échelle, recopiées
+    // de `echelle.*` des lignes de preuve. Le front les lit au lieu de les
+    // dériver des valeurs observées : trois échelles étirées sur la même plage
+    // de pixels fabriquent des concordances qui n'existent pas, et rendent la
+    // moyenne entre familles visuellement dessinable.
+    let mut declarees: BTreeMap<String, (String, Value, Value, Value)> = BTreeMap::new();
+    for mesure in &mesures {
+        let echelle = &mesure.ligne["echelle"];
+        let declaree = (
+            mesure.echelle.clone(),
+            echelle["min"].clone(),
+            echelle["max"].clone(),
+            echelle["decimales"].clone(),
+        );
+        if let Some(deja) = declarees.get(&mesure.famille)
+            && *deja != declaree
+        {
+            // Deux jeux de bornes pour une famille n'est pas un arbitrage à
+            // rendre : c'est une erreur bloquante. Publier l'un des deux
+            // publierait une graduation qu'une partie des lignes contredit.
+            return Err(format!(
+                "la famille {} déclare deux échelles divergentes : {:?} et {:?}",
+                mesure.famille, deja, declaree
+            ));
+        }
+        declarees.insert(mesure.famille.clone(), declaree);
+    }
+    let mut familles = Vec::new();
+    for (id, libelle, echelle) in FAMILLES {
+        let (min, max, decimales) = match declarees.get(id) {
+            Some((declaree, min, max, decimales)) => {
+                if declaree != echelle {
+                    return Err(format!(
+                        "la famille {id} est déclarée sur l'échelle {declaree} et le manifeste la nomme {echelle}"
+                    ));
+                }
+                (min.clone(), max.clone(), decimales.clone())
+            }
+            // Aucune ligne de cette famille : les bornes viennent de la table
+            // close des échelles (§2.3), jamais d'une valeur de remplissage.
+            None => bornes_declarees(echelle)
+                .ok_or_else(|| format!("échelle inconnue au manifeste : {echelle}"))?,
+        };
+        familles.push(serde_json::json!({
+            "id": id,
+            "libelle": libelle,
+            "echelle": echelle,
+            "min": min,
+            "max": max,
+            "decimales": decimales,
+        }));
+    }
+
     let manifeste = serde_json::json!({
         "schema": SCHEMA_MANIFESTE,
         "contrat": contrat,
@@ -583,10 +688,7 @@ pub fn construire_manifeste(
         "date_arretee": date_arretee(lignes)?,
         "licence": LICENCE,
         "mention_paternite": mention,
-        "familles": FAMILLES
-            .iter()
-            .map(|(id, libelle, echelle)| serde_json::json!({"id": id, "libelle": libelle, "echelle": echelle}))
-            .collect::<Vec<_>>(),
+        "familles": familles,
         "instantanes": liste,
         "preuves": {"racine": RACINE_DES_PREUVES, "eclats": ECLATS, "fonction": FONCTION_DECLAT},
     });
@@ -673,6 +775,41 @@ pub fn verifier_artefacts(
         return vec!["manifeste illisible".to_owned()];
     };
     cles_exactes(&manifeste_json, CLES_MANIFESTE, "le manifeste", &mut refus);
+    // I7 sur le manifeste — toute famille porte les bornes de son échelle, et
+    // ce sont celles de la table close du §2.3. Sans elles, le front dérive la
+    // graduation des valeurs observées et étire trois échelles sur la même
+    // plage ; avec des bornes fausses, il dessine une graduation qui n'existe
+    // pas. Les deux se refusent ici.
+    for famille in manifeste_json["familles"]
+        .as_array()
+        .map(Vec::as_slice)
+        .unwrap_or_default()
+    {
+        cles_exactes(
+            famille,
+            CLES_FAMILLE,
+            "une famille du manifeste",
+            &mut refus,
+        );
+        let echelle = famille["echelle"].as_str().unwrap_or_default();
+        match bornes_declarees(echelle) {
+            None => refus.push(format!(
+                "I7 : la famille {} du manifeste nomme l'échelle {echelle}, hors de la liste close",
+                famille["id"]
+            )),
+            Some((min, max, decimales)) => {
+                if famille["min"] != min
+                    || famille["max"] != max
+                    || famille["decimales"] != decimales
+                {
+                    refus.push(format!(
+                        "I7 : la famille {} du manifeste déclare {}..{} à {} décimales, l'échelle {echelle} porte {min}..{max} à {decimales}",
+                        famille["id"], famille["min"], famille["max"], famille["decimales"]
+                    ));
+                }
+            }
+        }
+    }
     for artefact in [manifeste]
         .iter()
         .copied()
@@ -700,6 +837,7 @@ pub fn verifier_artefacts(
         };
         cles_exactes(&racine, CLES_INSTANTANE, "un instantané", &mut refus);
         cles_exactes(&racine["ancrage"], CLES_ANCRAGE, "`ancrage`", &mut refus);
+        let mut citees: BTreeSet<String> = BTreeSet::new();
         for bande in racine["bandes"]
             .as_array()
             .map(Vec::as_slice)
@@ -724,6 +862,7 @@ pub fn verifier_artefacts(
                     continue;
                 };
                 references.insert(preuve.to_owned());
+                citees.insert(preuve.to_owned());
                 let Some(ligne) = index.get(preuve) else {
                     refus.push(format!(
                         "I16 : le marqueur cite la preuve {preuve}, absente du registre — un marqueur sans ligne ne s'affiche pas"
@@ -739,20 +878,22 @@ pub fn verifier_artefacts(
                 }
             }
         }
-        // I17 — `date_arretee` dérivée, jamais saisie.
-        let referencees: Vec<String> = references
-            .iter()
-            .filter_map(|id| index.get(id.as_str()).map(|l| (*l).to_owned()))
-            .collect();
-        match date_arretee(&referencees) {
-            Ok(attendue) if racine["date_arretee"] == attendue.as_str() => {}
-            Ok(attendue) => refus.push(format!(
-                "I17 : `date_arretee` de l'instantané vaut {} et le maximum des `date_calcul` référencées est {attendue}",
-                racine["date_arretee"]
-            )),
-            Err(erreur) => refus.push(format!("I17 : {erreur}")),
-        }
+        // I17 — `date_arretee` dérivée, jamais saisie. Elle porte sur les lignes
+        // que **cet** instantané référence, pas sur l'union : deux instantanés
+        // n'ont pas la même date d'arrêt.
+        i17_date_arretee(&racine, "de l'instantané", &citees, &index, &mut refus);
     }
+
+    // I17 porte sur « le manifeste **et** chaque instantané » (§6). Le manifeste
+    // arrête la même date sur l'union des lignes référencées ; sans ce contrôle,
+    // une date saisie à la main y passait.
+    i17_date_arretee(
+        &manifeste_json,
+        "du manifeste",
+        &references,
+        &index,
+        &mut refus,
+    );
 
     // I16, sens inverse — aucun éclat orphelin.
     for (prefixe, eclat) in eclats {
@@ -774,6 +915,27 @@ pub fn verifier_artefacts(
     refus.sort();
     refus.dedup();
     refus
+}
+
+fn i17_date_arretee(
+    artefact: &Value,
+    ou: &str,
+    references: &BTreeSet<String>,
+    index: &BTreeMap<&str, &str>,
+    refus: &mut Vec<String>,
+) {
+    let referencees: Vec<String> = references
+        .iter()
+        .filter_map(|id| index.get(id.as_str()).map(|l| (*l).to_owned()))
+        .collect();
+    match date_arretee(&referencees) {
+        Ok(attendue) if artefact["date_arretee"] == attendue.as_str() => {}
+        Ok(attendue) => refus.push(format!(
+            "I17 : `date_arretee` {ou} vaut {} et le maximum des `date_calcul` référencées est {attendue}",
+            artefact["date_arretee"]
+        )),
+        Err(erreur) => refus.push(format!("I17 : {erreur}")),
+    }
 }
 
 fn cles_exactes(objet: &Value, attendues: &[&str], ou: &str, refus: &mut Vec<String>) {
@@ -808,7 +970,11 @@ fn controles_de_texte(artefact: &str, refus: &mut Vec<String>) {
         map.remove("id");
     }
     for erreur in crate::preuves::verifier(&ligne) {
-        if erreur.starts_with("I12") || erreur.starts_with("I18") || erreur.starts_with("I19") {
+        if erreur.starts_with("I12")
+            || erreur.starts_with("I18")
+            || erreur.starts_with("I19")
+            || erreur.starts_with("I20")
+        {
             refus.push(erreur);
         }
     }

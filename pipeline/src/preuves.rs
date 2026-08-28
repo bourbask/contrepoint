@@ -88,36 +88,6 @@ const SOURCES: [&str; 11] = [
     "registre_partis",
 ];
 
-/// Les sources qui exigent d'être citées (I23, docs/sources.md §4), avec la
-/// citation qu'elles publient, **mot pour mot**. Une entrée d'une de ces
-/// sources porte cette chaîne caractère pour caractère ; toute autre porte
-/// `null`.
-///
-/// Elle est par jeu de données parce que c'est ainsi que les sources la
-/// formulent : chaque vague CHES publie sa propre ligne, et une mention globale
-/// du projet attribuerait à un jeu la citation d'un autre (§2.1).
-///
-/// `citation` est une **exigence de la source, pas une cession de droits** :
-/// CHES ne publie aucune licence, et la condition obtenue par échange écrit le
-/// 2026-08-27 n'autorise aucune republication du fichier (ADR 0000 §8).
-pub const CITATIONS: [(&str, &str); 2] = [
-    ("ches_2024", CITATION_CHES_2024),
-    ("ches_trend", CITATION_CHES_2024),
-];
-
-/// Relevée le 2026-08-27 sur `chesdata.eu/ches-europe/`, « When using the 2024
-/// survey, please cite ». 322 caractères, sous le plafond de 400 de I20.
-const CITATION_CHES_2024: &str = "Rovny, Jan, Jonathan Polk, Ryan Bakker, Liesbet Hooghe, Seth Jolly, Gary Marks, Marco Steenbergen, and Milada Anna Vachudova. 2025. \"The 2024 Chapel Hill Expert Survey on political party positioning in Europe: Twenty-five years of party positional data.\" Electoral Studies 97 (October). doi:10.1016/j.electstud.2025.102981";
-
-/// La citation exigée par une source, ou `None` si elle n'en exige aucune.
-#[must_use]
-pub fn citation_exigee(source: &str) -> Option<&'static str> {
-    CITATIONS
-        .iter()
-        .find(|(s, _)| *s == source)
-        .map(|(_, citation)| *citation)
-}
-
 /// Les sources qui exigent d'être citées (I23, docs/sources.md). Une entrée
 /// d'une de ces sources porte `citation` non nulle ; toute autre porte `null`.
 pub const SOURCES_A_CITATION: [&str; 2] = ["ches_2024", "ches_trend"];
@@ -372,6 +342,36 @@ pub fn construire(mut ligne: Value) -> Result<String, String> {
     rendre(&ligne)
 }
 
+/// Les sources qui exigent d'être citées (I23, docs/sources.md §4), avec la
+/// citation qu'elles publient, **mot pour mot**. Une entrée d'une de ces
+/// sources porte cette chaîne caractère pour caractère ; toute autre porte
+/// `null`.
+///
+/// Elle est par jeu de données parce que c'est ainsi que les sources la
+/// formulent : chaque vague CHES publie sa propre ligne, et une mention globale
+/// du projet attribuerait à un jeu la citation d'un autre (§2.1).
+///
+/// `citation` est une **exigence de la source, pas une cession de droits** :
+/// CHES ne publie aucune licence, et la condition obtenue par échange écrit le
+/// 2026-08-27 n'autorise aucune republication du fichier (ADR 0000 §8).
+pub const CITATIONS: [(&str, &str); 2] = [
+    ("ches_2024", CITATION_CHES_2024),
+    ("ches_trend", CITATION_CHES_2024),
+];
+
+/// Relevée le 2026-08-27 sur `chesdata.eu/ches-europe/`, « When using the 2024
+/// survey, please cite ». 322 caractères, sous le plafond de 400 de I20.
+const CITATION_CHES_2024: &str = "Rovny, Jan, Jonathan Polk, Ryan Bakker, Liesbet Hooghe, Seth Jolly, Gary Marks, Marco Steenbergen, and Milada Anna Vachudova. 2025. \"The 2024 Chapel Hill Expert Survey on political party positioning in Europe: Twenty-five years of party positional data.\" Electoral Studies 97 (October). doi:10.1016/j.electstud.2025.102981";
+
+/// La citation exigée par une source, ou `None` si elle n'en exige aucune.
+#[must_use]
+pub fn citation_exigee(source: &str) -> Option<&'static str> {
+    CITATIONS
+        .iter()
+        .find(|(s, _)| *s == source)
+        .map(|(_, citation)| *citation)
+}
+
 /// Le motif d'une non-publication, en une phrase de 140 caractères au plus.
 ///
 /// « Absence de donnée dite, jamais comblée » (ADR 0000 §5) : une case non
@@ -379,19 +379,44 @@ pub fn construire(mut ligne: Value) -> Result<String, String> {
 /// valeur accompagnée d'un avertissement, qui serait citée sans l'avertissement.
 /// Le `motif_code` qui l'accompagne est toujours `sous_seuil_de_publication` :
 /// la mesure existe, elle n'est pas publiable (§2.4).
-pub fn motif_de_non_publication(motif_agregation: &str, effectif: usize) -> String {
+pub fn motif_de_non_publication(
+    motif_agregation: &str,
+    effectif: usize,
+    iqr: Option<f64>,
+    ecart_type: Option<f64>,
+) -> String {
     match motif_agregation {
         crate::agregation::EFFECTIF_INSUFFISANT => {
             format!("Effectif retenu de {effectif} membres pour un minimum de {EFFECTIF_MINIMAL}.")
         }
-        crate::agregation::DISPERSION_INTERNE => format!(
-            "Dispersion interne au-delà du seuil publié : IQR maximal {IQR_MAXIMAL} sur {effectif} membres."
-        ),
-        crate::agregation::DISPERSION_REECHANTILLONNAGE => format!(
-            "Dispersion de rééchantillonnage au-delà du seuil publié : maximum {ECART_TYPE_MAXIMAL} sur {effectif} membres."
-        ),
+        crate::agregation::DISPERSION_INTERNE => match iqr {
+            Some(mesure) => format!(
+                "Dispersion interne au-delà du seuil publié : IQR {} pour un maximum de {}.",
+                decimal_francais(mesure),
+                decimal_francais(IQR_MAXIMAL)
+            ),
+            None => "Dispersion interne non calculable : le groupe compte trop peu de membres pour un écart interquartile.".to_owned(),
+        },
+        crate::agregation::DISPERSION_REECHANTILLONNAGE => match ecart_type {
+            Some(mesure) => format!(
+                "Dispersion de rééchantillonnage au-delà du seuil publié : écart-type {} pour un maximum de {}.",
+                decimal_francais(mesure),
+                decimal_francais(ECART_TYPE_MAXIMAL)
+            ),
+            None => "Dispersion de rééchantillonnage non mesurable : moins de deux tirages comparables.".to_owned(),
+        },
         autre => format!("Règle de non-publication appliquée : {autre}, sur {effectif} membres."),
     }
+}
+
+/// Un nombre tel que le contrat l'écrit **en prose** : virgule décimale, zéros
+/// terminaux retirés — « IQR 0,687 pour un maximum de 0,25 » (§2.4). La forme
+/// canonique du §7 ne gouverne que le JSON ; une phrase française n'y écrit pas
+/// un point décimal.
+fn decimal_francais(valeur: f64) -> String {
+    let brut = format!("{valeur:.4}");
+    let taille = brut.trim_end_matches('0').trim_end_matches('.');
+    taille.replace('.', ",")
 }
 
 // ------------------------------------------------------------ invariants ----
@@ -728,6 +753,16 @@ fn i9_ancrage(ligne: &Value, refus: &mut Vec<String>) {
 }
 
 fn i10_non_publication(ligne: &Value, refus: &mut Vec<String>) {
+    // §2.4 — `sous_seuil_de_publication` est la seule occurrence où `dispersion`
+    // est renseignée sans `valeur` : les chiffres qui justifient la
+    // non-publication sont publiés, la valeur non. Un motif d'absence comblé par
+    // un vide est exactement ce que le projet refuse.
+    if ligne["motif_code"] == "sous_seuil_de_publication" && !ligne["dispersion"].is_object() {
+        refus.push(
+            "I10 : `sous_seuil_de_publication` sans `dispersion` — les chiffres qui justifient la non-publication sont publiés, la valeur non (§2.4)"
+                .to_owned(),
+        );
+    }
     if !ligne["dispersion"].is_object() {
         return;
     }
@@ -966,6 +1001,9 @@ fn i20_i21_i22_i23_entrees(ligne: &Value, refus: &mut Vec<String>) {
 
         // I23 — une source à citation la porte, toute autre porte `null`.
         let citation = entree["citation"].as_str();
+        // La comparaison porte sur le **texte**, pas sur la présence : une
+        // citation abrégée ou reformulée n'est pas la citation que la source
+        // exige, et la présence seule laissait passer « Rovny et al. 2025. ».
         if let Some(exigee) = citation_exigee(source) {
             if citation.is_some_and(|c| !c.is_empty() && c != exigee) {
                 refus.push(format!(

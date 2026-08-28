@@ -77,10 +77,24 @@ jobs:
         if: steps.exists.outputs.yes == 'true'
         working-directory: web
         run: npm test --if-present
+      # La construction de publication refuse une racine d'artefacts absente :
+      # c'est voulu, sinon la porte est muette exactement quand la publication
+      # est cassée. Mais une PR qui ne porte pas d'artefacts — celle du front,
+      # par exemple — doit pouvoir se construire. La CI choisit selon ce qui
+      # existe, et le dit ; la publication réelle passe par deploy.yml, qui
+      # part de main et porte toujours les artefacts.
       - name: build
         if: steps.exists.outputs.yes == 'true'
         working-directory: web
-        run: npm run build
+        run: |
+          if [ -d ../public/api ]; then
+            echo "artefacts présents : construction de publication"
+            npm run build
+          else
+            echo "::notice::aucun artefact dans public/api — construction tolérante."
+            echo "La porte de publication n'est pas exercée par cette PR."
+            npm run build:local
+          fi
 
   artefacts:
     name: artefacts et schémas
@@ -267,15 +281,15 @@ jobs:
           bin=target/release/contrepoint
           D=2026-08-27T00:00:00Z
           # 1. Idempotence — même entrée, même date injectée, même octet.
-          CONTREPOINT_DATE_CALCUL=$D "$bin" construire --sortie /tmp/a
-          CONTREPOINT_DATE_CALCUL=$D "$bin" construire --sortie /tmp/b
+          CONTREPOINT_DATE_CALCUL=$D "$bin" construire --racine .. --sortie /tmp/a
+          CONTREPOINT_DATE_CALCUL=$D "$bin" construire --racine .. --sortie /tmp/b
           diff -r /tmp/a /tmp/b
           # 2. Isolement de l'horloge — seule la date de calcul bouge.
-          CONTREPOINT_DATE_CALCUL=2027-01-01T00:00:00Z "$bin" construire --sortie /tmp/c
+          CONTREPOINT_DATE_CALCUL=2027-01-01T00:00:00Z "$bin" construire --racine .. --sortie /tmp/c
           "$bin" diff-hors-date_calcul /tmp/a /tmp/c
           # 3. Ajout seul — l'existant est un préfixe octet pour octet du nouveau.
           if [ -f ../data/preuves/positions.jsonl ]; then
-            head -c "$(stat -c%s ../data/preuves/positions.jsonl)" /tmp/a/positions.jsonl \
+            head -c "$(stat -c%s ../data/preuves/positions.jsonl)" /tmp/a/data/preuves/positions.jsonl \
               | cmp - ../data/preuves/positions.jsonl
           fi
 

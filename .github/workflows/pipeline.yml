@@ -114,7 +114,28 @@ jobs:
         working-directory: pipeline
         env:
           CONTREPOINT_DATE_CALCUL: ${{ steps.date_calcul.outputs.valeur }}
-        run: cargo run --locked --release
+        run: cargo run --locked --release -- construire --racine ..
+
+      # Les trois contrôles de déterminisme du contrat §8.2, à leur place : ici le
+      # cache existe et le corpus est complet. La CI de PR ne peut pas les tenir.
+      - name: déterminisme — les trois contrôles du contrat
+        if: steps.exists.outputs.yes == 'true'
+        env:
+          CONTREPOINT_DATE_CALCUL: ${{ steps.date_calcul.outputs.valeur }}
+        run: |
+          set -euo pipefail
+          bin=pipeline/target/release/contrepoint
+          [ -x "$bin" ] || { echo "::error::binaire absent"; exit 1; }
+          "$bin" construire --sortie "$RUNNER_TEMP/a"
+          "$bin" construire --sortie "$RUNNER_TEMP/b"
+          diff -r "$RUNNER_TEMP/a" "$RUNNER_TEMP/b"
+          CONTREPOINT_DATE_CALCUL=2027-01-01T00:00:00Z "$bin" construire --sortie "$RUNNER_TEMP/c"
+          "$bin" diff-hors-date_calcul "$RUNNER_TEMP/a" "$RUNNER_TEMP/c"
+          if [ -f data/preuves/positions.jsonl ]; then
+            head -c "$(stat -c%s data/preuves/positions.jsonl)" "$RUNNER_TEMP/a/data/preuves/positions.jsonl" \
+              | cmp - data/preuves/positions.jsonl
+          fi
+          echo "les trois contrôles du contrat §8.2 passent sur le corpus complet"
 
       # Les trois contrôles de déterminisme du contrat §8.2, à leur place : ici le
       # cache existe et le corpus est complet. La CI de PR ne peut pas les tenir.

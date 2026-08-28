@@ -81,10 +81,10 @@
       "libelle": "Ministere de l'Interieur — codes de nuance constatés dans les resultats definitifs des legislatives 2024",
       "url": "https://static.data.gouv.fr/resources/elections-legislatives-des-30-juin-et-7-juillet-2024-resultats-definitifs-du-2nd-tour/20240710-170536/resultats-definitifs-par-region.csv",
       "recupere_le": "2026-08-27",
-      "empreinte_sha256": "bcc062b9264dcf3dc1eac5463acf1e8743171b86385923e7f770fd9028271083",
+      "empreinte_sha256": "f8552401cffade4397fa501f161c961d377d629235d9f9a813ecb11ad5ba0c50",
       "cardinalite": "plusieurs",
       "licence": "Licence Ouverte v2.0 (champ license = lov2 sur data.gouv.fr)",
-      "remarque": "22 codes constatés au 1er tour. Grille officielle : annexe de l'instruction IOMA2415630C du 2024-06-11."
+      "remarque": "17 codes au 2nd tour, 22 au 1er. Grille : annexe de l'instruction IOMA2415630C du 2024-06-11."
     },
     {
       "id": "parlgov",

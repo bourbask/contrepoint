@@ -15,6 +15,26 @@
 //! deux membres identifiables du groupe, réidentifiables en une exécution sur
 //! un groupe de neuf membres. Ils ne sont ni publiés ni calculés, et ce module
 //! n'a aucun emplacement d'où ils pourraient fuir.
+//!
+//! `A VERIFIER` — deux angles morts connus du rempart anti-fuite, ouverts au
+//! 2026-08-28 :
+//!
+//! - **AGR-01 ne lit que la chaîne rendue par [`rendre`], et n'y cherche que
+//!   des noms interdits connus.** Une borne publiée sous un nom anodin passe,
+//!   et une trace écrite sur la sortie d'erreur n'entre dans aucune assertion.
+//!   Le `Debug` manuel de [`Membre`] ferme le cas du formatage (AGR-11) ; les
+//!   deux autres restent. Ce qui les fermerait : une porte de CI qui grep les
+//!   artefacts publiés — elle existe déjà, `scripts/portes-de-ci.sh invariants`
+//!   — étendue à la sortie d'erreur du binaire, et un contrat de nommage des
+//!   colonnes vérifié plutôt qu'une liste noire.
+//! - **[`agreger`] accepte encore une position brute.** Rien dans le type de
+//!   [`Membre::position`] n'exige qu'elle soit passée par
+//!   [`crate::estimateur::ancrer_sur_groupes`] : la fonction d'ancrage est
+//!   désormais dans la bibliothèque et sous test (EST-17), mais un futur
+//!   appelant peut toujours la contourner. Ce qui le fermerait : un type
+//!   `PositionAncree` que seul l'ancrage construit, et que `Membre` exige.
+//!   Écarté ce cycle — un enveloppeur pour un seul appelant est une
+//!   abstraction que rien n'exerce encore.
 
 use crate::estimateur::mediane;
 use serde_json::Value;
@@ -25,6 +45,18 @@ use std::fmt::Write as _;
 pub const IQR_MAXIMAL: f64 = 0.25;
 pub const ECART_TYPE_MAXIMAL: f64 = 0.05;
 pub const EFFECTIF_MINIMAL: usize = 10;
+
+/// En deçà de ce nombre de membres, Q1 est le minimum du groupe : l'écart
+/// interquartile y porte une borne d'étendue, que le projet ne calcule ni ne
+/// publie (positionnement.md §6, I19).
+///
+/// Le seuil vaut **six** et non quatre. Avec la médiane basse de
+/// [`crate::estimateur::mediane`], la moitié inférieure d'un groupe de quatre
+/// ou cinq membres compte deux éléments, dont la médiane basse est le premier
+/// — c'est-à-dire le minimum du groupe. Six est le premier effectif où ni Q1
+/// ni Q3 n'est un extrême. Recompté sur n = 4 à 10, pas déduit du nom
+/// « charnières » : la méthode ne moyenne rien.
+pub const MEMBRES_MINIMAUX_POUR_LIQR: usize = 6;
 
 /// Un député n'entre dans la médiane de son groupe qu'au-delà de ce nombre de
 /// votes exprimés. Le seuil ne porte **que** là : il n'est jamais un filtre
@@ -42,12 +74,26 @@ pub const DISPERSION_REECHANTILLONNAGE: &str = "dispersion_de_reechantillonnage"
 /// Un député rattaché à son groupe daté, avec sa position sur l'axe ancré.
 /// Cette structure est une **entrée de calcul** : elle ne sort d'aucune
 /// fonction de rendu.
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 pub struct Membre {
     pub acteur: String,
     pub groupe: String,
     pub votes_exprimes: usize,
     pub position: f64,
+}
+
+/// `Debug` **manuel, sans la position**. Le `Debug` dérivé appariait l'acteur
+/// et sa coordonnée sur l'axe : un `dbg!` ou un `{:?}` dans une trace suffisait
+/// à publier une coordonnée individuelle (ADR 0000 §2, RG-41). Le rempart
+/// AGR-01 ne couvre que la chaîne rendue ; celui-ci couvre le formatage.
+impl std::fmt::Debug for Membre {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("Membre")
+            .field("acteur", &self.acteur)
+            .field("groupe", &self.groupe)
+            .field("votes_exprimes", &self.votes_exprimes)
+            .finish_non_exhaustive()
+    }
 }
 
 /// Ce qui s'affiche pour un groupe : une mesure, ou une absence dite.
@@ -58,8 +104,15 @@ pub enum Publication {
         iqr: f64,
         ecart_type_reechantillonnage: f64,
     },
+    /// Le motif, **et les chiffres qui l'ont déclenché**. Le §2.4 les veut
+    /// publiés : « les chiffres qui justifient la non-publication sont publiés,
+    /// la valeur non ». Un motif qui annonce le seuil sans la mesure se lit
+    /// comme la mesure. `None` quand la statistique n'est pas calculable —
+    /// jamais un zéro de remplissage.
     NonMesuree {
         motif: &'static str,
+        iqr: Option<f64>,
+        ecart_type_reechantillonnage: Option<f64>,
     },
 }
 
@@ -131,51 +184,72 @@ pub fn agreger(
 }
 
 fn publier(membres: &[Membre], reechantillons: &[Vec<f64>], retenus: &[usize]) -> Publication {
+    // Les deux dispersions sont calculées **avant** la règle de non-publication :
+    // ce sont elles qui la justifient, et le §2.4 exige qu'elles soient publiées
+    // même quand la valeur ne l'est pas. Le seuil d'effectif ne les supprime
+    // pas — positionnement.md §6 publie l'IQR de NI, neuf membres.
+    let positions: Vec<f64> = retenus.iter().map(|n| membres[*n].position).collect();
+    let centre = centre_et_dispersion(&positions);
+    let iqr = centre.map(|(_, iqr)| iqr);
+    let ecart_type = ecart_type_de_reechantillonnage(reechantillons, retenus);
     if retenus.len() < EFFECTIF_MINIMAL {
         return Publication::NonMesuree {
             motif: EFFECTIF_INSUFFISANT,
+            iqr,
+            ecart_type_reechantillonnage: ecart_type,
         };
     }
-    let positions: Vec<f64> = retenus.iter().map(|n| membres[*n].position).collect();
-    let (mediane_groupe, iqr) = match centre_et_dispersion(&positions) {
-        Some(mesure) => mesure,
-        None => {
-            return Publication::NonMesuree {
-                motif: EFFECTIF_INSUFFISANT,
-            };
-        }
+    let Some((mediane_groupe, iqr_mesure)) = centre else {
+        return Publication::NonMesuree {
+            motif: EFFECTIF_INSUFFISANT,
+            iqr: None,
+            ecart_type_reechantillonnage: ecart_type,
+        };
     };
-    if iqr > IQR_MAXIMAL {
+    if iqr_mesure > IQR_MAXIMAL {
         return Publication::NonMesuree {
             motif: DISPERSION_INTERNE,
+            iqr,
+            ecart_type_reechantillonnage: ecart_type,
         };
     }
-    let Some(ecart_type) = ecart_type_de_reechantillonnage(reechantillons, retenus) else {
+    let Some(ecart_type_mesure) = ecart_type else {
         return Publication::NonMesuree {
             motif: DISPERSION_REECHANTILLONNAGE,
+            iqr,
+            ecart_type_reechantillonnage: None,
         };
     };
-    if ecart_type > ECART_TYPE_MAXIMAL {
+    if ecart_type_mesure > ECART_TYPE_MAXIMAL {
         return Publication::NonMesuree {
             motif: DISPERSION_REECHANTILLONNAGE,
+            iqr,
+            ecart_type_reechantillonnage: ecart_type,
         };
     }
     Publication::Mesuree {
         mediane: mediane_groupe,
-        iqr,
-        ecart_type_reechantillonnage: ecart_type,
+        iqr: iqr_mesure,
+        ecart_type_reechantillonnage: ecart_type_mesure,
     }
 }
 
-/// Médiane et écart interquartile. Les quartiles sont les charnières de Tukey,
-/// avec la médiane basse de l'estimateur des deux côtés : **un seul estimateur
-/// de position dans toute la chaîne**, celui qui définit déjà l'ancrage.
+/// Médiane et écart interquartile. Les quartiles sont ceux des **moitiés
+/// exclusives, médiane basse** : la moitié basse et la moitié haute ne se
+/// recouvrent pas, et chacune rend sa médiane basse — **un seul estimateur de
+/// position dans toute la chaîne**, celui qui définit déjà l'ancrage.
 ///
-/// Aucune autre statistique d'ordre n'est calculée. Q1 et Q3 d'un groupe d'au
-/// moins dix membres ne sont la coordonnée d'aucun extrême identifiable ; un
-/// minimum et un maximum le seraient.
+/// Ce ne sont **pas** les charnières de Tukey, qui incluent la médiane dans
+/// les deux moitiés sur un effectif impair. L'estimateur retenu est légitime ;
+/// c'est le nom qui était faux, corrigé le 2026-08-28.
+///
+/// Aucune autre statistique d'ordre n'est calculée. En deçà de six membres, Q1
+/// est le minimum : l'IQR y porterait la coordonnée d'un membre identifiable
+/// (I19), et rien n'est calculé. Au-delà, l'IQR est une différence et non une coordonnée — il est
+/// calculé même sous le seuil d'effectif, parce que c'est lui qui justifie la
+/// non-publication (§2.4).
 fn centre_et_dispersion(positions: &[f64]) -> Option<(f64, f64)> {
-    if positions.len() < EFFECTIF_MINIMAL {
+    if positions.len() < MEMBRES_MINIMAUX_POUR_LIQR {
         return None;
     }
     let mut triees = positions.to_vec();
@@ -242,11 +316,22 @@ pub fn rendre(positions: &[Position]) -> String {
                     ligne.groupe, ligne.effectif_retenu
                 );
             }
-            Publication::NonMesuree { motif } => {
+            // Une ligne `N` porte son motif **et** les chiffres qui l'ont
+            // déclenché : un motif seul se lit comme un seuil, pas comme une
+            // mesure (§2.4). `-` là où la statistique n'est pas calculable.
+            Publication::NonMesuree {
+                motif,
+                iqr,
+                ecart_type_reechantillonnage,
+            } => {
+                let chiffre = |x: Option<f64>| x.map_or("-".to_owned(), |v| format!("{v:.4}"));
                 let _ = writeln!(
                     sortie,
-                    "N\t{}\t{}\t{motif}",
-                    ligne.groupe, ligne.effectif_retenu
+                    "N\t{}\t{}\t{motif}\t{}\t{}",
+                    ligne.groupe,
+                    ligne.effectif_retenu,
+                    chiffre(*iqr),
+                    chiffre(*ecart_type_reechantillonnage)
                 );
             }
         }

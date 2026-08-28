@@ -11,8 +11,8 @@ mod commun;
 use commun::T2;
 use contrepoint::agregation::{
     DISPERSION_INTERNE, DISPERSION_REECHANTILLONNAGE, ECART_TYPE_MAXIMAL, EFFECTIF_INSUFFISANT,
-    EFFECTIF_MINIMAL, IQR_MAXIMAL, Membre, Publication, VOTES_MINIMAUX, agreger, groupes_valides,
-    rendre,
+    EFFECTIF_MINIMAL, IQR_MAXIMAL, MEMBRES_MINIMAUX_POUR_LIQR, Membre, Publication, VOTES_MINIMAUX,
+    agreger, groupes_valides, rendre,
 };
 use serde_json::Value;
 
@@ -67,13 +67,13 @@ fn mesure(publication: &Publication) -> (f64, f64, f64) {
             iqr,
             ecart_type_reechantillonnage,
         } => (*mediane, *iqr, *ecart_type_reechantillonnage),
-        Publication::NonMesuree { motif } => panic!("groupe non mesuré : {motif}"),
+        Publication::NonMesuree { motif, .. } => panic!("groupe non mesuré : {motif}"),
     }
 }
 
 fn motif(publication: &Publication) -> &str {
     match publication {
-        Publication::NonMesuree { motif } => motif,
+        Publication::NonMesuree { motif, .. } => motif,
         Publication::Mesuree { mediane, .. } => panic!("groupe mesuré à {mediane}"),
     }
 }
@@ -135,7 +135,8 @@ fn dispersion_publiee_est_iqr_et_reechantillonnage() {
     let tirages = reechantillons(&liste, &[0.010, -0.010, 0.0, 0.020]);
     let resultat = agreger(&liste, &tirages, &[LFI.to_owned()], DATE);
     let (_, iqr, ecart_type) = mesure(&resultat[0].publication);
-    // Charnières de Tukey sur douze valeurs 0,00 … 0,11 : Q1 = 0,02, Q3 = 0,08.
+    // Quartiles par moitiés exclusives, médiane basse, sur douze valeurs 0,00 … 0,11 :
+    // moitié basse 0,00 … 0,05 → Q1 = 0,02 ; moitié haute 0,06 … 0,11 → Q3 = 0,08.
     assert!(
         (iqr - 0.06).abs() <= T2,
         "AGR-03 : écart interquartile attendu 0,06, obtenu {iqr}"
@@ -183,6 +184,23 @@ fn regle_de_non_publication() {
         DISPERSION_REECHANTILLONNAGE,
         "AGR-04 : écart-type de rééchantillonnage au-delà de {ECART_TYPE_MAXIMAL}"
     );
+
+    // Zéro pli, puis un seul pli. Avec un pli la somme des carrés vaut zéro et
+    // un écart-type de 0,0000 se publierait — exactement la dispersion inventée
+    // que le module interdit. Avec zéro pli c'est un NaN, et un NaN passe tous
+    // les seuils : `NaN > 0,05` est faux.
+    let serein = membres(LFI, &serre(-1.0, 0.05), 900);
+    let un_pli: Vec<Vec<f64>> = vec![serein.iter().map(|m| m.position).collect()];
+    for tirages in [Vec::new(), un_pli] {
+        let combien = tirages.len();
+        let resultat = agreger(&serein, &tirages, &[LFI.to_owned()], DATE);
+        assert_eq!(
+            motif(&resultat[0].publication),
+            DISPERSION_REECHANTILLONNAGE,
+            "AGR-04 : {combien} pli(s) — l'écart-type de rééchantillonnage n'est pas \
+             mesurable, il ne se publie pas à 0,0000"
+        );
+    }
 
     // Effectif retenu insuffisant.
     let petit = membres(LFI, &[-1.0, -0.99, -0.98, -0.97, -0.96], 900);
@@ -341,5 +359,120 @@ fn deux_uid_pour_une_meme_entite_ne_sont_pas_fusionnes_par_lestimateur() {
     );
     for ligne in &resultat {
         assert_eq!(ligne.effectif_retenu, 12, "AGR-09 : effectifs non cumulés");
+    }
+}
+
+/// AGR-10 — l'écart-type de rééchantillonnage est celui du **jackknife**,
+/// `√((K−1)/K · Σ(θₖ − θ̄)²)`, et non l'écart-type d'échantillon du bootstrap,
+/// `√(Σ(θₖ − θ̄)²/(K−1))`. Les deux diffèrent d'un facteur 1,5 exactement sur
+/// quatre plis.
+///
+/// Ce qui casse si le test disparaît : la construction des plis vit dans
+/// `examples/verification-corpus.rs`, que la CI n'exécute pas. Sans ce test le
+/// facteur n'est retenu par rien, et le pipeline peut passer au bootstrap —
+/// donc à un générateur aléatoire — sans qu'aucune porte ne morde.
+#[test]
+fn ecart_type_de_reechantillonnage_est_celui_du_jackknife() {
+    let liste = membres(LFI, &serre(-0.5, 0.05), 900);
+    // Quatre plis, chacun constant sur les douze membres retenus : la médiane
+    // du pli **est** la valeur écrite ici. Moyenne 0, Σ(θₖ − θ̄)² = 0,0010.
+    let medianes = [-0.02, -0.01, 0.01, 0.02];
+    let tirages: Vec<Vec<f64>> = medianes.iter().map(|m| vec![*m; liste.len()]).collect();
+    let resultat = agreger(&liste, &tirages, &[LFI.to_owned()], DATE);
+    let (_, _, ecart_type) = mesure(&resultat[0].publication);
+    // √(3/4 · 0,0010) = 0,027386127875258306.
+    // Le bootstrap donnerait √(0,0010/3) = 0,018257418583505537.
+    assert!(
+        (ecart_type - 0.027_386_127_875_258_306).abs() <= T2,
+        "AGR-10 : jackknife attendu 0,0273861278752583, obtenu {ecart_type} — \
+         0,0182574185835055 est le bootstrap"
+    );
+}
+
+/// AGR-11 [C] — le `Debug` de `Membre` n'apparie **jamais** un acteur et sa
+/// position. AGR-01 ne couvre que la chaîne rendue : un `dbg!(&membre)`, un
+/// `{:?}` dans un message d'erreur ou une trace sur la sortie d'erreur
+/// échappent à ce rempart-là.
+///
+/// Ce qui casse si le test disparaît : `#[derive(Debug)]` revient en une ligne
+/// et publie une coordonnée individuelle (ADR 0000 §2, RG-41).
+#[test]
+fn debug_de_membre_nexpose_pas_la_position() {
+    let membre = Membre {
+        acteur: "PA793290".to_owned(),
+        groupe: RN.to_owned(),
+        votes_exprimes: 900,
+        position: -0.987_654_321,
+    };
+    let trace = format!("{membre:?}");
+    assert!(
+        trace.contains("PA793290") && trace.contains(RN),
+        "AGR-11 : l'acteur et son groupe restent lisibles pour le débogage\n{trace}"
+    );
+    for interdit in ["position", "-0.98", "0.987"] {
+        assert!(
+            !trace.contains(interdit),
+            "AGR-11 : « {interdit} » dans le Debug de Membre — un dbg! publierait une \
+             coordonnée individuelle\n{trace}"
+        );
+    }
+}
+
+/// AGR-12 [C] — le seuil d'effectif du calcul de l'IQR protège la propriété
+/// « Q1 n'est pas le minimum », et non un nombre.
+///
+/// Avec la médiane basse, la moitié inférieure d'un groupe de quatre ou cinq
+/// membres compte deux éléments, dont la médiane basse **est** le minimum du
+/// groupe : l'IQR y porterait la coordonnée d'un membre identifiable (I19).
+/// Six est le premier effectif où ni Q1 ni Q3 n'est un extrême.
+///
+/// Le test recompte la propriété par balayage plutôt que de comparer une
+/// constante à elle-même : abaisser `MEMBRES_MINIMAUX_POUR_LIQR` le casse, et
+/// changer la méthode de médiane aussi.
+#[test]
+fn le_seuil_de_liqr_est_le_premier_effectif_sans_extreme() {
+    /// Réplique exacte des charnières de `agregation::centre_et_dispersion`,
+    /// qui est privée : moitiés hautes et basses, médiane basse sur chacune.
+    fn charnieres(triees: &[f64]) -> (f64, f64) {
+        let basse_de = |v: &[f64]| v[(v.len() - 1) / 2];
+        let moitie = triees.len() / 2;
+        (
+            basse_de(&triees[..moitie]),
+            basse_de(&triees[triees.len() - moitie..]),
+        )
+    }
+
+    let premier_sans_extreme = (2..=32)
+        .find(|n| {
+            let positions: Vec<f64> = (0..*n).map(|k| k as f64).collect();
+            let (q1, q3) = charnieres(&positions);
+            q1 != positions[0] && q3 != positions[positions.len() - 1]
+        })
+        .expect("AGR-12 : aucun effectif sans extrême sous 32, la méthode a changé");
+
+    assert_eq!(
+        premier_sans_extreme, MEMBRES_MINIMAUX_POUR_LIQR,
+        "AGR-12 : le seuil vaut {MEMBRES_MINIMAUX_POUR_LIQR}, alors que Q1 ou Q3 \
+         reste un extrême jusqu'à {} membres exclus. Toute valeur inférieure \
+         publie une borne d'étendue (I19)",
+        premier_sans_extreme
+    );
+
+    // Et le comportement observable : sous le seuil, rien n'est calculé.
+    for effectif in 2..MEMBRES_MINIMAUX_POUR_LIQR {
+        let positions: Vec<f64> = (0..effectif).map(|k| k as f64 / 100.0).collect();
+        let liste = membres(LFI, &positions, 900);
+        let tirages = reechantillons(&liste, &[0.010, -0.010]);
+        let resultat = agreger(&liste, &tirages, &[LFI.to_owned()], DATE);
+        match &resultat[0].publication {
+            Publication::NonMesuree { iqr, .. } => assert!(
+                iqr.is_none(),
+                "AGR-12 : à {effectif} membres, aucun IQR ne doit être calculé"
+            ),
+            Publication::Mesuree { mediane, .. } => panic!(
+                "AGR-12 : groupe de {effectif} membres mesuré à {mediane}, \
+                 alors que Q1 y est le minimum du groupe"
+            ),
+        }
     }
 }

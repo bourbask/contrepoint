@@ -10,7 +10,7 @@ mod commun;
 use commun::T2;
 use contrepoint::estimateur::{
     GAIN_MINIMAL, MOTIF_POUVOIR_EXPLICATIF, MOTIF_SEPARATION, SEPARATION_MAXIMALE,
-    SEPARATION_MINIMALE, ajuster, ancrer, ancres, mediane,
+    SEPARATION_MINIMALE, ajuster, ancrer, ancrer_sur_groupes, ancres, mediane,
 };
 use serde_json::Value;
 
@@ -534,5 +534,61 @@ fn alarme_pouvoir_explicatif() {
     assert!(
         ajustement.alarmes().contains(&MOTIF_POUVOIR_EXPLICATIF),
         "EST-16 : l'alarme de pouvoir explicatif doit se déclencher"
+    );
+}
+
+/// EST-17 — `ancrer_sur_groupes` est le **seul** chemin d'une position brute
+/// vers une position publiable : il calcule les deux médianes d'ancrage sur le
+/// même ensemble que la médiane publiée — les membres au-delà de 200 votes
+/// exprimés — et il bloque si un groupe d'ancrage n'a aucun membre retenu.
+///
+/// Ce qui casse si le test disparaît : l'ancrage vivait dans
+/// `examples/verification-corpus.rs`, hors de portée de la CI. Un appelant
+/// pouvait passer à `agreger` des positions non ancrées sans qu'aucun test ne
+/// le voie, et la coïncidence des deux ensembles de médianes — mesurée à
+/// +1,0002 pour l'ancre droite quand elle est rompue — n'était retenue par rien.
+#[test]
+fn ancrage_sur_les_medianes_des_deux_groupes_ancres() {
+    // Positions brutes. Les deux derniers membres de RN sont à 12 votes
+    // exprimés et à 9,0 : ils ne doivent peser ni sur la médiane d'ancrage ni
+    // sur l'échelle.
+    let brutes = [
+        -0.90, -0.85, -0.80, -0.75, -0.70, 0.70, 0.75, 0.80, 0.85, 0.90, 9.0, 9.0,
+    ];
+    let groupes = [LFI, LFI, LFI, LFI, LFI, RN, RN, RN, RN, RN, RN, RN];
+    let votes = [900, 900, 900, 900, 900, 900, 900, 900, 900, 900, 12, 12];
+
+    let ancrees = ancrer_sur_groupes(&brutes, &groupes, &votes, LFI, RN).expect("ancrage");
+    // Médiane basse de LFI sur les cinq retenus : −0,80 ; de RN : +0,80.
+    // x' = (2x − (−0,80) − 0,80) / 1,60 = x / 0,80.
+    assert!(
+        (ancrees[2] + 1.0).abs() <= T2 && (ancrees[7] - 1.0).abs() <= T2,
+        "EST-17 : les deux médianes d'ancrage valent exactement ∓1, obtenu {} et {}",
+        ancrees[2],
+        ancrees[7]
+    );
+    for (n, brute) in brutes.iter().enumerate() {
+        assert!(
+            (ancrees[n] - brute / 0.80).abs() <= T2,
+            "EST-17 : transformation affine unique, position {n}"
+        );
+    }
+
+    // Le seuil de votes porte bien sur la médiane d'ancrage : sans lui, la
+    // médiane de RN passerait de 0,80 à 0,85 et l'ancre ne vaudrait plus +1.
+    let tous_a_900 = [900; 12];
+    let sans_seuil = ancrer_sur_groupes(&brutes, &groupes, &tous_a_900, LFI, RN).expect("ancrage");
+    assert!(
+        (sans_seuil[7] - 1.0).abs() > 0.01,
+        "EST-17 : le cas de test doit séparer les deux ensembles de médianes"
+    );
+
+    // Groupe d'ancrage sans membre retenu : erreur bloquante, jamais une ancre
+    // de remplacement choisie en silence.
+    let erreur = ancrer_sur_groupes(&brutes, &groupes, &votes, LFI, DEM)
+        .expect_err("EST-17 : un groupe d'ancrage vide doit bloquer");
+    assert!(
+        erreur.contains(DEM),
+        "EST-17 : l'erreur nomme le groupe d'ancrage introuvable, obtenu « {erreur} »"
     );
 }

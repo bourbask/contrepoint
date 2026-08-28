@@ -277,8 +277,10 @@ fn fam_06_citation_ches_mot_pour_mot() {
     }
     let mut ligne = experts().remove(0);
     ligne["schema"] = json!("contrepoint/preuve/1");
-    ligne["id"] = json!("0".repeat(64));
     ligne["entrees"][0]["citation"] = json!("Rovny et al. 2025.");
+    // `id` recalculé après la mutation : un `id` faux ferait tomber le refus sur
+    // I8, et le test passerait au vert sans jamais exercer I23.
+    ligne["id"] = json!(contrepoint::preuves::identifiant(&ligne).expect("`id` recalculable"));
     assert!(
         verifier(&ligne).iter().any(|r| r.starts_with("I23")),
         "une citation abrégée est refusée : {:?}",
