@@ -2,7 +2,7 @@
 //! seul**, une ligne = une position mesurée.
 //!
 //! Spécification : `docs/brique0/contrats.md` §2, §3, §6 et §7. Schéma formel :
-//! `schemas/preuve-1.schema.json`.
+//! `schemas/preuve-2.schema.json`.
 //!
 //! **Il n'existe pas de champ de position hors d'une ligne.** [`CLES`] est la
 //! liste close des clés admises, et le producteur refuse d'en écrire une autre
@@ -21,16 +21,28 @@ use serde_json::Value;
 use std::collections::BTreeSet;
 use std::path::Path;
 
-/// `contrepoint/preuve/1`. Le `schema` est **sur la ligne** et pas dans un
+/// `contrepoint/preuve/2`. Le `schema` est **sur la ligne** et pas dans un
 /// en-tête de fichier : un JSONL en ajout seul n'a pas d'en-tête à mettre à
 /// jour, et deux majeurs cohabitent dans le même fichier (§5).
-pub const SCHEMA: &str = "contrepoint/preuve/1";
+///
+/// Le majeur est passé de `/1` à `/2` au contrat `0.6.0` : retirer `contrat` de
+/// la ligne est la ligne « champ supprimé » du §5, qui tarife un `schema`
+/// majeur. Le `/1` reste décrit par `schemas/preuve-1.schema.json`, figé, pour
+/// qui valide un artefact récupéré avant la bascule.
+pub const SCHEMA: &str = "contrepoint/preuve/2";
 
 /// L'ordre des clés du §2.1, qui est aussi l'ordre d'écriture du §7.
+///
+/// **`contrat` n'y est pas, et ne doit pas y revenir** (contrat 0.6.0). La
+/// version du contrat décrit le **format**, pas la **mesure** : dans une ligne
+/// dont l'identité est celle d'une mesure, elle produisait à chaque bascule 34
+/// lignes de même `id` et de contenu différent — I8 arrêtait le pipeline, et il
+/// fallait réécrire un registre en ajout seul, donc enfreindre I15. C'est
+/// arrivé en `0.4.0` puis en `0.5.0`. Elle vit dans le manifeste et dans
+/// l'instantané, qui sont les artefacts qui décrivent le format.
 pub const CLES: &[&str] = &[
     "schema",
     "id",
-    "contrat",
     "famille",
     "entite",
     "valeur",
@@ -154,7 +166,7 @@ pub const TOLERANCE_ANCRAGE: f64 = 1e-12;
 /// champ : deux clés différentes ne peuvent pas produire la même chaîne.
 ///
 /// Ce qui y est, et pourquoi : tout ce qui **détermine la valeur**. Ce qui n'y
-/// est pas — `valeur`, `date_calcul`, `contrat`, `logiciel`, `entrees[].url`,
+/// est pas — `valeur`, `date_calcul`, `logiciel`, `entrees[].url`,
 /// `entrees[].empreinte_sha256`, `producteur`, `derniere_mise_a_jour`,
 /// `citation` — ne détermine aucune valeur, et l'y mettre ré-émettrait des
 /// lignes sans cause.
@@ -500,9 +512,6 @@ fn i1_structure(ligne: &Value, refus: &mut Vec<String>) {
             "I1 : `schema` vaut {} et non {SCHEMA}",
             ligne["schema"]
         ));
-    }
-    if !semver(&ligne["contrat"]) {
-        refus.push("I1 : `contrat` n'est pas une version de la forme X.Y.Z".to_owned());
     }
     if !hexa64(&ligne["id"]) {
         refus.push("I1 : `id` n'est pas 64 hexadécimaux minuscules".to_owned());

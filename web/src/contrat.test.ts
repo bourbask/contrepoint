@@ -289,6 +289,13 @@ describe('EXP-06 schema_publie_et_verifie_a_la_construction', () => {
 
   test('un majeur de schema inconnu est refuse, jamais rendu en « non mesuré »', () => {
     expect(() => verifierSchemas(manifeste.schemas)).not.toThrow()
+    // Versant front de PRE-16 : le retrait de `contrat` a fait passer la ligne
+    // de preuve a `contrepoint/preuve/2`. Le majeur precedent n'est plus connu
+    // de ce front, et un artefact qui l'annonce est refuse en entier. Sans
+    // cette ligne, remettre `/1` dans SCHEMAS_CONNUS survit a toute la suite :
+    // une liste plus large ne fait echouer aucun autre test.
+    expect(manifeste.schemas).toContain('contrepoint/preuve/2')
+    expect(() => verifierSchemas(['contrepoint/preuve/1'])).toThrow(ContratRefuse)
     expect(() => verifierSchemas([...manifeste.schemas, 'contrepoint/instantane/2']))
       .toThrow(ContratRefuse)
     try {
@@ -342,6 +349,29 @@ describe('EXP-08 aucune_couleur_seule_porteuse_dinformation', () => {
     for (const s of disposition.systemes)
       for (const v of s.voix)
         expect(v.rang).toBe(manifeste.familles.findIndex((f) => f.id === v.famille))
+  })
+})
+
+describe('EXP-12 contrat_porte_par_le_format_jamais_par_la_mesure', () => {
+  test('le format porte `contrat`, la mesure ne le porte pas', () => {
+    // Versant front de PRE-15. Le champ vivait aussi dans la ligne de preuve,
+    // ou il n'entre pas dans la cle de deduplication du §3 : chaque bascule de
+    // version ré-emettait 34 lignes de meme `id` et de contenu different, I8
+    // arretait le pipeline, et le registre en ajout seul devait etre reecrit.
+    expect(manifeste.contrat).toMatch(/^\d+\.\d+\.\d+$/)
+    expect(instantane.contrat).toMatch(/^\d+\.\d+\.\d+$/)
+
+    // Aucune ligne servie au front ne le porte.
+    expect(eclats.length).toBeGreaterThan(0)
+    for (const l of eclats) expect(Object.keys(l)).not.toContain('contrat')
+
+    // Et le TYPE ne le declare plus. Sans cette ligne, remettre `contrat: string`
+    // dans `Preuve` survit a toute la suite : vitest efface les types, et les
+    // fixtures sont lues par un `as Preuve` qui ne verifie rien. Ici le type
+    // conditionnel vaut `never` des que la cle revient, et `npx tsc --noEmit`
+    // tombe — c'est la porte qui garde la propriete cote front.
+    const sansContrat: 'contrat' extends keyof Preuve ? never : Preuve = eclats[0]!
+    expect(sansContrat.id).toBe(eclats[0]!.id)
   })
 })
 

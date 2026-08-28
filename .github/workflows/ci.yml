@@ -143,17 +143,17 @@ jobs:
             # -r resout les $ref inter-fichiers : manifeste-1 et instantane-1
             # referencent des $defs de preuve-1. Sans lui la validation echoue.
             npx --yes ajv-cli@5.0.0 validate --spec=draft2020 --strict=true \
-              -r schemas/preuve-1.schema.json -s "$s" -d "$a" || echec=1
+              -r schemas/preuve-2.schema.json -s "$s" -d "$a" || echec=1
             echo "::endgroup::"
           done
           # Le registre de preuves est du JSONL : une ligne, un document.
-          if [ -f data/preuves/positions.jsonl ] && [ -f schemas/preuve-1.schema.json ]; then
+          if [ -f data/preuves/positions.jsonl ] && [ -f schemas/preuve-2.schema.json ]; then
             n=0
             while IFS= read -r ligne; do
               n=$((n+1))
               printf '%s' "$ligne" > /tmp/ligne.json
               npx --yes ajv-cli@5.0.0 validate --spec=draft2020 --strict=true \
-                -s schemas/preuve-1.schema.json -d /tmp/ligne.json >/dev/null \
+                -s schemas/preuve-2.schema.json -d /tmp/ligne.json >/dev/null \
                 || { echo "::error file=data/preuves/positions.jsonl,line=$n::ligne invalide"; echec=1; }
             done < data/preuves/positions.jsonl
             echo "$n lignes de preuve validées"

@@ -297,11 +297,9 @@ fn ligne(
     entrees: &Value,
     date_source: &str,
     date_calcul: &str,
-    contrat: &str,
     version_logicielle: &str,
 ) -> Value {
     json!({
-        "contrat": contrat,
         "famille": famille,
         "entite": entite,
         "valeur": valeur,
@@ -334,7 +332,6 @@ pub fn lignes_experts(
     entrees: &Value,
     date_source: &str,
     date_calcul: &str,
-    contrat: &str,
     version_logicielle: &str,
 ) -> Result<Vec<Value>, String> {
     let echelle = json!({
@@ -381,7 +378,6 @@ pub fn lignes_experts(
             entrees,
             date_source,
             date_calcul,
-            contrat,
             version_logicielle,
         ));
     }
@@ -412,7 +408,6 @@ pub fn lignes_administratif(
     entrees: &Value,
     date_source: &str,
     date_calcul: &str,
-    contrat: &str,
     version_logicielle: &str,
 ) -> Result<Vec<Value>, String> {
     let echelle = json!({
@@ -461,7 +456,6 @@ pub fn lignes_administratif(
             entrees,
             date_source,
             date_calcul,
-            contrat,
             version_logicielle,
         ));
     }

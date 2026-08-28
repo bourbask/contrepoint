@@ -135,7 +135,7 @@ moyenne jamais deux familles, ne comble jamais une absence.
 
 Écrit une ligne JSONL par valeur ou par non-mesure, en ajout seul, avec entité,
 famille, échelle, période observée, dates, méthode, entrées empreintées, version
-du contrat et du logiciel. Valide chaque ligne contre `schemas/preuve-1.schema.json`
+du contrat et du logiciel. Valide chaque ligne contre `schemas/preuve-2.schema.json`
 et refuse toute clé hors schéma.
 
 **Ne fait pas :** ne modifie ni ne supprime jamais une ligne existante, n'écrit

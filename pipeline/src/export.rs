@@ -746,7 +746,7 @@ pub fn construire_manifeste(
     let manifeste = serde_json::json!({
         "schema": SCHEMA_MANIFESTE,
         "contrat": contrat,
-        "schemas": ["contrepoint/preuve/1", SCHEMA_INSTANTANE, SCHEMA_ECLAT],
+        "schemas": [crate::preuves::SCHEMA, SCHEMA_INSTANTANE, SCHEMA_ECLAT],
         "date_arretee": date_arretee(lignes)?,
         "licence": LICENCE,
         "mention_paternite": mention,

@@ -43,7 +43,7 @@ function artefacts(racine) {
  */
 export function verifier(racineSchemas, racineArtefacts, remplacements = {}) {
   const ajv = new Ajv2020({ strict: true, allErrors: true })
-  ajv.addSchema(schema(racineSchemas, 'preuve-1.schema.json'))
+  ajv.addSchema(schema(racineSchemas, 'preuve-2.schema.json'))
   /** @type {Map<string, import('ajv').ValidateFunction>} */
   const compiles = new Map()
   /** @type {string[]} */

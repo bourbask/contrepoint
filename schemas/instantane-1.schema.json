@@ -8,12 +8,12 @@
   "required": ["schema", "contrat", "id", "chambre", "legislature", "date", "date_arretee", "ancrage", "bandes", "sans_mesure"],
   "properties": {
     "schema": { "const": "contrepoint/instantane/1" },
-    "contrat": { "$ref": "preuve-1.schema.json#/$defs/semver" },
+    "contrat": { "$ref": "preuve-2.schema.json#/$defs/semver" },
     "id": { "type": "string", "pattern": "^[a-z0-9-]+$" },
     "chambre": { "enum": ["AN"] },
     "legislature": { "type": "string", "pattern": "^[0-9]{1,2}$" },
     "date": {
-      "$ref": "preuve-1.schema.json#/$defs/date",
+      "$ref": "preuve-2.schema.json#/$defs/date",
       "description": "Date de référence de l'agrégation. Un groupe dont la période de validité ne la couvre pas est absent, jamais présent avec un effectif résiduel (ingestion-votes.md §8)."
     },
     "date_arretee": {
@@ -39,7 +39,7 @@
         "additionalProperties": false,
         "required": ["id", "libelle", "marqueurs"],
         "properties": {
-          "id": { "$ref": "preuve-1.schema.json#/properties/entite" },
+          "id": { "$ref": "preuve-2.schema.json#/properties/entite" },
           "libelle": { "type": "string", "minLength": 1, "maxLength": 40 },
           "composition_partielle": {
             "type": "array",
@@ -50,7 +50,7 @@
               "additionalProperties": false,
               "required": ["entite", "libelle"],
               "properties": {
-                "entite": { "$ref": "preuve-1.schema.json#/properties/entite" },
+                "entite": { "$ref": "preuve-2.schema.json#/properties/entite" },
                 "libelle": { "type": "string", "minLength": 1, "maxLength": 40 }
               }
             }
@@ -71,9 +71,9 @@
         "additionalProperties": false,
         "required": ["entite", "libelle", "motif_code", "motif"],
         "properties": {
-          "entite": { "$ref": "preuve-1.schema.json#/properties/entite" },
+          "entite": { "$ref": "preuve-2.schema.json#/properties/entite" },
           "libelle": { "type": "string", "minLength": 1, "maxLength": 40 },
-          "motif_code": { "$ref": "preuve-1.schema.json#/properties/motif_code" },
+          "motif_code": { "$ref": "preuve-2.schema.json#/properties/motif_code" },
           "motif": { "type": "string", "minLength": 1, "maxLength": 140 }
         }
       }
@@ -85,7 +85,7 @@
       "additionalProperties": false,
       "allOf": [
         {
-          "description": "I6 — valeur et code jamais tous deux présents. Recopié de preuve-1.schema.json : l'instantané est le seul fichier que le front lit, un marqueur qui passe ici sans passer là s'afficherait « non mesuré » sans motif.",
+          "description": "I6 — valeur et code jamais tous deux présents. Recopié de preuve-2.schema.json : l'instantané est le seul fichier que le front lit, un marqueur qui passe ici sans passer là s'afficherait « non mesuré » sans motif.",
           "not": {
             "properties": {
               "valeur": { "type": "number" },
@@ -118,8 +118,8 @@
         "valeur": { "type": ["number", "null"] },
         "valeur_code": { "type": ["string", "null"], "minLength": 1 },
         "libelle": { "type": "string", "minLength": 1, "maxLength": 40 },
-        "motif_code": { "$ref": "preuve-1.schema.json#/properties/motif_code" },
-        "motif": { "$ref": "preuve-1.schema.json#/$defs/phrase" },
+        "motif_code": { "$ref": "preuve-2.schema.json#/properties/motif_code" },
+        "motif": { "$ref": "preuve-2.schema.json#/$defs/phrase" },
         "dispersion": {
           "type": ["object", "null"],
           "additionalProperties": false,
@@ -131,7 +131,7 @@
           }
         },
         "preuve": {
-          "$ref": "preuve-1.schema.json#/$defs/sha256",
+          "$ref": "preuve-2.schema.json#/$defs/sha256",
           "description": "`id` de la ligne du registre. Le chemin de l'éclat en dérive : preuves/<deux premiers caractères>.json."
         }
       }

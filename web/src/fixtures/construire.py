@@ -24,7 +24,7 @@ OUT = f"{W}/web/src/fixtures"
 CON = open(f"{W}/docs/brique0/contrats.md", encoding="utf-8").read()
 
 bloc = CON[CON.index("### 2.6"):CON.index("### 2.7")]
-textes_reels = re.findall(r'^\{"schema":"contrepoint/preuve/1".*\}$', bloc, re.M)
+textes_reels = re.findall(r'^\{"schema":"contrepoint/preuve/2".*\}$', bloc, re.M)
 reelles = {json.loads(t)["id"]: t for t in textes_reels}
 par_cle = {}
 for t in textes_reels:
@@ -45,7 +45,7 @@ def identifiant(l):
     ])
     return hashlib.sha256(cle.encode("utf-8")).hexdigest()
 
-ORDRE = ["schema","id","contrat","famille","entite","valeur","valeur_code","echelle",
+ORDRE = ["schema","id","famille","entite","valeur","valeur_code","echelle",
          "motif_code","motif","dispersion","observation","date_source","date_calcul",
          "methode","epingles","entrees","logiciel"]
 
@@ -211,7 +211,7 @@ for bid in sorted(marqueurs, key=cle_bande):
     bandes.append(bande)
 
 instantane = {
-    "schema": "contrepoint/instantane/1", "contrat": "0.5.0", "id": "an17-2026-07-21",
+    "schema": "contrepoint/instantane/1", "contrat": "0.6.0", "id": "an17-2026-07-21",
     "chambre": "AN", "legislature": "17", "date": "2026-07-21",
     "date_arretee": "2026-08-27T00:00:00Z",
     "ancrage": {"famille": "votes", "ancre_gauche": "groupe.an17.lfi-nfp",
@@ -276,8 +276,8 @@ octets = len(texte_inst.encode("utf-8"))
 empreinte = hashlib.sha256(texte_inst.encode("utf-8")).hexdigest()
 
 manifeste = {
-    "schema": "contrepoint/manifeste/1", "contrat": "0.5.0",
-    "schemas": ["contrepoint/preuve/1", "contrepoint/instantane/1", "contrepoint/eclat-preuves/1"],
+    "schema": "contrepoint/manifeste/1", "contrat": "0.6.0",
+    "schemas": ["contrepoint/preuve/2", "contrepoint/instantane/1", "contrepoint/eclat-preuves/1"],
     "date_arretee": "2026-08-27T00:00:00Z",
     "licence": "Licence Ouverte / Open Licence (Etalab)",
     "mention_paternite": mention_paternite(),
