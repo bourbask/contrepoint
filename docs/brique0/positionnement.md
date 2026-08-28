@@ -20,7 +20,7 @@ reproductibles par les commandes du §1.
 7. **Un deuxième axe existe et il est fort** (norme relative 0,652, il absorbe la moitié du résidu du premier). Il n'oppose pas la gauche à la droite mais la majorité relative à ses oppositions. Ne pas le mesurer, c'est laisser croire que la première dimension est tout le comportement de vote.
 8. **La comparaison entre législatures n'est pas résoluble proprement** en v0 : les deux axes ne vivent pas dans le même espace, et l'ancrage sur groupes disparus est impossible. Ce qui s'affiche à la place est énoncé au §7.
 9. **Aucune projection sur l'échelle CHES ni sur RILE.** Les trois familles ne sont pas moyennées, elles ne sont pas non plus recalibrées l'une sur l'autre : recalibrer, c'est moyenner avec une étape de plus.
-10. **Un chiffre de l'ADR 0001 n'est pas reproductible** : le « gain du rang 1 de 2,1 % » y est en réalité de 59,1 %, invariant au codage. Point de blocage listé au §11.
+10. **Le gain du rang 1 vaut 60,8 % du résidu** après constante par scrutin, soit 51,5 % de la variance totale — recompté le 2026-08-27 sur le corpus retenu de 7 979 scrutins ([verification-2026-08-27.md](verification-2026-08-27.md) §3) et acté par [../adr/0003-arbitrages-de-coherence.md](../adr/0003-arbitrages-de-coherence.md) §3. Les 2,1 % de l'ADR 0001 étaient faux d'un facteur trente ; les 59,1 % que ce document portait sont une mesure antérieure sur une autre matrice d'entrée, écartée au §11.
 
 ---
 
@@ -45,8 +45,8 @@ curl -C - -O https://data.assemblee-nationale.fr/static/openData/repository/16/l
 | 5 | Conformité à la position majoritaire du groupe | **93,00 %** (94,28 % hors abstentions) |
 | 6 | Classification correcte, règle « position majoritaire du groupe » | **94,28 %** |
 | 7 | Classification correcte, axe rang 1 + coupure optimale par scrutin | **95,41 %** |
-| 8 | Part de la somme des carrés prise par une constante par scrutin | 19,8 % |
-| 9 | Gain du rang 1 sur le résidu après cette constante | **59,1 %** (60,9 % hors abstentions ; identique en codage 0/1) |
+| 8 | Part de la somme des carrés prise par une constante par scrutin | **15,2 %**, corpus retenu (7 979 scrutins), recomptage du 2026-08-27. La mesure d'exploration de ce tableau donnait 19,8 % : deux matrices d'entrée, pas deux convergences — §11 |
+| 9 | Gain du rang 1 sur le résidu après cette constante | **60,8 %**, corpus retenu (7 979 scrutins), soit 51,5 % de la variance totale, recomptage du 2026-08-27. La mesure d'exploration donnait 59,1 % — 60,9 % hors abstentions, identique en codage 0/1 — §11 |
 | 10 | Gain du rang 2 sur le résidu après le rang 1 | **50,1 %**, norme relative du second axe **0,652** |
 | 11 | Corrélation entre les deux axes | 0,081 |
 | 12 | Indétermination du signe, 4 initialisations | **2 sur 4 inversées**, \|corrélation\| = 1,000000 |
@@ -243,7 +243,7 @@ relative d'un côté, ses oppositions de l'autre, RN et LFI-NFP au même pôle. 
 corrélation avec le premier axe est de 0,081 : les deux structures coexistent
 dans la même matrice. Le premier axe range correctement les groupes de gauche à
 droite — il faut le dire, c'est un argument de validité — mais il ne le fait
-qu'avec 59,1 % du résidu, et une structure procédurale de poids comparable
+qu'avec 60,8 % du résidu, et une structure procédurale de poids comparable
 se tient juste derrière.
 
 ### Coût, dépendances, déterminisme
@@ -292,8 +292,9 @@ v[i,j] ≈ b[j] + x[i] · y[j]
 Le choix `abstention = 0` est une décision, pas une évidence : elle place
 l'abstention à mi-distance du pour et du contre, ce qui est un modèle. Il est
 retenu parce qu'il est vérifié sans effet sur la structure — hors abstentions,
-le gain du rang 1 passe de 59,1 % à 60,9 % et l'ordre des groupes est inchangé —
-et parce que l'écarter reviendrait à traiter l'abstention comme une absence,
+le gain du rang 1 passe de 59,1 % à 60,9 % (mesure d'exploration, une seule
+matrice d'entrée pour les deux codages, §11) et l'ordre des groupes est
+inchangé — et parce que l'écarter reviendrait à traiter l'abstention comme une absence,
 c'est-à-dire à confondre les deux choses que methode.md sépare. Le codage est
 consigné dans la ligne de preuve.
 
@@ -368,7 +369,7 @@ détecte au lieu de publier le résultat.
 | Contrôle | Bande d'acceptation | Action si hors bande |
 |---|---|---|
 | `s2/s1` | **0,10 ≤ s2/s1 ≤ 0,90** | Publication de la famille « votes » suspendue, colonne affichée « non mesuré » |
-| Gain du rang 1 sur le résidu après constante par scrutin | **≥ 0,40** (mesuré 0,591) | Idem |
+| Gain du rang 1 sur le résidu après constante par scrutin | **≥ 0,40** (mesuré 0,608, corpus retenu, recomptage du 2026-08-27) | Idem |
 | Corrélation de rang des médianes de groupe contre l'ordre de référence figé | **≥ 0,95** (mesuré 1) | Idem |
 | Écart-type de rééchantillonnage de la médiane d'un groupe | **≤ 0,05** en unités ancrées | Ce groupe seul passe en « non mesuré » |
 
@@ -394,8 +395,10 @@ chaîne.
 ### Dispersion publiée : écart interquartile et rééchantillonnage, pas variance ni étendue
 
 Une variance sur un axe sans unité n'est pas lisible et invite à la comparaison
-entre exécutions, qui n'a pas de sens. En unités ancrées, où l'amplitude
-publiable est 2,0 par construction :
+entre exécutions, qui n'a pas de sens. En **unités ancrées**, où l'**amplitude
+ancrée** est 2,0 par construction — l'amplitude **brute** d'un ajustement, elle,
+n'est pas 2,0 et dépend de l'ajustement : l'ADR 0001 §1.3 en mesurait 2,6 sur
+son tableau d'exploration. Corpus retenu, 7 979 scrutins, rattachement du §6 :
 
 | Groupe | n | Médiane ancrée | IQR | Écart-type de rééchantillonnage |
 |---|---|---|---|---|
@@ -415,9 +418,9 @@ publiable est 2,0 par construction :
 Trois lectures à porter sur le site, chacune vérifiable dans ce tableau :
 
 - **L'ordre obtenu correspond à l'ordre gauche-droite décrit par la littérature, sans qu'aucune étiquette n'ait été fournie au calcul.** C'est un argument de validité de la méthode.
-- **L'IQR d'un groupe constitué vaut 2 à 6 % de l'amplitude** : l'axe sépare les groupes, pas les députés — affirmation de methode.md, maintenant chiffrée.
-- **L'étendue n'est pas publiable.** Elle rendrait visible une limite réelle — un membre peu présent est ramené vers zéro et s'écarte fortement de la médiane de son groupe (§2) — mais un minimum et un maximum **sont** les coordonnées de deux membres du groupe. Sur un groupe de neuf membres, avec un code et un appariement publics, ces deux coordonnées sont réidentifiables en une exécution. L'IQR porte la même information sans exposer personne : sur un groupe constitué il vaut 2 à 6 % de l'amplitude, ce qui suffit à établir que l'axe sépare les groupes et non les députés.
-- **L'ancrage supprime l'essentiel du bruit.** Avant ancrage, l'écart-type de rééchantillonnage était proportionnel à la valeur du groupe — c'était du flottement d'échelle, pas de l'incertitude de position. Après ancrage il tombe entre 0,006 et 0,021, soit environ 1 % de l'amplitude.
+- **L'IQR d'un groupe constitué vaut 2 à 6 % de l'amplitude ancrée** : l'axe sépare les groupes, pas les députés — affirmation de methode.md, maintenant chiffrée.
+- **L'étendue n'est pas publiable.** Elle rendrait visible une limite réelle — un membre peu présent est ramené vers zéro et s'écarte fortement de la médiane de son groupe (§2) — mais un minimum et un maximum **sont** les coordonnées de deux membres du groupe. Sur un groupe de neuf membres, avec un code et un appariement publics, ces deux coordonnées sont réidentifiables en une exécution. L'IQR porte la même information sans exposer personne : sur un groupe constitué il vaut 2 à 6 % de l'amplitude ancrée, ce qui suffit à établir que l'axe sépare les groupes et non les députés.
+- **L'ancrage supprime l'essentiel du bruit.** Avant ancrage, l'écart-type de rééchantillonnage était proportionnel à la valeur du groupe — c'était du flottement d'échelle, pas de l'incertitude de position. Après ancrage il tombe entre 0,006 et 0,021, soit environ 1 % de l'amplitude ancrée.
 
 ### Règle de non-publication
 
@@ -560,7 +563,7 @@ la colonne « votes » s'affiche non mesurée et la v0 sort avec deux familles.
 | Non livré | Pourquoi |
 |---|---|
 | Position d'un député | Magnitude confondue avec l'assiduité (+0,336), 15,37 % des positions exprimées par délégation, et 94,28 % du comportement expliqué par le seul groupe |
-| Distance entre deux groupes lue comme un écart idéologique | L'échelle est ancrée sur deux groupes ; seuls l'ordre et les écarts relatifs à l'amplitude 2,0 ont un sens |
+| Distance entre deux groupes lue comme un écart idéologique | L'échelle est ancrée sur deux groupes ; seuls l'ordre et les écarts relatifs à l'amplitude ancrée 2,0 ont un sens |
 | Dérive, évolution, comparaison de dates | Le bloc central se déplace de 0,15 à 0,25 entre les deux moitiés de la même législature sans cause interprétable |
 | Position sur l'échelle CHES ou RILE | Recalibrer, c'est moyenner |
 | Position de NI et de LIOT | Dispersion interne au-delà du seuil publié |
@@ -571,18 +574,43 @@ la colonne « votes » s'affiche non mesurée et la v0 sort avec deux familles.
 
 ## 11. Points de blocage et `A VERIFIER`
 
-**Blocage 1 — contradiction avec l'ADR 0001 §1.3.** L'ADR affirme « le gain du
-terme rang 1 au-delà d'une simple constante par scrutin est de **2,1 %** de
-variance résiduelle ». Mesure obtenue ici sur le même jeu, même modèle :
-**59,1 %**. Le chiffre est invariant au codage (`+1/0/−1` ou `1/0`, avec ou sans
-les abstentions : 0,5912 / 0,5912 / 0,6095 / 0,6095) et un double centrage
-scrutin **et** député donne 0,6121 pour un axe corrélé à 0,998 au précédent.
-Aucune spécification plausible ne produit 2,1 %. Les positions de groupe de
-l'ADR, elles, sont reproduites à l'ordre près, donc l'estimateur y est correct :
-c'est la mesure d'ajustement qui est à reprendre. **À arbitrer avant que la
-phrase « l'axe ne résume qu'une petite part du comportement de vote » n'atteigne
-le site** — elle est fausse au sens où elle est écrite, la bonne formulation
-étant celle du §3 : l'axe explique bien le résidu, mais l'appartenance au groupe
+**Blocage 1 — gain du rang 1. ~~Bloquant~~ Acté le 2026-08-27** par
+[../adr/0003-arbitrages-de-coherence.md](../adr/0003-arbitrages-de-coherence.md)
+§3, sur le recomptage de
+[verification-2026-08-27.md](verification-2026-08-27.md) §3.
+
+**Valeur normative : 60,8 % du résidu** après constante par scrutin, soit 51,5 %
+de la variance totale, la constante seule en prenant 15,2 %. Corpus retenu,
+7 979 scrutins. Les trois valeurs se relisent sur les trois sommes des carrés du
+recomptage — 1 108 825,4 autour de la moyenne globale, 939 865,3 avec constante
+par scrutin, 368 791,6 avec constante et rang 1 — et rien n'est à croire sur
+parole ici : (939 865,3 − 368 791,6) / 939 865,3 = 0,6076.
+
+Trois valeurs ont circulé pour cette quantité. D'où vient chacune :
+
+- **2,1 %**, ADR 0001 dans une version antérieure — faux d'un facteur trente,
+  corrigé.
+- **59,1 %**, mesures 8 et 9 du §1 de ce document — mesure antérieure, écartée.
+  Son invariance au codage tient toujours et n'est pas en cause (`+1/0/−1` ou
+  `1/0`, avec ou sans les abstentions : 0,5912 / 0,5912 / 0,6095 / 0,6095 ; un
+  double centrage scrutin **et** député donne 0,6121 pour un axe corrélé à
+  0,998 au précédent).
+- **60,8 %**, recomptage du 2026-08-27 — la valeur retenue.
+
+**L'écart 59,1 / 60,8 n'est pas une convergence d'estimateur.** Le dire serait
+une erreur, et elle a été écrite une fois. La part prise par la constante par
+scrutin passe elle aussi de 19,8 % à 15,2 % entre les deux mesures ; or cette
+constante est la moyenne des valeurs observées de chaque scrutin (§4, point 1),
+une forme close sans itération. Aucun nombre d'itérations des moindres carrés
+alternés ne la déplace. Les deux jeux de chiffres viennent donc de **deux
+matrices d'entrée différentes**, mesurées séparément, et non d'un même ajustement
+mieux convergé. Ce qui suit de cette lecture : les deux valeurs ne convergeront
+pas l'une vers l'autre, et remplacer l'une par l'autre sans dire laquelle est
+mesurée sur quoi refabrique la contradiction.
+
+La phrase « l'axe ne résume qu'une petite part du comportement de vote », tirée
+des 2,1 %, n'atteint pas le site : elle est fausse. La formulation juste est
+celle du §3 — l'axe explique bien le résidu, mais l'appartenance au groupe
 expliquait déjà 94,28 % des votes.
 
 **Blocage 2 — le second axe n'est prévu nulle part.** ROADMAP.md v0.2 et
@@ -620,6 +648,7 @@ identifiants UDR le prouvent autrement.
 | Référence exacte du théorème de Davis–Kahan, si le critère de séparation des axes du §5 doit être justifié par autre chose que la mesure de rééchantillonnage | Notice de la publication d'origine |
 | Volume et pages de Imai, Lo & Olmsted, *American Political Science Review*, estimation rapide de points idéaux | Notice APSR |
 | Le second identifiant UDR (`PO847173` / `PO872880`) correspond-il à deux périodes du même parti ou à deux entités distinctes | Lire `viMoDe` des deux organes dans AMO30 et arbitrer dans le registre d'entités |
+| Corpus exact de la mesure à 59,1 % / 19,8 % des mesures 8 et 9 du §1. Le recomptage du 2026-08-27 déclare le sien — 7 979 scrutins retenus ; le tableau du §1 ne déclare pas le sien, et sa mesure 3 porte sur le corpus complet | Rejouer l'ajustement sur les 8 434 scrutins puis sur les 7 979, et comparer les trois sommes des carrés à celles de `verification-2026-08-27.md` §3 |
 
 ---
 

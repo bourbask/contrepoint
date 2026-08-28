@@ -225,7 +225,7 @@ réciproquement interdits sinon. Même convention que le registre d'entités
 | `motif_code` | Ce qu'il dit | Cas réel |
 |---|---|---|
 | `hors_source` | l'entité n'existe pas dans cette source | UDR, absent de CHES 2024 : créé après le terrain |
-| `sous_seuil_de_publication` | la mesure existe, elle n'est pas publiable | LIOT, IQR 0,687 pour un maximum de 0,25 |
+| `sous_seuil_de_publication` | la mesure existe, elle n'est pas publiable | LIOT, IQR 0,687 pour un maximum de 0,25 — valeur de `positionnement.md` §6, corpus retenu de 7 979 scrutins et rattachement du §6, sur 25 membres. Une dispersion ne se lit pas sans son corpus : voir la note ci-dessous |
 | `source_indeterminee` | la source ne tranche pas | Les Écologistes : `ECO` ou `VEC`, non tranché |
 | `source_non_recuperable` | la source existe et n'est pas accessible par script | grille de nuances, annexe PDF Légifrance en 403 |
 
@@ -234,6 +234,19 @@ mesure retenue puis non publiée occupe une bande (§4.3), une entité absente
 d'une source n'en occupe pas. `sous_seuil_de_publication` est la seule
 occurrence où `dispersion` est renseignée sans `valeur` : les chiffres qui
 justifient la non-publication sont publiés, la valeur non.
+
+**Une dispersion porte son corpus, ou elle ne veut rien dire.** LIOT et NI sont
+mesurés dans ce document et ailleurs avec des chiffres différents, et ce ne sont
+pas des erreurs à réconcilier : ce sont des corpus et des rattachements
+différents, qui doivent être nommés à chaque emploi.
+
+| Origine | Corpus et rattachement | LIOT | NI |
+|---|---|---|---|
+| `positionnement.md` §6 — **la spécification**, et la seule valeur que ce document reprend | 7 979 scrutins retenus, rattachement du §6 | n 25, IQR 0,687 | n 9, IQR 0,623 |
+| `verification-2026-08-27.md` §4 — contrôle | 7 979 scrutins retenus, rattachement par le **dernier groupe observé**, approximation déclarée comme telle | `PO845485`, n 25, IQR 0,655 | `PO840056`, n 10, IQR 0,681 |
+
+Ne jamais écraser l'une par l'autre, ni en publier la moyenne : les trois
+familles ne sont pas les seules choses que ce projet refuse de moyenner.
 
 ### 2.5 `methode`
 
@@ -355,10 +368,24 @@ des familles `experts` et `administratif` sont inchangés par cette majeure.
 
 ```sh
 unzip -oq Scrutins.json.zip -d s17
-cd s17 && find . -type f | sed 's|^\./||' | LC_ALL=C sort \
-  | tr '\n' '\0' | xargs -0 cat | sha256sum
+# -print0 et sort -z : un nom contenant un saut de ligne serait sinon coupé en
+# deux chemins. `--` : un fichier nommé `-n` dans l'archive atteindrait sinon
+# cat comme un drapeau, et l'empreinte publiée serait celle de `cat -n`,
+# silencieusement et avec un code de retour nul.
+# Le préfixe `./` est constant, il ne change pas l'ordre d'octets.
+cd s17 && find . -type f -print0 | LC_ALL=C sort -z | xargs -0 cat -- | sha256sum
 # c8457f346220b5b7fb673bd1f273ef8c3296b7ff2769524bf5024c9d95c7e65c   8 434 fichiers
 ```
+
+C'est la commande de `scripts/recuperer-sources.sh`, mot pour mot. Une version
+antérieure de ce bloc publiait `find . -type f | sed 's|^\./||' | LC_ALL=C sort
+| tr '\n' '\0' | xargs -0 cat | sha256sum`, qui n'est pas la même sur deux
+points, tous deux démontrés le 2026-08-27 sur ce dépôt
+([verification-2026-08-27.md](verification-2026-08-27.md) §0) : elle coupe en
+deux chemins un nom contenant un saut de ligne, et sans `--` elle rend
+l'empreinte de `cat -n` pour un fichier nommé `-n`, avec un code de retour nul.
+Le script implémentait déjà la variante sûre en citant ce paragraphe comme
+source : c'est ce document qui était en retard, pas le script.
 
 La méthode est reproductible par un tiers et stable quel que soit l'outil de
 décompression : aucun décompresseur ne modifie ni le nom relatif ni le contenu
@@ -578,6 +605,11 @@ non-publication :
 Les deux `preuve` ci-dessus sont les `id` recalculés du §2.6 : un `id` fait
 64 caractères hexadécimaux quelle que soit sa valeur, un recalcul d'`id` laisse
 donc la taille de l'instantané inchangée et son empreinte non.
+
+Les `dispersion` de ces deux exemples — LFI-NFP `{73, 0,0470}`, LIOT
+`{25, 0,6870}` — sont celles de `positionnement.md` §6 : corpus retenu de
+7 979 scrutins, rattachement du §6. Un exemple qui recopie une dispersion sans
+son corpus fabrique la contradiction que le §2.4 documente.
 
 **Taille mesurée avant le contrat `0.3.0` : 10 064 octets** pour 16 bandes et
 32 marqueurs, la XVIIe législature complète. Le renommage de l'échelle, lui,
@@ -854,13 +886,12 @@ délibéré.
 
 ## 10. Points de blocage et `A VERIFIER`
 
-**Blocage 0 — `docs/brique0/echantillons/README.md` porte l'empreinte
-`c5e405f1…`** pour l'archive des scrutins, avec la mention « concorde » face au
-MD5 `1f951dea…` de la fiche source. Ni l'une ni l'autre ne se reproduit
-(§2.8). Ce fichier est hors du périmètre de cette majeure ; sa correction est un
-patch à part, et les fixtures qu'il décrit ne sont pas invalidées pour autant —
-elles sont extraites d'une archive dont l'empreinte est désormais connue comme
-non reproduite.
+**~~Blocage 0 — `docs/brique0/echantillons/README.md` porte l'empreinte
+`c5e405f1…` avec la mention « concorde ».~~ Refermé le 2026-08-28.** Le fichier
+porte aujourd'hui l'empreinte de **contenu** `c8457f34…`, dit que l'empreinte
+d'archive varie selon la construction servie, et donne les deux MD5 comme
+documentaires. Les fixtures qu'il décrit n'ont jamais été invalidées : elles sont
+extraites d'une archive dont le contenu, lui, se reproduit.
 
 **~~Blocage 1 — le registre d'entités ne déclare pas les ancres.~~ Refermé le
 2026-08-27 avec le contrat `0.3.0`.** Le registre porte `ancre_axe` sur ses
@@ -887,7 +918,7 @@ n'est qu'une trace.
 |---|---|
 | Période de terrain exacte de CHES 2024. La convention retenue est « une source qui ne déclare qu'une année donne `observation` = bornes de l'année », d'où `2024-01-01` → `2024-12-31`. Si le codebook publie des dates de terrain, elles s'y substituent — ce qui change l'`id` et ré-émet les lignes `experts` | Lire le codebook `CHES.2024.Codebook.pdf` |
 | CHES publie-t-il une dispersion par parti exploitable comme `dispersion` ? Aujourd'hui `null` | Lire le codebook, colonne d'écart-type de la vague 2024 |
-| ~~Empreinte et URL définitives de `data/registre/partis.json`~~ **tranché le 2026-08-27** : le fichier existe, `186fc8195d357d08c65ba0bceb45da90a0132df3bd859e039e7303eee96a9680` pour 42 972 octets, et les cinq lignes du §2.6 portent cette empreinte. Elle est datée, pas permanente : toute correction du registre la change, donc ré-émet les lignes qui le citent | `sha256sum data/registre/partis.json` |
+| ~~Empreinte et URL définitives de `data/registre/partis.json`~~ **tranché le 2026-08-27** : le fichier existe, `186fc8195d357d08c65ba0bceb45da90a0132df3bd859e039e7303eee96a9680` pour **42 970** octets, et les cinq lignes du §2.6 portent cette empreinte. Ce point portait 42 972 : un même fichier ne peut pas avoir deux tailles pour une seule empreinte, `wc -c` en donne 42 970 au recomptage du 2026-08-28, et c'est déjà la valeur de `sources.md` §1.1 et de `registre-entites.md`. Elle est datée, pas permanente : toute correction du registre la change, donc ré-émet les lignes qui le citent | `sha256sum data/registre/partis.json` |
 | Taille de l'instantané `an17-2026-07-21`, annoncée à 10 064 octets au §1 et au §4.2. La mesure est antérieure au contrat `0.3.0` : chaque marqueur de la famille `votes` porte sept caractères de plus. Le nombre de marqueurs `votes` de l'instantané n'est pas lu dans un artefact existant, donc la nouvelle taille n'est pas calculée ici | `wc -c public/api/instantanes/an17-2026-07-21.json` à la première construction |
 | ~~`date_source` de CHES~~ **tranché le 2026-08-27** : la ressource `CHES_2024_final_v2.csv` de la version `ches-europe` porte une date de dépôt, `2026-08-04T17:28:50Z`. C'est cette date qui est retenue pour `date_source` et pour `entrees[].derniere_mise_a_jour`, à la place de la date de récupération | `curl -sSL https://api.github.com/repos/chesdata/chesdata.github.io/releases \| python3 -c "import json,sys;[print(a['name'],a['updated_at']) for r in json.load(sys.stdin) for a in r['assets']]"` |
 | Empreinte de l'instantané `an17-2026-07-21` déclarée dans le manifeste, `c23fc935…`. Les `preuve` de ses marqueurs ont changé avec la clé du §3 : la valeur publiée n'est plus la bonne, sa **taille** l'est toujours (10 064 octets, un `id` faisant 64 caractères quelle que soit sa valeur) | `sha256sum public/api/instantanes/an17-2026-07-21.json` à la première construction |
@@ -895,3 +926,4 @@ n'est qu'une trace.
 | `entrees[].derniere_mise_a_jour` du registre d'entités. La valeur écrite, `2026-08-27`, est le `date_registre` du fichier, pas sa date de commit — le fichier n'est pas encore commité | `git log -1 --format=%cs -- data/registre/partis.json` à la première publication |
 | `entrees[].url` du registre d'entités pointe sur l'étiquette `v0.1.0` du dépôt, qui ne porte pas ce fichier : le registre naît avec le contrat `0.3.0`. L'URL est donc juste de forme et fausse de cible tant qu'aucune étiquette ne la sert | `curl -sSIL <url>` après la première étiquette qui contient `data/registre/partis.json` |
 | Empreinte de contenu de l'archive AMO30, `0f49c00a8227d6cb8e658d374bacfec35238fe4e2dd6305f7df6ac4f515c5de6`, mesurée le 2026-08-27 sur 13 991 fichiers pour une archive de 13 600 736 octets. Le jeu est reconstruit chaque nuit : la valeur est datée, pas permanente | Méthode du §2.8, à rejouer à chaque exécution du pipeline |
+| Dispersion de LIOT et de NI dans les exemples des §2.4, §2.6 et §4.2. Une régénération d'artefact aurait donné LIOT n 20, IQR 0,6417 et NI IQR 1,2362, contre n 25 / 0,687 et 0,623 dans `positionnement.md` §6. Aucun artefact portant ces valeurs n'existe dans le dépôt au 2026-08-28 : elles ne sont **pas** écrites ici, et rien n'est écrasé tant que leur corpus n'est pas déclaré | Retrouver l'artefact régénéré, lire le corpus, le rattachement et l'effectif qui le produisent, puis les nommer au §2.4 à côté des deux séries déjà tabulées — jamais à leur place |

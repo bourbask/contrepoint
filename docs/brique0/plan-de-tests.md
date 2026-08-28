@@ -26,8 +26,8 @@ inter-familles, terme de lexique, axe à pôle dépréciatif).
 
 | Affirmation | Pourquoi la suite ne la prouve pas | Où elle est vérifiée |
 |---|---|---|
-| Les chiffres de corpus (8 434 scrutins, 7 979 retenus, densité 0,232, gain 0,591, `s2/s1` 0,652, IQR par groupe) | Ils portent sur les 26,3 Mo d'archive, non redistribuable comme fixture et hors de portée d'une suite rapide | Niveau 2 (§2), sur archive en cache, hors PR |
-| L'intégrité du téléchargement (reprise `Range`, MD5 du producteur) | Exige le réseau, seule étape qui n'a pas de test hors ligne (ingestion-votes.md §9d) | Niveau 3, échec bruyant |
+| Les chiffres de corpus (8 434 scrutins, 7 979 retenus, densité 0,232, gain 0,608, `s2/s1` 0,652, IQR par groupe) | Ils portent sur les 26,3 Mo d'archive, non redistribuable comme fixture et hors de portée d'une suite rapide | Niveau 2 (§2), sur archive en cache, hors PR |
+| L'intégrité du téléchargement (reprise `Range`, taille annoncée, empreinte de contenu) | Exige le réseau, seule étape qui n'a pas de test hors ligne (ingestion-votes.md §9d) | Niveau 3, échec bruyant |
 | L'égalité bit-à-bit entre deux implémentations | Fausse par construction (ADR 0001 §1.7) | Jamais. Aucun test ne l'affirme |
 | La justesse des trois libellés `PAN` / `PSE` / `MG` | Inférés des mandats, aucune énumération officielle lue | Rien n'en dépend : le codage ne lit que le bloc, pas la cause |
 
@@ -42,7 +42,7 @@ fixtures serait faux. La règle est de ne pas l'écrire.
 |---|---|---|---|---|
 | **1 — unitaire** | Tout ce qui est listé aux §5 à §11 sauf mention contraire | `docs/brique0/echantillons/` et matrices synthétiques construites dans le test | < 10 s, `cargo test` | Toute PR |
 | **2 — corpus** | Les seuils de sanité de positionnement.md §9 (contrôles 8, 9, 10, 11) et l'instantané de sortie complète | Archives réelles, prises dans le cache par SHA-256, jamais téléchargées par le test | minutes | La publication, pas la PR |
-| **3 — récupération** | Reprise sur troncature, MD5 publié, `last-modified` d'une source censée être vivante | Réseau | — | La publication |
+| **3 — récupération** | Reprise sur troncature, taille annoncée puis empreinte de contenu, `last-modified` d'une source censée être vivante | Réseau | — | La publication |
 
 Le niveau 1 comprend, hors `cargo test`, la suite shell du §4bis :
 `./scripts/test-recuperer-sources.sh`, exécutée par le travail `garde-fous` de
@@ -55,7 +55,7 @@ se fait par cible de test distincte, pas par un drapeau d'environnement lu au
 milieu d'une fonction.
 
 **Conséquence assumée** : les valeurs de référence les plus intéressantes
-(0,591, 0,652, l'ordre des douze groupes) ne gardent pas les PR. Ce qui garde
+(0,608, 0,652, l'ordre des douze groupes) ne gardent pas les PR. Ce qui garde
 les PR, c'est la classe d'erreur qui les produit — codage, imputation, ancrage,
 ordre — et elle est testable sur cinq fichiers.
 
@@ -123,8 +123,8 @@ du corpus réel n'est nécessaire, aucune horloge n'est lue.
 | REC-05 | `date_de_source_iso_complete` | trois horodatages ISO, et un `last-modified` HTTP | Le plus récent l'emporte ; le résultat vérifie `^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$` et est relu **à l'identique** par le `date -u -d` de pipeline.yml ; un `last-modified` HTTP devient un horodatage ISO complet | `CONTREPOINT_DATE_CALCUL` en dérive (contrats.md §8.1). Une date réduite au jour produit une ligne de preuve invalide contre le schéma `preuve-1`, et `date -u -d` d'une chaîne vide rend l'heure courante — c'est-à-dire l'horloge, précisément ce que le pipeline ne lit jamais |
 | REC-06 | `cache_immuable` | entrée de cache déjà présente, et empreinte inconnue | L'entrée présente n'est pas réécrite ; l'empreinte inconnue crée la sienne | Le cache indexé par empreinte est ce qui rend un calcul de 2026 rejouable en 2027 (RG-116, ingestion-votes.md §9e). Un cache réécrit n'est plus une archive, c'est une copie du jour |
 
-Les contrôles de niveau 3 restants — reprise réelle sur troncature, MD5 publié,
-fraîcheur d'une source censée être vivante — sont exercés par une exécution
+Les contrôles de niveau 3 restants — reprise réelle sur troncature, empreinte de
+contenu, fraîcheur d'une source censée être vivante — sont exercés par une exécution
 manuelle de `scripts/recuperer-sources.sh` et consignés dans
 [verification-2026-08-27.md](verification-2026-08-27.md) §0.
 
@@ -156,9 +156,10 @@ Fixtures : les cinq scrutins verbatim et les deux index de
 ### Cas particulier `PO0` — conflit de spécification, acté par l'ADR 0003 §1
 
 ingestion-votes.md §8 retient **le groupe du bloc de ventilation**, AMO30 ne
-servant que de recours pour les 146 blocs `PO0`. positionnement.md §1 écrit
+servant que de recours pour les 146 blocs `PO0`. positionnement.md §1 **écrivait**
 l'inverse : « le rattachement ne peut donc pas être lu dans le fichier de
-scrutin ; il doit venir des mandats ». Les deux ne peuvent pas être vrais.
+scrutin ; il doit venir des mandats » — phrase corrigée depuis. Les deux ne
+pouvaient pas être vrais.
 
 Ce plan retient **ingestion-votes.md** : c'est la version mesurée sur les
 1 270 476 cellules, elle explique les 2 255 désaccords par un retard de `dateFin`
@@ -187,7 +188,7 @@ la réponse datée. C'est ce que
 | MAT-05 [C] | `aucun_seuil_de_participation` | `VTANR5L17V5268.json`, 35 votants | Retenu. `nombreVotants` est **publié**, jamais utilisé comme porte | La mesure dit que le seuil justifiable est l'absence de seuil : à ≥ 300, RN passe devant DR et LIOT traverse le zéro. Un seuil réintroduit « par prudence » dégrade l'axe et personne ne le remarque |
 | MAT-06 | `decompte_retenus_ecartes_expose_avec_motif` | les cinq scrutins | Un décompte par motif, sortie visible de la v0.1 | La case de roadmap v0.1 promet cette sortie. Sans test, elle est cochée sans exister (definition-of-done.md, section finale) |
 | MAT-07 | `tri_canonique_des_triplets` | les cinq scrutins, ordres d'entrée permutés | Triplets triés par `(uid_scrutin, acteurRef)`, ordre lexicographique | Sans tri explicite, l'itération sur une table de hachage rend la sortie non reproductible d'un processus à l'autre — `HashMap` de Rust est semé par processus, l'erreur se manifeste une fois sur deux |
-| MAT-08 | `entete_porte_les_empreintes_dentree` | matrice produite à partir de deux SHA-256 factices | L'en-tête porte les deux empreintes d'archive et la version du code d'ingestion, et rien d'autre de variable | C'est ce qui rend le cache invalidable **sans horloge**. Sans en-tête, la seule façon de savoir si la matrice est à jour est une date, donc une horloge dans le pipeline |
+| MAT-08 | `entete_porte_les_empreintes_dentree` | matrice produite à partir de deux empreintes de contenu factices | L'en-tête porte les deux **empreintes de contenu** et la version du code d'ingestion, et rien d'autre de variable. **Pas les empreintes d'archive** : le répartiteur de la source les fait varier à contenu identique, et le cache s'invaliderait sans cause (ingestion-votes.md §9b, contrats.md §2.8) | C'est ce qui rend le cache invalidable **sans horloge**. Sans en-tête, la seule façon de savoir si la matrice est à jour est une date, donc une horloge dans le pipeline |
 | MAT-09 [C] | `aucune_imputation` | matrice à 77 % de cellules absentes | Le nombre de valeurs entrant dans les sommes de l'estimateur égale exactement le nombre de cellules observées | Les trois façons usuelles de compléter la matrice sont mesurées comme fausses ici (positionnement.md §2). Ce test est celui qui rend l'interdiction structurelle plutôt que déclarative |
 
 ---
@@ -393,7 +394,7 @@ première ligne d'implémentation.
 | **11** | Le registre d'entités | REG-01 → REG-22 | Un validateur qui refuse vingt-deux fichiers fautifs et accepte l'extrait. Une PR de correction du registre devient possible |
 | **12** | Le registre de preuves | PRE-01 → PRE-13 | Le JSONL en ajout seul, rejouable, idempotent. Le contrat des briques 1-3 existe |
 | **13** | L'export et le front | EXP-01 → EXP-08 | Le graphe de la roadmap v0.6, sur fixtures |
-| **14** | Le niveau 2 | Contrôles 8, 9, 10, 11 de positionnement.md §9, sur archive en cache | Les chiffres du corpus réel retrouvés par l'implémentation Rust, aux tolérances du §4. C'est ici, et seulement ici, que 0,591 et 0,652 sont vérifiés |
+| **14** | Le niveau 2 | Contrôles 8, 9, 10, 11 de positionnement.md §9, sur archive en cache | Les chiffres du corpus réel retrouvés par l'implémentation Rust, aux tolérances du §4. C'est ici, et seulement ici, que 0,608 et 0,652 sont vérifiés. **0,608, pas 0,591** : la valeur actée est celle du recomptage sur le corpus retenu (ADR 0003 §3, positionnement.md §11), et un test écrit sur 0,591 épinglerait la mesure écartée |
 
 Deux points d'ordre non négociables : **MAT-01 avant tout code de matrice**
 (cycle 2), parce que l'erreur qu'il attrape est invisible sur la sortie publiée ;
@@ -546,7 +547,7 @@ et laquelle chaque cycle aurait figée sans arbitrage.
 |---|---|---|---|
 | 1 | **Source du rattachement au groupe.** ingestion-votes.md §8 : le bloc de ventilation, AMO30 en recours. positionnement.md §1 : « le rattachement ne peut pas être lu dans le fichier de scrutin ; il doit venir des mandats » | 4 | **Acté** — ADR 0003 §1 : le bloc de ventilation du scrutin, mesuré sur 1 270 476 cellules (2 255 désaccords, 0,2 %, tous par retard de `dateFin` du mandat de non-inscrit). AMO30 : recours pour les blocs `PO0`, périodes de validité, contrôle croisé. `ING-16` à `ING-19` peuvent être écrits |
 | 2 | **Nombre de scrutins à `PO0`.** ingestion-votes.md §8 : 14 scrutins, dont 13 le 2024-12-02 et un le 2026-04-16. positionnement.md §1 : 14 scrutins, dont 13 le 2024-12-02, un le 2025-04-07 **et** un le 2026-04-16 — soit 15 énumérés pour 14 annoncés | 4 | **Acté** — ADR 0003 §3 : recompté sur l'archive complète, **14** au total, **12** le 2024-12-02, 1 le 2025-04-07, 1 le 2026-04-16. Juste sur le total, faux sur la ventilation dans les deux documents |
-| 3 | **Gain du rang 1.** ADR 0001 §1.3 : 2,1 %. positionnement.md §1 et blocage 1 : 59,1 %, invariant au codage | 14 | **Acté** — ADR 0003 §3 : **60,8 % du résidu** après constante par scrutin, recompté ; 51,5 % de la variance totale. L'ADR 0001 se trompait d'un facteur trente |
+| 3 | **Gain du rang 1.** ADR 0001 §1.3 : 2,1 %. positionnement.md §1 et blocage 1 **portaient** 59,1 %, invariant au codage | 14 | **Acté** — ADR 0003 §3 : **60,8 % du résidu** après constante par scrutin, recompté ; 51,5 % de la variance totale, corpus retenu de 7 979 scrutins. L'ADR 0001 se trompait d'un facteur trente. Les 59,1 % venaient d'une autre matrice d'entrée, pas d'une convergence moindre (positionnement.md §11) ; les six occurrences et les trois `0,591` de ce plan sont corrigés depuis le 2026-08-28 |
 | 4 | **Dispersion publiée.** ROADMAP.md v0.2 et methode.md §2 : « variance intra-groupe publiée ». positionnement.md §6 : IQR et étendue, « aucune variance » | 9 | **Acté** — ADR 0003 §3, tranché par la relecture juridique : **IQR et écart-type de rééchantillonnage, jamais la variance, jamais l'étendue** — une borne d'étendue est la coordonnée d'un membre identifiable. `AGR-03` l'épingle ; ROADMAP.md v0.2 et methode.md §2 mis à jour dans la PR de l'ADR |
 | 5 | **Fixture du cas `votant` objet nu.** ADR 0001 §7 étape 0 cite `VTANR5L17V5646`. `echantillons/README.md` livre `VTANR5L17V5268` | 0 | **Acté** — ADR 0003 §3 : `VTANR5L17V5268`, la fixture qui existe |
 | 6 | **Filtre de participation.** ROADMAP.md v0.1 et methode.md exigent « un seuil documenté ». ingestion-votes.md §6 : aucun seuil, la mesure dit que le seuil justifiable est l'absence de seuil | 3 | **Acté** — ADR 0003 §2 : **aucun seuil**. Filtre unique `min(pour, contre) ≥ 1` — 455 écartés sur 8 434, dont les 23 motions de censure, 7 979 retenus. `nombreVotants` publié, jamais une porte. `MAT-05` l'épingle ; ROADMAP.md v0.1 et methode.md §1 mis à jour dans la PR de l'ADR |

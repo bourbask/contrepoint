@@ -172,8 +172,21 @@ sans générateur aléatoire.
 | **Gain du rang 1 sur le résidu** | **60,8 %** |
 | Gain du rang 1 sur la variance totale | 51,5 % |
 
-**`positionnement.md` avait raison** ; l'écart de 59,1 à 60,8 tient à la
-convergence de l'estimateur. **L'ADR 0001 se trompait d'un facteur trente**, et
+**`positionnement.md` avait raison sur l'ordre de grandeur** et **l'ADR 0001 se
+trompait d'un facteur trente**.
+
+L'écart résiduel de 59,1 à 60,8, en revanche, **ne tient pas à la convergence de
+l'estimateur** : la première rédaction de ce paragraphe l'écrivait, et c'était
+faux — corrigé le 2026-08-28. La part prise par la constante par scrutin passe
+elle aussi de 19,8 % (`positionnement.md` §1, mesure 8) à 15,2 % ici, or cette
+constante est une moyenne par scrutin, forme close qu'aucune itération ne
+déplace. Les deux jeux de valeurs viennent donc de deux matrices d'entrée
+différentes. Celle du présent recomptage est déclarée ci-dessus — 7 979 scrutins
+retenus ; celle de `positionnement.md` §1 ne l'est pas. `A VERIFIER` : rejouer
+l'ajustement sur les 8 434 scrutins puis sur les 7 979 et comparer les trois
+sommes des carrés à celles du tableau ci-dessus.
+
+Et
 la phrase qu'il en tirait — « l'axe ne résume qu'une petite part du comportement
 de vote » — était destinée au site. Corrigée.
 
