@@ -19,6 +19,10 @@ use contrepoint::export::{
     Description, ancres_du_registre, construire_eclats, construire_instantane,
     construire_manifeste, verifier_artefacts,
 };
+use contrepoint::familles::{
+    SOURCE_ADMINISTRATIF, SOURCE_EXPERTS, codes_constates, lignes_administratif, lignes_experts,
+    lrgen_par_party_id,
+};
 use contrepoint::ingestion::{IndexMandats, groupe_a_la_date, index_mandats, lire_scrutin};
 use contrepoint::matrice::{Entete, Matrice, construire as construire_matrice};
 use contrepoint::preuves::{ajouter, confronter_registre, construire, verifier};
@@ -101,12 +105,14 @@ fn executer() -> Result<(), String> {
     let cache = racine.join("data/cache");
     let scrutins = entree_de_cache(&cache, "scrutins")?;
     let amo30 = entree_de_cache(&cache, "amo30")?;
-    for source in ["ches_2024", "nuance_leg2024"] {
-        println!(
-            "famille écartée : la source {source} n'est pas dans le cache — aucune ligne émise, \
-             aucune valeur reprise d'une autre famille"
-        );
-    }
+    // Une source absente du cache ne produit **aucune** ligne : elle est nommée,
+    // avec ce qui manque, et aucune valeur n'est reprise d'une autre famille.
+    let ches = entree_de_cache(&cache, SOURCE_EXPERTS)
+        .map_err(|e| println!("{e}"))
+        .ok();
+    let nuances = entree_de_cache(&cache, SOURCE_ADMINISTRATIF)
+        .map_err(|e| println!("{e}"))
+        .ok();
 
     // V15, V16 — le registre en face des organes de AMO30.
     let organes = organes_de(&amo30.extrait);
@@ -173,8 +179,8 @@ fn executer() -> Result<(), String> {
     });
     let entrees = json!([
         entree_registre(&empreinte_registre, &date_registre),
-        entree_archive("an_scrutins_17", &scrutins),
-        entree_archive("an_organe", &amo30),
+        entree_source("an_scrutins_17", &scrutins),
+        entree_source("an_organe", &amo30),
     ]);
 
     let mut lignes = Vec::new();
@@ -258,6 +264,63 @@ fn executer() -> Result<(), String> {
     }
     for (motif, groupe) in &ecartees {
         println!("non publié, dit avec son motif : {groupe} — {motif}");
+    }
+
+    // ---- 4bis. les deux autres familles -----------------------------------
+    //
+    // Elles ne se rencontrent nulle part : trois familles, trois échelles, trois
+    // méthodes, et aucun champ où écrire une valeur qui n'appartienne à aucune
+    // d'elles (contrats.md §2.1). L'appariement passe par le registre d'entités
+    // et par lui seul — une entité sans appariement déclaré ne produit aucune
+    // ligne, et une entité appariée à un identifiant que la source ne porte pas
+    // arrête l'exécution.
+    let mut autres = Vec::new();
+    if let Some(entree) = &ches {
+        let texte = lire_fichier_unique(entree)?;
+        let lrgen = lrgen_par_party_id(&texte)?;
+        println!(
+            "CHES : {} partis français exploitables dans la vague",
+            lrgen.len()
+        );
+        autres.extend(lignes_experts(
+            &registre,
+            &lrgen,
+            &json!([
+                entree_source(SOURCE_EXPERTS, entree),
+                entree_registre(&empreinte_registre, &date_registre),
+            ]),
+            &entree.date_source[..10],
+            &date_calcul,
+            CONTRAT,
+            VERSION_LOGICIELLE,
+        )?);
+    }
+    if let Some(entree) = &nuances {
+        let texte = lire_fichier_unique(entree)?;
+        let codes = codes_constates(&texte)?;
+        println!("nuancier : {} codes distincts constatés", codes.len());
+        autres.extend(lignes_administratif(
+            &registre,
+            &codes,
+            &json!([
+                entree_registre(&empreinte_registre, &date_registre),
+                entree_source(SOURCE_ADMINISTRATIF, entree),
+            ]),
+            &entree.date_source[..10],
+            &date_calcul,
+            CONTRAT,
+            VERSION_LOGICIELLE,
+        )?);
+    }
+    for ligne in autres {
+        let refus = confronter_registre(&ligne, &registre);
+        if !refus.is_empty() {
+            return Err(format!(
+                "ligne refusée par le registre d'entités :\n  {}",
+                refus.join("\n  ")
+            ));
+        }
+        lignes.push(construire(ligne)?);
     }
     println!("lignes de preuve construites : {}", lignes.len());
 
@@ -522,10 +585,30 @@ fn arrondir(valeur: f64, decimales: u32) -> f64 {
 
 struct EntreeDeCache {
     extrait: PathBuf,
+    /// La ressource elle-même, pour une source d'un **seul fichier** : son
+    /// contenu EST le fichier, il n'y a rien à décompresser, et les deux
+    /// empreintes coïncident (contrats.md §2.8).
+    fichier: PathBuf,
+    forme: String,
     url: String,
+    producteur: String,
     empreinte_archive: String,
     empreinte_contenu: String,
     date_source: String,
+    recupere_le: String,
+}
+
+/// Le texte d'une source d'un seul fichier. Une source de forme `zip` n'en a
+/// pas : la confondre lirait un conteneur pour une donnée.
+fn lire_fichier_unique(entree: &EntreeDeCache) -> Result<String, String> {
+    if entree.forme != "fichier" {
+        return Err(format!(
+            "{} : forme `{}` — une source d'un seul fichier était attendue",
+            entree.url, entree.forme
+        ));
+    }
+    std::fs::read_to_string(&entree.fichier)
+        .map_err(|e| format!("{} : {e}", entree.fichier.display()))
 }
 
 /// Le cache est la seule source du pipeline : **aucun téléchargement**, aucun
@@ -559,10 +642,14 @@ fn entree_de_cache(cache: &Path, source: &str) -> Result<EntreeDeCache, String> 
         };
         return Ok(EntreeDeCache {
             extrait: entree.path().join("extrait"),
+            fichier: entree.path().join(lire("fichier")?),
+            forme: lire("forme")?,
             url: lire("url")?,
+            producteur: lire("producteur")?,
             empreinte_archive: lire("empreinte_sha256")?,
             empreinte_contenu: lire("empreinte_contenu_sha256")?,
             date_source: lire("date_source")?,
+            recupere_le: lire("recupere_le")?,
         });
     }
     Err(format!(
@@ -570,16 +657,20 @@ fn entree_de_cache(cache: &Path, source: &str) -> Result<EntreeDeCache, String> 
     ))
 }
 
-fn entree_archive(source: &str, entree: &EntreeDeCache) -> Value {
+/// Une entrée de ligne de preuve, dérivée du descripteur de cache. Rien n'y est
+/// écrit en dur : le nom du producteur et la citation exigée viennent de la
+/// source, jamais d'une constante recopiée d'une source sur une autre (RG-76,
+/// I21, I23).
+fn entree_source(source: &str, entree: &EntreeDeCache) -> Value {
     json!({
         "source": source,
         "url": entree.url,
-        "producteur": "Assemblée nationale",
+        "producteur": entree.producteur,
         "derniere_mise_a_jour": &entree.date_source[..10],
-        "citation": Value::Null,
+        "citation": contrepoint::preuves::citation_exigee(source),
         "empreinte_sha256": entree.empreinte_archive,
         "empreinte_contenu_sha256": entree.empreinte_contenu,
-        "recupere_le": &entree.date_source[..10],
+        "recupere_le": entree.recupere_le,
     })
 }
 

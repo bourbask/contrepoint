@@ -123,6 +123,9 @@ du corpus réel n'est nécessaire, aucune horloge n'est lue.
 | REC-05 | `date_de_source_iso_complete` | trois horodatages ISO, et un `last-modified` HTTP | Le plus récent l'emporte ; le résultat vérifie `^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$` et est relu **à l'identique** par le `date -u -d` de pipeline.yml ; un `last-modified` HTTP devient un horodatage ISO complet | `CONTREPOINT_DATE_CALCUL` en dérive (contrats.md §8.1). Une date réduite au jour produit une ligne de preuve invalide contre le schéma `preuve-1`, et `date -u -d` d'une chaîne vide rend l'heure courante — c'est-à-dire l'horloge, précisément ce que le pipeline ne lit jamais |
 | REC-06 | `cache_immuable` | entrée de cache déjà présente, et empreinte inconnue | L'entrée présente n'est pas réécrite ; l'empreinte inconnue crée la sienne | Le cache indexé par empreinte est ce qui rend un calcul de 2026 rejouable en 2027 (RG-116, ingestion-votes.md §9e). Un cache réécrit n'est plus une archive, c'est une copie du jour |
 
+| REC-07 | `paternite` | producteur, licence et date de source de deux sources différentes | La mention est dérivée des trois arguments ; celle de CHES ne nomme ni l'Assemblée nationale ni une Licence Ouverte | Deux des quatre sources ne sont pas de l'Assemblée. La mention était écrite en dur : elle attribuait à l'Assemblée un fichier du Chapel Hill Expert Survey et un fichier du ministère de l'intérieur, sous une licence qu'aucun des deux ne porte. C'est une fausse attribution, pas une approximation (RG-76) |
+| REC-08 | `archives.sh deposer` sur une source hors liste blanche | descripteurs portant l'URL de CHES, celle du nuancier, et une URL qui imite celle de l'Assemblée sans en être une | Refus dans les trois cas, **avant tout appel réseau** à `gh` | RG-118 et ADR 0000 §8 : CHES ne publie aucune licence, et la condition obtenue le 2026-08-27 est une exigence de citation, pas une cession de droits. Un dépôt de release est public et immuable ; l'asset mal déposé ne se reprend pas |
+
 Les contrôles de niveau 3 restants — reprise réelle sur troncature, MD5 publié,
 fraîcheur d'une source censée être vivante — sont exercés par une exécution
 manuelle de `scripts/recuperer-sources.sh` et consignés dans
@@ -303,6 +306,38 @@ l'exige definition-of-done.md.
 
 ---
 
+## 10bis. Module `familles` — les familles `experts` et `administratif`
+
+Les deux familles que le pipeline n'a pas produites jusqu'ici. Elles ne
+partagent avec `votes` **ni source, ni échelle, ni méthode, ni objet mesuré**
+(contrats.md §2.2 et §2.3), et l'écart entre les trois est le produit : aucun
+test de ce module ne compare deux familles autrement que pour vérifier qu'elles
+ne se rencontrent pas.
+
+Fixtures : **aucun fichier**, et c'est délibéré. L'ADR 0000 §4 interdit de
+commiter un extrait de CHES — aucune licence n'y est publiée. Le fichier de
+résultats du ministère, lui, porte `Nom candidat n`, `Prénom candidat n` et
+`Elu n`, que RG-111 interdit d'ingérer « y compris dans un fichier intermédiaire
+ou de cache ». Les deux dialectes de CSV sont donc **fabriqués dans la suite**,
+avec les colonnes réelles et des valeurs inventées : le test exerce la forme des
+sources sans en republier la donnée. Le corpus réel est exercé au niveau 3, par
+une exécution du binaire.
+
+| ID | Test | Entrée | Sortie attendue | Ce qui casse si le test disparaît |
+|---|---|---|---|---|
+| FAM-01 | `lecture_csv_deux_dialectes` | CSV à virgule non guillemeté ; CSV à point-virgule guillemeté, avec un séparateur et un guillemet doublé **dans** un champ, et des fins de ligne CRLF | Les champs sont rendus tels quels, guillemets retirés, `"DUPOND;LE JEUNE"` en un seul champ | Un lecteur qui coupe sur le séparateur sans connaître les guillemets décale toutes les colonnes suivantes : la nuance lue devient celle du candidat d'à côté, sans erreur et sans trace |
+| FAM-02 | `lrgen_filtre_le_pays_et_ne_comble_pas` | vague portant deux pays dont un `party_id` commun, et une ligne sans valeur mesurée ; en-tête amputé | Seul `country = 6` entre ; la ligne sans valeur est absente, jamais à zéro ; l'en-tête amputé est un refus | `party_id` n'est unique que dans un pays. Sans le filtre, une entité française reçoit la position d'un parti étranger, et la ligne publiée ne porte rien qui le dise |
+| FAM-03 [C] | `aucune_colonne_nominative_ingeree` | fichier de nuances dont les colonnes `Nom`, `Prénom` et `Elu` portent des valeurs qui **sont** des codes valides | Seule la colonne `Nuance candidat n` est lue ; aucune valeur nominative n'entre | RG-111. Un lecteur qui balaye toutes les colonnes puis filtre après coup a déjà constitué, en mémoire et dans sa sortie, l'appariement d'une nuance à une personne |
+| FAM-04 [C] | `appariement_par_le_registre_seul` | registre où une coalition ne déclare aucun appariement CHES | Aucune ligne `experts` pour elle ; une ligne par appariement déclaré, ni plus ni moins | L'appariement parti → source est une **déclaration du registre**, pas une lecture de la source (registre-entites.md §2.5). Apparier par le libellé attribue à une coalition une position que l'enquête n'a pas mesurée |
+| FAM-05 [C] | `absence_dite_avec_son_code` | entité absente de CHES ; entité que le nuancier ne tranche pas | `hors_source` dans le premier cas, `source_indeterminee` dans le second, chacun avec son motif ; jamais une case vide | contrats.md §2.4. Une absence sans code oblige le front à lire de la prose pour savoir s'il dessine une bande, et une case vide se lit comme un centre |
+| FAM-06 [C] | `citation_ches_mot_pour_mot` | lignes `experts` ; citation abrégée injectée dans une entrée | Chaque entrée CHES porte la citation de sources.md §4, caractère pour caractère ; l'abrégée est refusée par I23 ; le nuancier n'en porte aucune | CHES n'accorde **aucun droit de republication** : la citation est la seule condition écrite obtenue, et elle est portée par la donnée. Une citation reformulée ou remontée en mention globale ne satisfait pas la condition et attribue à un jeu la citation d'un autre |
+| FAM-07 [C] | `nuance_publiee_en_code_jamais_en_nombre` | lignes `administratif` | `valeur` nulle, `valeur_code` renseigné, `echelle.min`, `max` et `decimales` nuls | Le nuançage n'est pas une mesure scientifique : c'est une classification administrative révisée par circulaire et contestée au Conseil d'État. Publiée comme un nombre, elle entre sur un axe et devient moyennable |
+| FAM-08 [C] | `echelles_propres_jamais_partagees` | lignes des deux familles | Une échelle par famille, distincte, et jamais celle des votes | Règle non négociable n° 6. La forme mécanique de l'interdiction de moyenner est l'échelle : deux familles qui partagent une graduation sont additionnables sans qu'aucune revue le voie |
+| FAM-09 [C] | `referentiel_et_observation_ne_se_traitent_pas_pareil` | `party_id` apparié et absent de la vague ; code apparié et non constaté au tour observé | Refus dans le premier cas ; ligne d'absence motivée dans le second, le code non constaté nommé dans le motif | CHES énumère des partis : un `party_id` disparu est une divergence registre/source, comme V15 et V16. Le nuancier énumère ce que des candidatures ont porté : `COM` est constaté au 1er tour de 2024 et pas au 2nd, et le confondre avec une divergence arrêterait le pipeline sur un fait normal — ou, dans l'autre sens, publierait une nuance que le scrutin n'a jamais portée |
+| FAM-10 | `lignes_valides_et_identifiant_stable` | lignes des deux familles | Les invariants du §6 et la confrontation au registre passent ; deux constructions rendent le même octet | Filet de non-régression : une ligne qui ne passe pas `verifier` n'est pas publiée, et ce test le dit avant l'exécution réelle plutôt qu'après |
+
+---
+
 ## 11. Module `export` — contrat de sortie consommé par le front
 
 Le contrat d'export n'est spécifié nulle part en détail : l'ADR 0001 §6 dit
@@ -420,6 +455,7 @@ et pas avant.
 | `AGR` | `pipeline/tests/agregation.rs` |
 | `REG` | `pipeline/tests/registre.rs` |
 | `PRE` | `pipeline/tests/preuves.rs` |
+| `FAM` | `pipeline/tests/familles.rs` |
 | `EXP` | `pipeline/tests/export.rs`, `web/src/contrat.test.ts` |
 
 Pointer le répertoire `pipeline/` aurait fait basculer sept préfixes — 96
@@ -473,7 +509,7 @@ par `hashFiles` ne publiant aucun contexte quand il saute
 ### Porte 1 — la liste nominative des invariants, bloquante
 
 Tout identifiant de test de ce document (`ADA-…`, `ING-…`, `MAT-…`, `EST-…`, `AGR-…`,
-`REG-…`, `PRE-…`, `EXP-…`) doit exister comme fonction de test dans l'arbre, dès
+`REG-…`, `PRE-…`, `FAM-…`, `EXP-…`) doit exister comme fonction de test dans l'arbre, dès
 que la PR touche le module concerné. La vérification est une boucle de grep en
 CI : les identifiants sont dans le document, les noms de fonctions sont dans le
 code, l'un cite l'autre.

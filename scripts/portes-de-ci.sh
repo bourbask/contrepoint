@@ -26,7 +26,7 @@ signaler() { echec=1; printf '::error::%s\n' "$1"; }
 # sens : un identifiant déclaré et non écrit est une porte fantôme, un
 # identifiant écrit et non déclaré est un test que le plan ne connaît pas.
 PLAN=docs/brique0/plan-de-tests.md
-PREFIXES='REC|ADA|ING|MAT|EST|AGR|REG|PRE|EXP'
+PREFIXES='REC|ADA|ING|MAT|EST|AGR|REG|PRE|FAM|EXP'
 
 # Une suite par préfixe, désignée par SON FICHIER et non par le répertoire qui
 # la contiendra. C'est ce qui évite la falaise : pointer `pipeline` faisait
@@ -43,6 +43,7 @@ suites_de() {
     AGR) echo pipeline/tests/agregation.rs ;;
     REG) echo pipeline/tests/registre.rs ;;
     PRE) echo pipeline/tests/preuves.rs ;;
+    FAM) echo pipeline/tests/familles.rs ;;
     EXP) echo pipeline/tests/export.rs web/src/contrat.test.ts ;;
     *)   echo "" ;;
   esac
@@ -51,7 +52,7 @@ suites_de() {
 identifiants() {
   echo "── porte 1 : identifiants de test déclarés contre suites écrites"
   local prefixe presents id trouve suites s
-  for prefixe in REC ADA ING MAT EST AGR REG PRE EXP; do
+  for prefixe in REC ADA ING MAT EST AGR REG PRE FAM EXP; do
     presents=""
     for s in $(suites_de "$prefixe"); do
       [ -e "$s" ] && presents="$presents $s"
