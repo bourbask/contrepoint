@@ -158,6 +158,11 @@ jobs:
         run: ./scripts/lexique.sh code
       - name: lexique (documentation)
         run: ./scripts/lexique.sh docs
+      # Le glossaire est la source : le script le lit, il ne recopie aucune
+      # liste. Un glossaire vidé de ses formes interdites rend 2, pas 0 — une
+      # porte qui ne lit rien n'affirme rien.
+      - name: glossaire (un terme, un concept)
+        run: ./scripts/glossaire.sh
       # securite.sh n'était lancé que par le crochet local, en mode index. Un
       # défaut latent est donc passé sur develop, et quiconque n'a pas posé
       # core.hooksPath committait sans aucun contrôle. En CI, sur l'arbre entier.
