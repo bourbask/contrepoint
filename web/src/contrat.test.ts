@@ -12,6 +12,7 @@ import { renderToStaticMarkup } from 'react-dom/server'
 import { ContratRefuse, cheminEclat, verifierSchemas } from './contrat.ts'
 import type { Instantane, Manifeste, Preuve } from './contrat.ts'
 import { FORMES, direAbsence, disposer } from './graphe.ts'
+import { direComposition } from './presentation.ts'
 import { Partition } from './Partition.tsx'
 import { verifier } from '../scripts/verifier-artefacts.mjs'
 
@@ -455,5 +456,72 @@ describe('EXP-10 ordre des lignes dans un panneau gradue', () => {
     // Le cas de test doit mordre : au moins un panneau porte assez de lignes
     // pour qu'un ordre soit observable.
     expect(Math.max(...disposition.panneaux.map((p) => p.lignes.length))).toBeGreaterThan(2)
+  })
+})
+
+describe('EXP-11 composition des groupes affichee sous le nom', () => {
+  // Quelqu'un a cherche les communistes et les ecologistes sur le site sans
+  // les trouver : le PCF siege a « Gauche Democrate et Republicaine », les
+  // ecologistes a « Ecologiste et Social », et l'ecran ne montrait que le nom
+  // du groupe. La composition vivait dans le registre, lu par le seul pipeline.
+  const composees = instantane.bandes.filter(
+    (b) => (b.composition_partielle ?? []).length > 0,
+  )
+
+  test('le cas de test mord : au moins un groupe porte une composition', () => {
+    expect(composees.length).toBeGreaterThan(0)
+    expect(composees.map((b) => b.id)).toContain('groupe.an17.gdr')
+  })
+
+  test('chaque parti abrite est nomme dans le rendu, sous le nom de son groupe', () => {
+    for (const bande of composees) {
+      for (const parti of bande.composition_partielle ?? []) {
+        expect(rendu, `${bande.id} doit nommer ${parti.libelle}`).toContain(parti.libelle)
+      }
+      // Sous le nom, et non ailleurs : dans le MEME groupe de dessin que le
+      // nom du groupe, et apres lui dans l'ordre du DOM, qui est celui de la
+      // lecture au clavier. Une recherche sur le rendu entier ne dirait rien —
+      // « Parti communiste français » y figure aussi pour la bande ECOS.
+      const fragment = rendu
+        .split('<g class="ligne')
+        .find((f) => f.includes(`>${bande.libelle}<`))
+      expect(fragment, `aucune ligne dessinee pour ${bande.id}`).toBeDefined()
+      const nom = (fragment as string).indexOf(`>${bande.libelle}<`)
+      for (const parti of bande.composition_partielle ?? []) {
+        expect((fragment as string).indexOf(parti.libelle)).toBeGreaterThan(nom)
+      }
+    }
+  })
+
+  test('la liste est dite partielle, jamais donnee pour complete', () => {
+    // La composition du registre est un EXTRAIT : GDR n'y porte que le PCF
+    // quand ses membres declarent aussi sept partis ultramarins hors
+    // perimetre. Publier la liste sans le dire serait faux par omission.
+    expect(direComposition([{ libelle: 'Parti communiste français' }])).toContain('extrait')
+    expect(rendu).toContain('extrait')
+  })
+
+  test('aucun effectif n affiche : le nombre de membres n existe qu en prose', () => {
+    // « 9 membres en cours declarent PCF » est une phrase du champ `remarque`
+    // du registre. Un nombre tire d'une phrase est fabrique.
+    const ligne = direComposition([{ libelle: 'Parti communiste français' }]) as string
+    expect(ligne).not.toMatch(/[0-9]/)
+  })
+
+  test('une bande sans composition n en affiche aucune, et n en prend pas la place', () => {
+    const sans = {
+      ...instantane,
+      bandes: instantane.bandes.map(({ composition_partielle, ...reste }) => {
+        void composition_partielle
+        return reste
+      }),
+    }
+    const nue = disposer(manifeste, sans, 760)
+    const pleine = disposer(manifeste, instantane, 760)
+    expect(nue.systemes.flatMap((s) => s.voix).every((v) => v.yComposition === null)).toBe(true)
+    // Le cran de hauteur ne se prend que sur les lignes qui nomment un parti :
+    // sans composition, le graphe est plus court, et il ne l est pas d autant
+    // de crans qu il y a de lignes.
+    expect(nue.hauteur).toBeLessThan(pleine.hauteur)
   })
 })

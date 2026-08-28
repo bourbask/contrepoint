@@ -1,4 +1,4 @@
-//! EXP-01 à EXP-08 — le contrat d'export : manifeste, instantané, éclats de
+//! EXP-01 à EXP-11 — le contrat d'export : manifeste, instantané, éclats de
 //! preuves. Spécification : `docs/brique0/contrats.md` §4, §6 et §7.
 //!
 //! Les trois artefacts sont des **projections** du registre de preuves et ne
@@ -1131,4 +1131,193 @@ fn refus_de(
         eprintln!("{invariant} attendu ; refus observés : {refus:?}");
     }
     trouve
+}
+
+// ---------------------------------------------------------------- EXP-11 ----
+
+/// Les deux groupes dont le registre retient au moins un parti, plus une bande
+/// de parti et une bande de coalition : le jeu minimal pour distinguer les
+/// trois cas de `composition_partielle`.
+fn lignes_avec_groupes_composes() -> Vec<String> {
+    vec![
+        ligne_votes("groupe.an17.lfi-nfp", json!(-1.0), 0.047, 73),
+        ligne_votes("groupe.an17.rn", json!(1.0), 0.052, 129),
+        ligne_votes("groupe.an17.gdr", json!(-0.86), 0.083, 18),
+        ligne_votes("groupe.an17.ecos", json!(-0.99), 0.033, 38),
+        ligne_votes("groupe.an17.liot", json!(null), 0.687, 25),
+        ligne_experts("parti.rn", 8.82),
+    ]
+}
+
+fn bande_de<'a>(vue: &'a Value, id: &str) -> &'a Value {
+    vue["bandes"]
+        .as_array()
+        .expect("bandes")
+        .iter()
+        .find(|b| b["id"] == id)
+        .unwrap_or_else(|| panic!("bande {id} absente"))
+}
+
+#[test]
+fn composition_des_groupes_publiee_sans_effectif() {
+    // EXP-11 — le site ne montrait que le nom du groupe : personne ne trouvait
+    // les communistes, qui siègent à « Gauche Démocrate et Républicaine ». La
+    // composition vivait dans le registre, lu par le seul pipeline.
+    //
+    // Trois choses, et le test tombe si l'une saute.
+    let vue: Value = serde_json::from_str(
+        &construire_instantane(
+            &description(),
+            "0.5.0",
+            &lignes_avec_groupes_composes(),
+            &registre(),
+        )
+        .expect("instantané construit"),
+    )
+    .expect("instantané lisible");
+
+    // 1. La bande d'un groupe nomme les partis que le registre retient.
+    assert_eq!(
+        bande_de(&vue, "groupe.an17.gdr")["composition_partielle"],
+        json!([{"entite": "parti.pcf", "libelle": "Parti communiste français"}]),
+        "GDR doit nommer le PCF : c'est le fait que l'écran ne disait pas"
+    );
+    assert_eq!(
+        bande_de(&vue, "groupe.an17.ecos")["composition_partielle"],
+        json!([
+            {"entite": "parti.ecologistes", "libelle": "Les Écologistes"},
+            {"entite": "parti.pcf", "libelle": "Parti communiste français"}
+        ]),
+    );
+
+    // 2. Aucun effectif, nulle part. « 9 membres en cours déclarent PCF » vit
+    //    dans le champ `remarque` du registre, en prose : un nombre tiré d'une
+    //    phrase est fabriqué, et il n'a pas d'emplacement ici.
+    for bande in vue["bandes"].as_array().expect("bandes") {
+        for parti in bande["composition_partielle"]
+            .as_array()
+            .map(Vec::as_slice)
+            .unwrap_or_default()
+        {
+            let cles: Vec<&String> = parti.as_object().expect("objet").keys().collect();
+            assert_eq!(
+                cles,
+                vec!["entite", "libelle"],
+                "un parti déclaré porte deux noms et rien d'autre"
+            );
+            assert!(
+                !parti.to_string().chars().any(|c| c.is_ascii_digit()),
+                "aucun chiffre dans la composition publiée : {parti}"
+            );
+        }
+    }
+
+    // 3. La clé est ABSENTE là où elle n'a pas de sens : sur la bande d'un
+    //    parti, sur celle d'une coalition — dont le registre porte pourtant une
+    //    `composition` de cinq partis — et sur un groupe dont le registre ne
+    //    retient aucun parti. Absente, et non présente et vide : un tableau
+    //    vide se lit « ce groupe n'abrite aucun parti », ce que la source ne
+    //    dit pas.
+    for id in ["parti.rn", "groupe.an17.liot"] {
+        assert_eq!(
+            bande_de(&vue, id).get("composition_partielle"),
+            None,
+            "{id} ne porte pas de composition"
+        );
+    }
+    assert!(
+        registre()["entites"]
+            .as_array()
+            .expect("entités")
+            .iter()
+            .any(|e| e["id"] == "coalition.nfp"
+                && e["composition"].as_array().is_some_and(|c| !c.is_empty())),
+        "le registre doit porter une composition de coalition, sans quoi le cas ci-dessous ne mord pas"
+    );
+    let coalition = construire_instantane(
+        &description(),
+        "0.5.0",
+        &[
+            ligne_votes("groupe.an17.lfi-nfp", json!(-1.0), 0.047, 73),
+            ligne_votes("groupe.an17.rn", json!(1.0), 0.052, 129),
+            ligne_experts("coalition.nfp", 2.30),
+        ],
+        &registre(),
+    )
+    .expect("instantané construit");
+    let coalition: Value = serde_json::from_str(&coalition).expect("lisible");
+    assert_eq!(
+        bande_de(&coalition, "coalition.nfp").get("composition_partielle"),
+        None,
+        "une coalition n'est pas un groupe parlementaire : sa composition n'est pas ce champ"
+    );
+}
+
+#[test]
+fn composition_close_avant_la_date_nest_pas_publiee() {
+    // EXP-11, second volet. Une adhésion close avant la date de l'instantané
+    // n'est plus une composition : publiée, elle daterait de l'an dernier.
+    let mut registre_ferme = registre();
+    for groupe in registre_ferme["groupes"].as_array_mut().expect("groupes") {
+        if groupe["id"] == "groupe.an17.gdr" {
+            groupe["composition"][0]["fin"] = json!("2025-01-31");
+        }
+    }
+    let vue: Value = serde_json::from_str(
+        &construire_instantane(
+            &description(),
+            "0.5.0",
+            &lignes_avec_groupes_composes(),
+            &registre_ferme,
+        )
+        .expect("instantané construit"),
+    )
+    .expect("instantané lisible");
+    assert_eq!(
+        bande_de(&vue, "groupe.an17.gdr").get("composition_partielle"),
+        None,
+        "une adhésion close au 2026-07-21 ne se publie pas"
+    );
+    // Et le groupe dont l'adhésion court, lui, la garde : sans quoi le test
+    // passerait aussi bien avec un champ jamais publié.
+    assert!(bande_de(&vue, "groupe.an17.ecos")["composition_partielle"].is_array());
+}
+
+#[test]
+fn un_effectif_glisse_dans_la_composition_est_refuse() {
+    // EXP-11, troisième volet. La porte, pas le producteur : c'est elle qui
+    // tient le jour où quelqu'un tire « 9 membres » de la prose du registre
+    // pour l'ajouter ici.
+    let lignes = lignes_avec_groupes_composes();
+    let instantane = construire_instantane(&description(), "0.5.0", &lignes, &registre()).unwrap();
+    let eclats = construire_eclats(&lignes, std::slice::from_ref(&instantane)).unwrap();
+    let manifeste = construire_manifeste(
+        "0.5.0",
+        &[(description(), instantane.clone())],
+        &lignes,
+        &licences(),
+    )
+    .unwrap();
+    assert!(
+        verifier_artefacts(
+            &manifeste,
+            std::slice::from_ref(&instantane),
+            &eclats,
+            &lignes
+        )
+        .is_empty(),
+        "l'artefact non altéré passe la porte"
+    );
+
+    let mut altere: Value = serde_json::from_str(&instantane).unwrap();
+    for bande in altere["bandes"].as_array_mut().unwrap() {
+        if let Some(partis) = bande["composition_partielle"].as_array_mut() {
+            partis[0]["effectif"] = json!(9);
+        }
+    }
+    let refus = verifier_artefacts(&manifeste, &[altere.to_string()], &eclats, &lignes);
+    assert!(
+        refus.iter().any(|r| r.contains("effectif")),
+        "un effectif glissé dans la composition doit être refusé, obtenu {refus:?}"
+    );
 }

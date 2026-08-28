@@ -36,7 +36,7 @@ use std::collections::{BTreeMap, BTreeSet};
 use std::path::{Path, PathBuf};
 
 /// Version du contrat de sortie qui produit ces lignes (ADR 0000 §6).
-const CONTRAT: &str = "0.4.0";
+const CONTRAT: &str = "0.5.0";
 /// Version du logiciel, **lue du paquet** : un littéral recopié ici diverge du
 /// `Cargo.toml` sans que rien ne le dise, et `logiciel.version` est un champ de
 /// traçabilité. `logiciel.commit` reste nul tant que le dépôt n'a pas de version

@@ -95,6 +95,20 @@ BANDE = {
     "groupe.an17.rn":      ("parti.rn",       "Rassemblement national"),
 }
 
+# La composition publiee sur la bande d'un groupe, lue sur le registre et non
+# recopiee ici : c'est le meme champ que le pipeline projette. Elle est
+# PARTIELLE — le registre est un extrait — et le nom de la cle le dit.
+REGISTRE = json.load(open(f"{W}/data/registre/partis.json", encoding="utf-8"))
+NOMS = {e["id"]: (e["nom"] if len(e["nom"]) <= 40 else e["sigle"])
+        for e in REGISTRE["entites"]}
+COMPOSITION = {
+    g["id"]: [{"entite": c["entite"], "libelle": NOMS[c["entite"]]}
+              for c in g["composition"]
+              if (c["debut"] is None or c["debut"] <= "2026-07-21")
+              and (c["fin"] is None or c["fin"] >= "2026-07-21")]
+    for g in REGISTRE["groupes"]
+}
+
 lignes = {}          # id -> texte de la ligne
 marqueurs = {}       # bande_id -> [(famille, marqueur)]
 libelles = {}
@@ -190,10 +204,14 @@ for bid in sorted(marqueurs, key=cle_bande):
             "motif_code": m["motif_code"], "motif": m["motif"],
             "dispersion": None if d is None else {"effectif": d["effectif"], "iqr": dec(d["iqr"], 4)},
             "preuve": m["preuve"]})
-    bandes.append({"id": bid, "libelle": libelles[bid], "marqueurs": sortie})
+    bande = {"id": bid, "libelle": libelles[bid]}
+    if COMPOSITION.get(bid):
+        bande["composition_partielle"] = COMPOSITION[bid]
+    bande["marqueurs"] = sortie
+    bandes.append(bande)
 
 instantane = {
-    "schema": "contrepoint/instantane/1", "contrat": "0.4.0", "id": "an17-2026-07-21",
+    "schema": "contrepoint/instantane/1", "contrat": "0.5.0", "id": "an17-2026-07-21",
     "chambre": "AN", "legislature": "17", "date": "2026-07-21",
     "date_arretee": "2026-08-27T00:00:00Z",
     "ancrage": {"famille": "votes", "ancre_gauche": "groupe.an17.lfi-nfp",
@@ -258,7 +276,7 @@ octets = len(texte_inst.encode("utf-8"))
 empreinte = hashlib.sha256(texte_inst.encode("utf-8")).hexdigest()
 
 manifeste = {
-    "schema": "contrepoint/manifeste/1", "contrat": "0.4.0",
+    "schema": "contrepoint/manifeste/1", "contrat": "0.5.0",
     "schemas": ["contrepoint/preuve/1", "contrepoint/instantane/1", "contrepoint/eclat-preuves/1"],
     "date_arretee": "2026-08-27T00:00:00Z",
     "licence": "Licence Ouverte / Open Licence (Etalab)",

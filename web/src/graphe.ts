@@ -47,7 +47,7 @@
 // GV-07. Le modele `systemes[]`, lui, garde l'ordre du contrat.
 
 import { scaleLinear } from 'd3-scale'
-import type { Instantane, Manifeste, Marqueur } from './contrat.ts'
+import type { Instantane, Manifeste, Marqueur, PartiDeclare } from './contrat.ts'
 import { ContratRefuse } from './contrat.ts'
 
 /** Tetes de note. La forme porte l'information au meme titre que la couleur. */
@@ -66,6 +66,9 @@ export type Voix = {
   /** Entite portant cette voix : le titre de la ligne dans son panneau. */
   entite: string
   libelleEntite: string
+  /** Partis que le registre retient pour ce groupe, vide partout ailleurs.
+   *  Recopies de la bande : le front n'en derive rien, il les nomme. */
+  composition: PartiDeclare[]
   /** Abscisse de la tete de note, dans les unites de `largeur`. Hors de toute
    *  plage graduee des que l'etat n'est pas « mesuree ». */
   x: number
@@ -91,6 +94,9 @@ export type Voix = {
   /** Ordonnee de la dispersion. Sous la valeur si la largeur le permet, sur une
    *  ligne propre sinon — deux textes ne se chevauchent jamais. */
   yDispersion: number | null
+  /** Ordonnee de la ligne qui nomme les partis abrites. `null` quand il n'y en
+   *  a pas — et alors la ligne n'a pas pris le cran de hauteur. */
+  yComposition: number | null
 }
 
 export type Systeme = { id: string; libelle: string; voix: Voix[] }
@@ -150,6 +156,10 @@ const SEUIL_ETROIT = 560
 /** Hauteur d'une ligne d'entite. Deux constantes de disposition, pas une echelle. */
 const H_LIGNE = 46
 const H_LIGNE_ETROIT = 76
+/** Cran supplementaire pour la ligne qui nomme les partis abrites par un
+ *  groupe. Seules ces lignes-la le prennent : un cran donne a toutes serait
+ *  du blanc sur quatorze lignes pour en servir deux. */
+const H_COMPOSITION = 17
 /** Part de la largeur reservee a la colonne de texte, et colonne des valeurs.
  *  La colonne porte le carre d'identite, le nom et sa nature : elle a ete
  *  elargie de 300 a 340 px pour que « Union des droites pour la Republique ·
@@ -335,6 +345,7 @@ export function disposer(
         etat,
         entite: bande.id,
         libelleEntite: bande.libelle,
+        composition: bande.composition_partielle ?? [],
         x,
         valeur,
         // Deux decimales, celles de l'echelle : quatre donneraient a l'IQR une
@@ -353,6 +364,7 @@ export function disposer(
         yTete: 0,
         portee,
         yDispersion: null,
+        yComposition: null,
       })
     }
     systemes.push({ id: bande.id, libelle: bande.libelle, voix })
@@ -376,15 +388,26 @@ export function disposer(
     const yAxe = y
     y += 14
     const hautLignes = y
-    lignes.forEach((v, i) => {
-      v.y = hautLignes + i * hLigne
-      v.hauteur = hLigne
+    // Les hauteurs ne sont plus toutes egales : la ligne d'un groupe qui nomme
+    // les partis qu'il abrite prend un cran de plus. Le curseur remplace le
+    // produit `i * hLigne`, qui supposait l'egalite.
+    let curseur = hautLignes
+    lignes.forEach((v) => {
+      v.y = curseur
+      // Le cran que prend la ligne des partis abrites. En etroit il s'insere
+      // ENTRE le sigle et le reste de la pile : pose apres la portee, la ligne
+      // se lisait comme le sous-titre de l'entite SUIVANTE.
+      const cran = v.composition.length > 0 ? H_COMPOSITION : 0
+      v.hauteur = hLigne + cran
       // En etroit, la ligne se lit en pile : nom, puis sigle et valeur, puis
-      // la dispersion, puis la portee. Rien ne se chevauche.
-      v.yTete = etroit ? v.y + 62 : v.y + hLigne / 2
-      v.yDispersion = v.dispersion === null ? null : etroit ? v.y + 48 : v.yTete + 18
+      // les partis abrites, puis la dispersion, puis la portee. Rien ne se
+      // chevauche.
+      v.yTete = etroit ? v.y + 62 + cran : v.y + hLigne / 2
+      v.yDispersion = v.dispersion === null ? null : etroit ? v.y + 48 + cran : v.yTete + 18
+      v.yComposition = cran === 0 ? null : etroit ? v.y + 50 : v.y + 49
+      curseur += v.hauteur
     })
-    y = hautLignes + lignes.length * hLigne
+    y = curseur
     const basLignes = y
     y += 20
     const yPied = y
