@@ -36,8 +36,9 @@ un MD5 par ressource. Il n'est pas un contrôle utilisable comme porte : la sour
 sert deux constructions du même contenu, et le MD5 publié suit celle que son
 propre serveur voit. Le contrôle qui décide est la taille annoncée, puis
 l'empreinte de contenu ([contrats.md](contrats.md) §2.8).
-C'est la réponse au piège de troncature relevé en ADR 0001 §1.5 : l'intégrité se
-vérifie contre l'empreinte du producteur, pas seulement contre `content-length`.
+C'est la réponse au piège de troncature relevé en ADR 0001 §1.5 : la complétude
+se vérifie contre `content-length`, puis l'intégrité contre l'**empreinte de
+contenu** calculée localement — jamais contre le MD5 du producteur (RG-114).
 AMO30 n'a pas de fiche équivalente ; pour lui, seul `content-length` et la reprise
 `curl -C -` sont disponibles.
 
@@ -231,10 +232,22 @@ non-votants et la cause suffisent à l'argument.
 | 4 | EPR | 1 304 | PSE 665, MG 639 | +0,234 | −0,127 | −0,360 |
 | 5 | EPR | 644 | MG 644 | +0,153 | −0,150 | −0,303 |
 
-Sur une amplitude inter-groupes de 2,6, le mauvais codage déplace la ligne la
-plus touchée de **0,72**, soit 28 % de l'axe, et ramène la troisième à mi-chemin
-du centre. Le mécanisme est celui annoncé dans `methode.md` : les zéros s'accumulent chez les députés
-institutionnellement empêchés de voter, et les tirent vers le milieu.
+Le mauvais codage déplace la ligne la plus touchée de **0,72 en unités brutes**.
+Rapporté à l'amplitude inter-groupes **du même ajustement**, cela donne la part
+de l'axe que l'erreur déplace — et cette part ne dépend pas de l'échelle :
+l'ancrage étant affine, un déplacement et une amplitude sont divisés par le même
+facteur. Elle vaut 28 % si cette amplitude brute vaut 2,6. **2,6 est mesuré sur
+un autre ajustement** — le tableau d'exploration de l'ADR 0001 §1.3, que l'ADR
+marque lui-même remplacé par `positionnement.md` §6 : numérateur et dénominateur
+ne viennent pas de la même exécution. `A VERIFIER` : relever l'amplitude brute
+inter-groupes de l'ajustement de ce paragraphe, sur les 7 979 scrutins retenus,
+et recalculer la part. Ne pas diviser 0,72 par l'amplitude **ancrée** 2,0 : 0,72
+n'est pas en unités ancrées, et le résultat de 36 % serait faux. L'erreur ramène
+par ailleurs la troisième ligne à mi-chemin du centre.
+
+Le mécanisme est celui annoncé dans `methode.md` : les zéros s'accumulent chez
+les députés institutionnellement empêchés de voter, et les tirent vers le
+milieu.
 
 **Et l'erreur ne se voit pas au niveau du groupe.** Corrélation des deux
 solutions : **0,9969**. Les moyennes de groupe bougent de moins de 0,04. En
@@ -352,8 +365,10 @@ Distribution de `syntheseVote.nombreVotants` sur 8 434 scrutins, pour 577 siège
 |---|---|---|---|---|---|---|---|
 | 16 | 59 | 89 | **133** | 192 | 246 | 574 | 147,9 |
 
-La médiane est à 23 % des sièges. Le corpus s'effondre dès que le
-seuil est relevé : ≥ 100 → 68,6 % ; ≥ 150 → 42,5 % ; ≥ 200 → 22,7 % ; ≥ 300 → 4,3 %.
+La médiane est à 23 % des sièges. Le corpus s'effondre dès que le seuil est
+relevé — comptes et parts **sur les 8 434 scrutins bruts**, comme le tableau des
+tranches ci-dessous : ≥ 100 → 5 789, soit 68,6 % ; ≥ 150 → 3 581, soit 42,5 % ;
+≥ 200 → 1 912, soit 22,7 % ; ≥ 300 → 359, soit 4,3 %.
 
 ### Le seuil ne peut pas être justifié par une rupture, parce qu'il n'y en a pas
 
@@ -363,6 +378,10 @@ composition** : la moitié de la somme des écarts absolus entre la part de chaq
 groupe parmi les votants et sa part de l'effectif déclaré
 (`nombreMembresGroupe`, somme médiane = 577). Zéro = les votants sont un
 échantillon exactement proportionnel de l'Assemblée.
+
+Tranches **sur les 8 434 scrutins bruts**. La tranche `[300, 577]` en compte
+359 ; la ligne `≥ 300` du tableau de sensibilité ci-dessous en compte 339, parce
+qu'elle part des 7 979 retenus. Deux bases, deux nombres, aucun n'est faux.
 
 | Tranche de `nombreVotants` | n | Distance médiane | p90 |
 |---|---|---|---|
@@ -385,7 +404,9 @@ désignent. Tout seuil de participation serait un arbitrage déguisé en mesure.
 
 L'axe a été ajusté sur sept corpus. Corrélation de Pearson des coordonnées
 individuelles avec le corpus de référence (minorité non vide, aucun seuil de
-participation) :
+participation). Les seuils sont ici cumulés **après** le filtre de minorité :
+les comptes partent des **7 979 retenus**, pas des 8 434 bruts des deux tableaux
+précédents.
 
 | Corpus | Scrutins | Corrélation | Ordre des groupes |
 |---|---|---|---|
@@ -486,19 +507,45 @@ puis comparé au groupe du bloc pour les 1 270 476 cellules :
 
 | Comparaison | Cellules |
 |---|---|
-| Identique | 1 250 505 (98,4 %) |
-| **Plusieurs mandats GP valides à la date** | **17 716 (1,4 %)** |
-| **Groupe différent** | **2 255 (0,2 %)** |
+| Identique | **1 268 189** (99,82 %), dont 1 244 918 exprimées |
+| ~~Plusieurs mandats GP valides à la date~~ | **0** après dédoublonnage — voir ci-dessous |
+| Groupe différent, hors `PO0` | **371**, dont **280** exprimées — c'est ce que le code publie |
+| Blocs `PO0`, non résolubles par la ventilation | **1 916**, dont **1 895** exprimées |
+| **Total** | **1 270 476** |
 
-Les 2 255 désaccords vont tous dans le même sens : AMO30 dit encore `NI`
+> **La colonne compte des lignes nominatives, pas des cellules.** La base de
+> 1 270 476 inclut les 23 383 non-votants — `1 270 476 − 1 247 093 = 9 991 + 7 508
+> + 5 884`. Une cellule est une position exprimée ; un non-votant n'en produit
+> aucune. Les deux décomptes sont donnés côte à côte pour que la distinction ne
+> se perde pas : c'est en la perdant qu'une « correction » a un moment inscrit
+> 1 916 cellules là où il y en a 1 895.
+>
+> `371 + 1 916 = 2 287`, ce qui rend lisible le troisième nombre de la note
+> ci-dessous.
+
+> **Recompté le 2026-08-28 par le code du cycle 1**, sur l'archive dont
+> l'empreinte de contenu est `c8457f34…`. Les valeurs annoncées auparavant —
+> 17 716 cellules ambiguës et 2 255 désaccords — ne se reproduisent pas.
+>
+> **L'ambiguïté disparaît entièrement** une fois la règle de dédoublonnage
+> appliquée : aucun acteur ne porte deux mandats de groupe valides à une même
+> date. Les 17 716 comptaient des doublons de la source, pas des ambiguïtés.
+>
+> Le désaccord vaut **2 287** si l'on compte les blocs `PO0` comme des
+> désaccords, **371** hors `PO0` toutes positions confondues, et **280** sur les
+> seules cellules exprimées. Trois nombres pour trois questions différentes : le
+> document en annonçait un seul sans dire laquelle.
+
+Les 280 désaccords vont tous dans le même sens : AMO30 dit encore `NI`
 (PO840056) là où la ventilation dit un groupe constitué. Exemple réel :
 PA642725, scrutin `VTANR5L17V10` du 2024-10-22 — ventilation `PO845425` (DR),
 mandat AMO30 `PO840056` (NI). Le mandat de non-inscrit porte une `dateFin` en
 retard sur la constitution du groupe. Une jointure par mandat classerait ces
 votes chez les non-inscrits.
 
-Les 17 716 cellules ambiguës viennent de **18 chevauchements de périodes** sur
-648 députés. Ils sont de deux natures :
+Les chevauchements de périodes relevés dans AMO30 — **18** sur 648 députés —
+sont de deux natures. Ils ne produisent aucune cellule ambiguë une fois le
+dédoublonnage appliqué, mais ils expliquent pourquoi il est nécessaire :
 
 - des **mandats dupliqués à périodes identiques** — PA267285 porte deux fois
   `PO845425` du 2024-07-19 à `null` ;
@@ -527,8 +574,10 @@ concentre sur **14 scrutins** (0,17 %) : **12** le 2024-12-02, un le 2025-04-07
 et `VTANR5L17V6256` le 2026-04-16 — ventilation recomptée sur l'archive complète
 ([verification-2026-08-27.md](verification-2026-08-27.md) §2), une version
 antérieure de ce document annonçant 13 pour la seule date de décembre. Dans ces
-14 fichiers, **tous** les blocs de groupe ont perdu leur `organeRef`, pas
-seulement un.
+14 fichiers, **146 blocs sur 168** ont perdu leur `organeRef` —
+`VTANR5L17V6256` en porte 1 sur 12. Une version antérieure de ce document
+annonçait « tous » : recompté le 2026-08-28, c'est faux, et la distinction
+compte puisqu'un scrutin peut mêler blocs résolus et blocs pendants.
 
 Traitement : pour un bloc `PO0`, le groupe est résolu par le mandat GP AMO30 des
 votants du bloc à la date du scrutin. Vérifié sur les 146 blocs — la résolution
@@ -584,10 +633,19 @@ Obligations de téléchargement, imposées par les défauts constatés du serveu
 
 1. Reprise `Range` tant que les octets reçus diffèrent de `content-length` — le
    serveur ferme la connexion en cours de transfert sans erreur (ADR 0001 §1.5).
-2. Comparaison au MD5 publié sur la fiche source lorsqu'il existe. Écart →
-   arrêt, pas d'avertissement.
-3. SHA-256 calculé et consigné dans le registre de preuves. Une archive dont
-   l'empreinte est inconnue n'entre pas dans le pipeline.
+2. MD5 publié sur la fiche source relevé et consigné **à titre documentaire**.
+   Il ne fait **jamais** échouer la récupération (RG-114) : la source répond en
+   plusieurs constructions du même contenu et le MD5 publié suit celle que son
+   propre serveur voit (§1, `contrats.md` §2.8,
+   [verification-2026-08-27.md](verification-2026-08-27.md) §0 point 3). Une
+   version antérieure de cette obligation prescrivait « écart → arrêt » : une
+   porte ainsi écrite tombe au hasard du serveur atteint, et
+   `scripts/recuperer-sources.sh` ne l'implémente pas.
+3. **Les deux empreintes** calculées et consignées dans le registre de preuves :
+   celle de l'archive, documentaire et hors de la clé de déduplication, et celle
+   du contenu, qui décide (`contrats.md` §2.8 et §3, RG-77, RG-115). La porte de
+   complétude est la taille annoncée ; la porte d'intégrité est l'empreinte de
+   **contenu** à date de source constante.
 
 **b. La matrice normalisée.** Sortie déterministe de l'ingestion : les triplets
 `(acteurRef, uid_scrutin, valeur)` triés par `(uid_scrutin, acteurRef)` — ordre
@@ -596,9 +654,12 @@ a livré `VTANR5L17V5646` avant `VTANR5L17V2136` sur la machine de mesure. Plus
 le décompte retenus / écartés avec motif, et par scrutin `dateScrutin`,
 `nombreVotants`, `typeVote.codeTypeVote`, le drapeau de mise au point.
 
-Cet artefact est une fonction pure des deux SHA-256 d'entrée et de la version du
-code d'ingestion. Il porte les trois dans son en-tête, ce qui rend le cache
-invalidable sans horloge.
+Cet artefact est une fonction pure des **deux empreintes de contenu d'entrée** et
+de la version du code d'ingestion. Il porte les trois dans son en-tête, ce qui
+rend le cache invalidable sans horloge. **Pas les empreintes d'archive** : une
+version antérieure les employait, et le répartiteur de la source les fait varier
+à contenu identique — la clé du cache aurait changé sans que la donnée bouge
+(`contrats.md` §2.8).
 
 **c. Ce qui n'entre jamais dans un calcul.** L'horloge. Les dates du pipeline
 sont des données d'entrée : `dateScrutin` du fichier, `last-modified` de
@@ -627,7 +688,8 @@ la même chose.
 ```sh
 # archives et empreintes
 curl -C - -O https://data.assemblee-nationale.fr/static/openData/repository/17/loi/scrutins/Scrutins.json.zip
-md5sum Scrutins.json.zip      # doit valoir le MD5 de la fiche source
+md5sum Scrutins.json.zip      # documentaire : le MD5 de la fiche suit la
+                              # construction servie et ne fait échouer rien (RG-114)
 sha256sum Scrutins.json.zip
 unzip -q Scrutins.json.zip -d s17 && ls s17/json | wc -l   # 8434
 

@@ -26,8 +26,8 @@ inter-familles, terme de lexique, axe à pôle dépréciatif).
 
 | Affirmation | Pourquoi la suite ne la prouve pas | Où elle est vérifiée |
 |---|---|---|
-| Les chiffres de corpus (8 434 scrutins, 7 979 retenus, densité 0,232, gain 0,591, `s2/s1` 0,652, IQR par groupe) | Ils portent sur les 26,3 Mo d'archive, non redistribuable comme fixture et hors de portée d'une suite rapide | Niveau 2 (§2), sur archive en cache, hors PR |
-| L'intégrité du téléchargement (reprise `Range`, MD5 du producteur) | Exige le réseau, seule étape qui n'a pas de test hors ligne (ingestion-votes.md §9d) | Niveau 3, échec bruyant |
+| Les chiffres de corpus (8 434 scrutins, 7 979 retenus, densité 0,232, gain 0,608, `s2/s1` 0,652, IQR par groupe) | Ils portent sur les 26,3 Mo d'archive, non redistribuable comme fixture et hors de portée d'une suite rapide | Niveau 2 (§2), sur archive en cache, hors PR |
+| L'intégrité du téléchargement (reprise `Range`, taille annoncée, empreinte de contenu) | Exige le réseau, seule étape qui n'a pas de test hors ligne (ingestion-votes.md §9d) | Niveau 3, échec bruyant |
 | L'égalité bit-à-bit entre deux implémentations | Fausse par construction (ADR 0001 §1.7) | Jamais. Aucun test ne l'affirme |
 | La justesse des trois libellés `PAN` / `PSE` / `MG` | Inférés des mandats, aucune énumération officielle lue | Rien n'en dépend : le codage ne lit que le bloc, pas la cause |
 
@@ -42,7 +42,7 @@ fixtures serait faux. La règle est de ne pas l'écrire.
 |---|---|---|---|---|
 | **1 — unitaire** | Tout ce qui est listé aux §5 à §11 sauf mention contraire | `docs/brique0/echantillons/` et matrices synthétiques construites dans le test | < 10 s, `cargo test` | Toute PR |
 | **2 — corpus** | Les seuils de sanité de positionnement.md §9 (contrôles 8, 9, 10, 11) et l'instantané de sortie complète | Archives réelles, prises dans le cache par SHA-256, jamais téléchargées par le test | minutes | La publication, pas la PR |
-| **3 — récupération** | Reprise sur troncature, MD5 publié, `last-modified` d'une source censée être vivante | Réseau | — | La publication |
+| **3 — récupération** | Reprise sur troncature, taille annoncée puis empreinte de contenu, `last-modified` d'une source censée être vivante | Réseau | — | La publication |
 
 Le niveau 1 comprend, hors `cargo test`, la suite shell du §4bis :
 `./scripts/test-recuperer-sources.sh`, exécutée par le travail `garde-fous` de
@@ -55,7 +55,7 @@ se fait par cible de test distincte, pas par un drapeau d'environnement lu au
 milieu d'une fonction.
 
 **Conséquence assumée** : les valeurs de référence les plus intéressantes
-(0,591, 0,652, l'ordre des douze groupes) ne gardent pas les PR. Ce qui garde
+(0,608, 0,652, l'ordre des douze groupes) ne gardent pas les PR. Ce qui garde
 les PR, c'est la classe d'erreur qui les produit — codage, imputation, ancrage,
 ordre — et elle est testable sur cinq fichiers.
 
@@ -123,7 +123,10 @@ du corpus réel n'est nécessaire, aucune horloge n'est lue.
 | REC-05 | `date_de_source_iso_complete` | trois horodatages ISO, et un `last-modified` HTTP | Le plus récent l'emporte ; le résultat vérifie `^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$` et est relu **à l'identique** par le `date -u -d` de pipeline.yml ; un `last-modified` HTTP devient un horodatage ISO complet | `CONTREPOINT_DATE_CALCUL` en dérive (contrats.md §8.1). Une date réduite au jour produit une ligne de preuve invalide contre le schéma `preuve-1`, et `date -u -d` d'une chaîne vide rend l'heure courante — c'est-à-dire l'horloge, précisément ce que le pipeline ne lit jamais |
 | REC-06 | `cache_immuable` | entrée de cache déjà présente, et empreinte inconnue | L'entrée présente n'est pas réécrite ; l'empreinte inconnue crée la sienne | Le cache indexé par empreinte est ce qui rend un calcul de 2026 rejouable en 2027 (RG-116, ingestion-votes.md §9e). Un cache réécrit n'est plus une archive, c'est une copie du jour |
 
-Les contrôles de niveau 3 restants — reprise réelle sur troncature, MD5 publié,
+| REC-07 | `paternite` | producteur, licence et date de source de deux sources différentes | La mention est dérivée des trois arguments ; celle de CHES ne nomme ni l'Assemblée nationale ni une Licence Ouverte | Deux des quatre sources ne sont pas de l'Assemblée. La mention était écrite en dur : elle attribuait à l'Assemblée un fichier du Chapel Hill Expert Survey et un fichier du ministère de l'intérieur, sous une licence qu'aucun des deux ne porte. C'est une fausse attribution, pas une approximation (RG-76) |
+| REC-08 | `archives.sh deposer` sur une source hors liste blanche | descripteurs portant l'URL de CHES, celle du nuancier, et une URL qui imite celle de l'Assemblée sans en être une | Refus dans les trois cas, **avant tout appel réseau** à `gh` | RG-118 et ADR 0000 §8 : CHES ne publie aucune licence, et la condition obtenue le 2026-08-27 est une exigence de citation, pas une cession de droits. Un dépôt de release est public et immuable ; l'asset mal déposé ne se reprend pas |
+
+Les contrôles de niveau 3 restants — reprise réelle sur troncature, empreinte de contenu,
 fraîcheur d'une source censée être vivante — sont exercés par une exécution
 manuelle de `scripts/recuperer-sources.sh` et consignés dans
 [verification-2026-08-27.md](verification-2026-08-27.md) §0.
@@ -150,18 +153,19 @@ Fixtures : les cinq scrutins verbatim et les deux index de
 | ING-11 | `par_delegation_est_une_position` | `VTANR5L17V5268.json` (les deux valeurs présentes) | `parDelegation = "true"` code comme `"false"` | 15,4 % des cellules exprimées. Les traiter en empêchement viderait un septième de la matrice (§3) |
 | ING-12 | `mise_au_point_ingeree_jamais_appliquee` | `VTANR5L17V2767.json` | La cellule vaut le vote de la machine ; la mise au point est un attribut du scrutin, comptée et exposée | 3 043 entrées, dont 746 combleraient une absence par une intention déclarée — interdit par methode.md. Et une matrice qui applique les mises au point est incohérente avec `sort.code` de la source |
 | ING-13 | `ordre_des_fichiers_sans_effet` [P] | les cinq scrutins, présentés dans 5 ordres fixes | Sortie identique à l'octet | La machine de mesure a livré `VTANR5L17V5646` avant `VTANR5L17V2136` : l'ordre du système de fichiers entre dans la sortie si rien ne l'interdit (definition-of-done.md §6) |
-| ING-14 | `dedoublonnage_des_mandats_gp` | `mandats-gp-l17.json`, cas mandat dupliqué | Regroupement par `(organeRef, dateDebut)`, `dateFin` maximale retenue, `null` = en cours ; aucun chevauchement résiduel entre deux `organeRef` | 18 chevauchements sur 648 députés, 17 716 cellules ambiguës. Sans la règle, la jointure choisit au hasard |
+| ING-14 | `dedoublonnage_des_mandats_gp` | `mandats-gp-l17.json`, cas mandat dupliqué | Regroupement par `(organeRef, dateDebut)`, `dateFin` maximale retenue, `null` = en cours ; aucun chevauchement résiduel entre deux `organeRef` | 18 chevauchements sur 648 députés, **0 cellule ambiguë** après dédoublonnage. Sans la règle, la jointure choisit au hasard |
 | ING-15 | `mandat_ref_ne_donne_pas_le_groupe` [C] | `VTANR5L17V156.json` + `mandats-gp-l17.json` | Le rattachement ne consulte jamais `votant.mandatRef` pour le groupe | `mandatRef` pointe toujours un mandat `ASSEMBLEE`, 1 270 476 / 1 270 476. Le piège est de croire tenir la jointure ; le test empêche de le recroire |
 
 ### Cas particulier `PO0` — conflit de spécification, acté par l'ADR 0003 §1
 
 ingestion-votes.md §8 retient **le groupe du bloc de ventilation**, AMO30 ne
-servant que de recours pour les 146 blocs `PO0`. positionnement.md §1 écrit
+servant que de recours pour les 146 blocs `PO0`. positionnement.md §1 **écrivait**
 l'inverse : « le rattachement ne peut donc pas être lu dans le fichier de
-scrutin ; il doit venir des mandats ». Les deux ne peuvent pas être vrais.
+scrutin ; il doit venir des mandats » — phrase corrigée depuis. Les deux ne
+pouvaient pas être vrais.
 
 Ce plan retient **ingestion-votes.md** : c'est la version mesurée sur les
-1 270 476 cellules, elle explique les 2 255 désaccords par un retard de `dateFin`
+1 270 476 cellules, elle explique les 280 désaccords par un retard de `dateFin`
 du mandat de non-inscrit, et elle évite une jointure là où la source publie déjà
 la réponse datée. C'est ce que
 [../adr/0003-arbitrages-de-coherence.md](../adr/0003-arbitrages-de-coherence.md)
@@ -171,7 +175,7 @@ la réponse datée. C'est ce que
 |---|---|---|---|---|
 | ING-16 | `po0_resolu_par_les_mandats` | `VTANR5L17V6256.json` + `mandats-gp-l17.json` | Chaque bloc `PO0` non vide est résolu par le mandat GP de ses votants à `dateScrutin`, unanimement ; un bloc vide est sans objet | 335 acteurs sur 14 scrutins perdent leur groupe, ou un treizième groupe apparaît dans l'agrégation |
 | ING-17 [C] | `po0_non_resolu_est_bloquant` | bloc `PO0` construit dans le test, votants sans mandat GP à la date | Erreur bloquante. **Pas** de groupe « inconnu », pas de bloc ignoré | Un groupe « inconnu » remonte dans une agrégation publiée et devient une bande du graphe |
-| ING-18 | `desaccord_ventilation_amo30_tranche_pour_la_ventilation` | `mandats-gp-l17.json`, cas de désaccord | Le groupe retenu est celui de la ventilation ; le désaccord est compté et exposé, pas tu | Les 2 255 cellules concernées basculeraient chez les non-inscrits, dont la dispersion interne est la plus grande du jeu |
+| ING-18 | `desaccord_ventilation_amo30_tranche_pour_la_ventilation` | `mandats-gp-l17.json`, cas de désaccord | Le groupe retenu est celui de la ventilation ; le désaccord est compté et exposé, pas tu | Les 280 cellules concernées basculeraient chez les non-inscrits, dont la dispersion interne est la plus grande du jeu |
 | ING-19 | `periode_de_validite_respectee` | `mandats-gp-l17.json`, cas des trois groupes successifs | Un vote du 2025-05-01 est attribué au groupe valide **ce jour-là**, jamais au dernier groupe connu | Invariant nommément exigé par definition-of-done.md §9. Nul sur les données de la v0 (aucun scrutin avant le 2024-10-08) et réel dès la XVIe législature : le test protège l'extension, pas la v0 |
 
 ---
@@ -187,7 +191,7 @@ la réponse datée. C'est ce que
 | MAT-05 [C] | `aucun_seuil_de_participation` | `VTANR5L17V5268.json`, 35 votants | Retenu. `nombreVotants` est **publié**, jamais utilisé comme porte | La mesure dit que le seuil justifiable est l'absence de seuil : à ≥ 300, RN passe devant DR et LIOT traverse le zéro. Un seuil réintroduit « par prudence » dégrade l'axe et personne ne le remarque |
 | MAT-06 | `decompte_retenus_ecartes_expose_avec_motif` | les cinq scrutins | Un décompte par motif, sortie visible de la v0.1 | La case de roadmap v0.1 promet cette sortie. Sans test, elle est cochée sans exister (definition-of-done.md, section finale) |
 | MAT-07 | `tri_canonique_des_triplets` | les cinq scrutins, ordres d'entrée permutés | Triplets triés par `(uid_scrutin, acteurRef)`, ordre lexicographique | Sans tri explicite, l'itération sur une table de hachage rend la sortie non reproductible d'un processus à l'autre — `HashMap` de Rust est semé par processus, l'erreur se manifeste une fois sur deux |
-| MAT-08 | `entete_porte_les_empreintes_dentree` | matrice produite à partir de deux SHA-256 factices | L'en-tête porte les deux empreintes d'archive et la version du code d'ingestion, et rien d'autre de variable | C'est ce qui rend le cache invalidable **sans horloge**. Sans en-tête, la seule façon de savoir si la matrice est à jour est une date, donc une horloge dans le pipeline |
+| MAT-08 | `entete_porte_les_empreintes_dentree` | matrice produite à partir de deux empreintes de contenu factices | L'en-tête porte les deux **empreintes de contenu** et la version du code d'ingestion, et rien d'autre de variable. **Pas les empreintes d'archive** : le répartiteur de la source les fait varier à contenu identique, et le cache s'invaliderait sans cause (ingestion-votes.md §9b, contrats.md §2.8) | C'est ce qui rend le cache invalidable **sans horloge**. Sans en-tête, la seule façon de savoir si la matrice est à jour est une date, donc une horloge dans le pipeline |
 | MAT-09 [C] | `aucune_imputation` | matrice à 77 % de cellules absentes | Le nombre de valeurs entrant dans les sommes de l'estimateur égale exactement le nombre de cellules observées | Les trois façons usuelles de compléter la matrice sont mesurées comme fausses ici (positionnement.md §2). Ce test est celui qui rend l'interdiction structurelle plutôt que déclarative |
 
 ---
@@ -219,6 +223,7 @@ sont au niveau 2.
 | EST-14 [C] | `aucune_reduction_flottante_parallele` | revue outillée : absence de `rayon` dans `Cargo.toml`, absence de `par_iter` sur le chemin de calcul | Aucun | `par_iter().sum()` a produit 3 représentations binaires distinctes sur 40 exécutions, aucune égale au séquentiel. La faute s'ajoute en une ligne de `Cargo.toml` et casse T1 sans casser T2 : aucun test de valeur ne la détecte |
 | EST-15 | `alarme_separation_des_axes` | matrice synthétique où `s2/s1` sort de [0,10 ; 0,90] | La famille « votes » passe en « non mesuré » ; aucune valeur publiée | Un tirage sur 25 a produit un ajustement dégénéré (`s2/s1 = 0,002`). Sans alarme, ce tirage-là se publie |
 | EST-16 | `alarme_pouvoir_explicatif` | matrice synthétique de gain < 0,40 | Idem | Transforme le risque accepté « le premier axe est peu informatif » (ADR 0000 §8) en résultat affiché plutôt qu'en publication silencieuse |
+| EST-17 | `ancrage_sur_les_medianes_des_deux_groupes_ancres` | positions brutes de deux groupes ancres, dont deux membres sous les 200 votes exprimés | Les deux médianes d'ancrage valent exactement ∓1 ; les membres sous le seuil ne déplacent ni la médiane d'ancrage ni l'échelle ; un groupe d'ancrage sans membre retenu **bloque** | L'ancrage vivait dans `examples/verification-corpus.rs`, hors de portée de la CI : un appelant pouvait passer à `agreger` des positions non ancrées sans qu'aucun test ne le voie. Et la coïncidence entre l'ensemble de la médiane d'ancrage et celui de la médiane publiée n'était retenue par rien — rompue, l'ancre droite est mesurée à +1,0002 |
 
 ---
 
@@ -228,13 +233,16 @@ sont au niveau 2.
 |---|---|---|---|---|
 | AGR-01 [C] | `aucune_coordonnee_individuelle_en_sortie` | sortie complète du pipeline sur fixtures | Aucun `PA…` accompagné d'une valeur de position, dans aucun fichier produit ni aucune réponse d'interface | Invariant exigé par definition-of-done.md §9 et ADR 0000 §2. C'est le principal rempart contre l'accusation de ciblage de personnes, et il se casse en ajoutant un champ « pour déboguer » |
 | AGR-02 | `mediane_de_groupe_et_pas_moyenne` | groupe hétérogène construit dans le test | La médiane. Une moyenne donnerait une valeur différente sur ce cas | Sur NI et LIOT, l'écart moyenne / médiane atteint le tiers de la valeur. Et la médiane est ce qui définit l'ancrage : deux estimateurs concurrents dans la même chaîne rendent l'ancrage incohérent avec la valeur publiée |
-| AGR-03 | `dispersion_publiee_est_iqr_et_etendue` | groupe construit dans le test | IQR et étendue. **Aucune variance** dans la sortie | Une variance sur un axe sans unité n'est pas lisible et invite à comparer deux exécutions. ROADMAP.md v0.2 et methode.md disent « variance intra-groupe » ; positionnement.md §6 les remplace — voir §16 |
+| AGR-03 | `dispersion_publiee_est_iqr_et_reechantillonnage` | groupe construit dans le test | IQR et écart-type de rééchantillonnage. **Aucune variance, aucune étendue** dans la sortie | Une variance sur un axe sans unité n'est pas lisible et invite à comparer deux exécutions ; une borne d'étendue **est** la coordonnée d'un membre identifiable, écartée par l'ADR 0003 §3. ROADMAP.md v0.2 et methode.md disent « variance intra-groupe » ; positionnement.md §6 les remplace — voir §16 |
 | AGR-04 | `regle_de_non_publication` | groupes construits : IQR > 0,25 ; écart-type de rééchantillonnage > 0,05 ; effectif retenu < 10 | Case « non mesuré » **avec sa raison**, jamais une médiane accompagnée d'un avertissement | Aujourd'hui NI (IQR 0,623) et LIOT (0,687) échouent au critère. Une valeur publiée avec avertissement est citée sans l'avertissement |
 | AGR-05 | `groupe_eteint_a_la_date_de_reference_absent` | `organes-groupes-l17.json` ; date de référence après le 2025-09-04 | `UDR` (`PO847173`) absent, pas présenté avec un effectif résiduel ; `AD` absent en toute date de scrutin | Une agrégation « dernier groupe observé » laisse UDR avec 1 membre et fabrique sur le graphe un groupe sans effectif réel |
 | AGR-06 | `date_de_reference_est_une_entree` [C] | même matrice, deux dates de référence | Sorties différentes et cohérentes ; aucune lecture d'horloge | Si la date de référence vient de l'horloge, deux exécutions du même jeu à deux dates donnent deux sorties : le déterminisme tombe, et la composition des groupes affichés dépend du moment du calcul |
 | AGR-07 | `effectif_retenu_publie_avec_la_valeur` | groupe construit dans le test | Chaque valeur porte son effectif et sa date | ADR 0000 §5 : « Chiffres : jamais seuls ». Une médiane sans effectif est incitation à comparer deux groupes de 9 et de 129 membres |
 | AGR-08 | `seuil_de_200_votes_ne_sapplique_quau_calcul_de_la_mediane` | groupe avec un membre à 12 votes exprimés | Le membre entre dans la matrice et dans l'estimation, il n'entre pas dans la médiane du groupe | L'ordre de ces deux opérations est inversable sans que rien ne casse visiblement, et l'inverser appauvrit la matrice sans corriger le mécanisme d'absence |
 | AGR-09 | `deux_uid_pour_une_meme_entite_ne_sont_pas_fusionnes_par_lestimateur` | `PO847173` et `PO872880` | Deux lignes de groupe distinctes ; la réconciliation appartient au registre d'entités | Un `libelleAbrev` égal fusionnerait deux périodes distinctes ; ici les deux abrégés diffèrent (`UDR` / `UDDPLR`) et évitent la fusion par accident. Le test empêche de compter sur cet accident |
+| AGR-10 | `ecart_type_de_reechantillonnage_est_celui_du_jackknife` | quatre plis de médianes écrites à la main, −0,02 / −0,01 / +0,01 / +0,02 | `√((K−1)/K · Σ(θₖ − θ̄)²)` = **0,0273861278752583**, en dur | Le facteur du jackknife ne vit que dans une ligne de `agregation.rs`, et la construction des plis vit dans `examples/verification-corpus.rs`, que la CI n'exécute pas. Sans ce test, le passage au bootstrap — `√(Σ/(K−1))` = 0,0182574185835055, un facteur 1,5 — survit à toute la suite, et avec lui un générateur aléatoire dans le pipeline |
+| AGR-11 [C] | `debug_de_membre_nexpose_pas_la_position` | un `Membre` construit dans le test, formaté par `{:?}` | L'acteur et le groupe restent lisibles ; **ni le mot `position`, ni sa valeur** | AGR-01 ne couvre que la chaîne rendue. Un `#[derive(Debug)]` sur `Membre` apparie l'acteur et sa coordonnée : un `dbg!`, un `{:?}` dans un message d'erreur ou une trace sur la sortie d'erreur publient une coordonnée individuelle sans passer par `rendre` |
+| AGR-12 | `le_seuil_de_liqr_est_le_premier_effectif_sans_extreme` | effectifs 2 à 32, positions distinctes croissantes | Le seuil de calcul de l'IQR égale le premier effectif où ni Q1 ni Q3 n'est un extrême, et rien n'est calculé en deçà | Le seuil valait **4**, et à 4 comme à 5 membres la médiane basse de la moitié inférieure **est** le minimum du groupe : l'IQR y portait une borne d'étendue (I19). Le test recompte la propriété par balayage plutôt que de comparer la constante à elle-même — les mutants 4, 5 et 7 sont tués |
 
 ---
 
@@ -270,6 +278,8 @@ fichier fautif universel : un test qui échoue pour deux raisons ne dit laquelle
 | REG-21 [C] | `au_plus_une_ancre_par_pole_et_par_date` (V24) | deux groupes portant `ancre_axe.pole = "gauche"` sur des périodes qui se chevauchent ; les deux mêmes sur périodes disjointes | Refus, puis acceptation | Deux ancres du même pôle à la même date rendent la transformation d'ancrage non définie : le pipeline choisirait selon l'ordre de lecture du fichier, et deux exécutions donneraient deux axes. Test **inécrivable avant** le contrat `0.3.0`, le registre n'ayant pas le champ |
 | REG-22 [C] | `ancre_manquante_arrete_le_pipeline` (V25) | registre sans ancre `droite` valide à la date d'agrégation | Échec bruyant ; aucune ligne `votes` émise, aucune ancre de remplacement choisie | RG-31. Une substitution silencieuse d'ancre change l'échelle de toutes les positions publiées sans changer leur identifiant d'échelle — le défaut exact que le découplage de contrats.md §2.3 rend visible. Test **inécrivable avant** le contrat `0.3.0` |
 
+| REG-23 [C] | `echantillon_et_registre_declarent_les_memes_sources` | `docs/brique0/echantillons/registre-l17.json` et `data/registre/partis.json` | Les deux déclarent les mêmes `url`, `empreinte_sha256`, `remarque` et `licence` par source | La bascule du nuancier vers le fichier régional du 2nd tour (RG-111, qui écarte un fichier portant des noms de candidats) a été appliquée au registre et pas à l'échantillon. Celui-ci a gardé l'empreinte de la source nominative et « 22 codes » au lieu de 17. Aucun test ne comparait les deux : le défaut était muet, et l'échantillon renvoyait un reproducteur vers le fichier écarté |
+
 REG-21 et REG-22 sont les deux tests que le blocage 3 de positionnement.md §11
 laissait inécrivables : sans le champ `ancre_axe`, il n'existait rien à déclarer,
 donc rien à contredire. REG-11b est le test de l'exception nommée à V13, qui n'a
@@ -300,6 +310,38 @@ l'exige definition-of-done.md.
 | PRE-11 | `valeur_publiee_trace_vers_une_ligne` | export du front | Chaque valeur affichable pointe une ligne existante du registre | definition-of-done.md §15. Une valeur sans preuve est exactement l'estimation affichée à la place d'une mesure, interdite par la règle permanente de ROADMAP.md |
 | PRE-12 | `date_darret_derivee_du_registre` | registre dont la dernière date de calcul est connue | Le bandeau « données arrêtées le … » vaut cette date ; aucune saisie manuelle, aucune horloge | Mitigation du risque d'abandon (ADR 0000 §8) : le bandeau ne vaut que s'il est dérivé. Saisi à la main, il reste juste tant que quelqu'un y pense |
 | PRE-13 | `codage_consigne_dans_la_ligne` | ligne de la famille votes | Le codage `+1/0/−1` et le choix `abstention = 0` sont consignés | Le choix `abstention = 0` est une décision, pas une évidence (positionnement.md §4). Non consignée, elle devient indiscernable d'un défaut |
+
+---
+
+## 10bis. Module `familles` — les familles `experts` et `administratif`
+
+Les deux familles que le pipeline n'a pas produites jusqu'ici. Elles ne
+partagent avec `votes` **ni source, ni échelle, ni méthode, ni objet mesuré**
+(contrats.md §2.2 et §2.3), et l'écart entre les trois est le produit : aucun
+test de ce module ne compare deux familles autrement que pour vérifier qu'elles
+ne se rencontrent pas.
+
+Fixtures : **aucun fichier**, et c'est délibéré. L'ADR 0000 §4 interdit de
+commiter un extrait de CHES — aucune licence n'y est publiée. Le fichier de
+résultats du ministère, lui, porte `Nom candidat n`, `Prénom candidat n` et
+`Elu n`, que RG-111 interdit d'ingérer « y compris dans un fichier intermédiaire
+ou de cache ». Les deux dialectes de CSV sont donc **fabriqués dans la suite**,
+avec les colonnes réelles et des valeurs inventées : le test exerce la forme des
+sources sans en republier la donnée. Le corpus réel est exercé au niveau 3, par
+une exécution du binaire.
+
+| ID | Test | Entrée | Sortie attendue | Ce qui casse si le test disparaît |
+|---|---|---|---|---|
+| FAM-01 | `lecture_csv_deux_dialectes` | CSV à virgule non guillemeté ; CSV à point-virgule guillemeté, avec un séparateur et un guillemet doublé **dans** un champ, et des fins de ligne CRLF | Les champs sont rendus tels quels, guillemets retirés, `"DUPOND;LE JEUNE"` en un seul champ | Un lecteur qui coupe sur le séparateur sans connaître les guillemets décale toutes les colonnes suivantes : la nuance lue devient celle du candidat d'à côté, sans erreur et sans trace |
+| FAM-02 | `lrgen_filtre_le_pays_et_ne_comble_pas` | vague portant deux pays dont un `party_id` commun, et une ligne sans valeur mesurée ; en-tête amputé | Seul `country = 6` entre ; la ligne sans valeur est absente, jamais à zéro ; l'en-tête amputé est un refus | `party_id` n'est unique que dans un pays. Sans le filtre, une entité française reçoit la position d'un parti étranger, et la ligne publiée ne porte rien qui le dise |
+| FAM-03 [C] | `aucune_colonne_nominative_ingeree` | fichier de nuances dont les colonnes `Nom`, `Prénom` et `Elu` portent des valeurs qui **sont** des codes valides | Seule la colonne `Nuance candidat n` est lue ; aucune valeur nominative n'entre | RG-111. Un lecteur qui balaye toutes les colonnes puis filtre après coup a déjà constitué, en mémoire et dans sa sortie, l'appariement d'une nuance à une personne |
+| FAM-04 [C] | `appariement_par_le_registre_seul` | registre où une coalition ne déclare aucun appariement CHES | Aucune ligne `experts` pour elle ; une ligne par appariement déclaré, ni plus ni moins | L'appariement parti → source est une **déclaration du registre**, pas une lecture de la source (registre-entites.md §2.5). Apparier par le libellé attribue à une coalition une position que l'enquête n'a pas mesurée |
+| FAM-05 [C] | `absence_dite_avec_son_code` | entité absente de CHES ; entité que le nuancier ne tranche pas | `hors_source` dans le premier cas, `source_indeterminee` dans le second, chacun avec son motif ; jamais une case vide | contrats.md §2.4. Une absence sans code oblige le front à lire de la prose pour savoir s'il dessine une bande, et une case vide se lit comme un centre |
+| FAM-06 [C] | `citation_ches_mot_pour_mot` | lignes `experts` ; citation abrégée injectée dans une entrée | Chaque entrée CHES porte la citation de sources.md §4, caractère pour caractère ; l'abrégée est refusée par I23 ; le nuancier n'en porte aucune | CHES n'accorde **aucun droit de republication** : la citation est la seule condition écrite obtenue, et elle est portée par la donnée. Une citation reformulée ou remontée en mention globale ne satisfait pas la condition et attribue à un jeu la citation d'un autre |
+| FAM-07 [C] | `nuance_publiee_en_code_jamais_en_nombre` | lignes `administratif` | `valeur` nulle, `valeur_code` renseigné, `echelle.min`, `max` et `decimales` nuls | Le nuançage n'est pas une mesure scientifique : c'est une classification administrative révisée par circulaire et contestée au Conseil d'État. Publiée comme un nombre, elle entre sur un axe et devient moyennable |
+| FAM-08 [C] | `echelles_propres_jamais_partagees` | lignes des deux familles | Une échelle par famille, distincte, et jamais celle des votes | Règle non négociable n° 6. La forme mécanique de l'interdiction de moyenner est l'échelle : deux familles qui partagent une graduation sont additionnables sans qu'aucune revue le voie |
+| FAM-09 [C] | `referentiel_et_observation_ne_se_traitent_pas_pareil` | `party_id` apparié et absent de la vague ; code apparié et non constaté au tour observé | Refus dans le premier cas ; ligne d'absence motivée dans le second, le code non constaté nommé dans le motif | CHES énumère des partis : un `party_id` disparu est une divergence registre/source, comme V15 et V16. Le nuancier énumère ce que des candidatures ont porté : `COM` est constaté au 1er tour de 2024 et pas au 2nd, et le confondre avec une divergence arrêterait le pipeline sur un fait normal — ou, dans l'autre sens, publierait une nuance que le scrutin n'a jamais portée |
+| FAM-10 | `lignes_valides_et_identifiant_stable` | lignes des deux familles | Les invariants du §6 et la confrontation au registre passent ; deux constructions rendent le même octet | Filet de non-régression : une ligne qui ne passe pas `verifier` n'est pas publiée, et ce test le dit avant l'exécution réelle plutôt qu'après |
 
 ---
 
@@ -356,7 +398,7 @@ lui-même, parce qu'elle ne correspond à aucun bug observé.
 | Les trois familles ne sont jamais moyennées | PRE-09, PRE-10, EXP-01, REG-20 | Un champ « position consolidée » ajouté pour simplifier le front, ou un identifiant repris d'une famille voisine faute de mieux |
 | Absent ≠ abstention | MAT-01, MAT-03, MAT-09, ING-09, ING-11 | Un `unwrap_or(0.0)`, un masque de valeurs manquantes, ou la lecture de `nonVotantsVolontaires` |
 | Aucune position sans date | PRE-01, PRE-02, PRE-03, AGR-06, AGR-07 | Un champ de date rendu optionnel pour faire passer un cas limite |
-| Aucune coordonnée individuelle publiée | AGR-01, REG-18 | Un champ de débogage laissé dans l'export |
+| Aucune coordonnée individuelle publiée | AGR-01, AGR-11, REG-18 | Un champ de débogage laissé dans l'export |
 | Aucun axe ni champ à pôle dépréciatif | REG-02, REG-16, REG-18, EXP-05, PRE-10 | Un nom technique anodin portant une valorisation |
 | Aucun identifiant technique ne nomme une entité mesurée | REG-21, EXP-05 | Un `echelle.id` ou un `methode.id` construit sur le sigle des deux groupes ancres, gravé dans chaque ligne par la règle d'ajout seul (RG-112) |
 | L'ancrage de l'axe est de la donnée, jamais du code | REG-21, REG-22 | Deux ancres en dur dans le pipeline, ou une ancre de remplacement choisie en silence quand la déclarée manque |
@@ -387,13 +429,13 @@ première ligne d'implémentation.
 | **5** | La matrice canonique | MAT-07, MAT-08, MAT-09, ING-13 | Un artefact de matrice trié, à en-tête portant les empreintes, identique d'une exécution à l'autre |
 | **6** | L'estimateur | EST-01, EST-02, EST-03, EST-04 | Un axe sur matrice synthétique, exact. Rien de publiable encore, et c'est voulu : les invariances viennent avant les vraies données |
 | **7** | Les invariances | EST-05, EST-06, EST-07, EST-13, EST-14 | Six permutations et quatre initialisations qui donnent le même axe. Le déterminisme cesse d'être une intention |
-| **8** | L'ancrage | EST-08, EST-09, EST-10, EST-11, EST-12 | Un axe où LFI-NFP vaut −1 et RN +1, ancres lues dans le registre, pipeline qui s'arrête si l'ancre manque |
-| **9** | L'agrégation et la règle de non-publication | AGR-01 → AGR-09 | Les bandes de partis avec médiane, IQR, étendue, effectif, date — et NI et LIOT en « non mesuré » avec leur raison. La première sortie qui ressemble au produit |
+| **8** | L'ancrage | EST-08, EST-09, EST-10, EST-11, EST-12, EST-17 | Un axe où LFI-NFP vaut −1 et RN +1, ancres lues dans le registre, pipeline qui s'arrête si l'ancre manque |
+| **9** | L'agrégation et la règle de non-publication | AGR-01 → AGR-12 | Les bandes de partis avec médiane, IQR, écart-type de rééchantillonnage, effectif, date — et NI et LIOT en « non mesuré » avec leur raison. La première sortie qui ressemble au produit |
 | **10** | Les alarmes | EST-15, EST-16 | Deux corpus synthétiques dégradés qui font passer la famille « votes » en « non mesuré ». Le risque accepté de l'ADR 0000 §8 devient un comportement observable |
-| **11** | Le registre d'entités | REG-01 → REG-22 | Un validateur qui refuse vingt-deux fichiers fautifs et accepte l'extrait. Une PR de correction du registre devient possible |
+| **11** | Le registre d'entités | REG-01 → REG-23 | Un validateur qui refuse vingt-deux fichiers fautifs et accepte l'extrait. Une PR de correction du registre devient possible |
 | **12** | Le registre de preuves | PRE-01 → PRE-13 | Le JSONL en ajout seul, rejouable, idempotent. Le contrat des briques 1-3 existe |
 | **13** | L'export et le front | EXP-01 → EXP-08 | Le graphe de la roadmap v0.6, sur fixtures |
-| **14** | Le niveau 2 | Contrôles 8, 9, 10, 11 de positionnement.md §9, sur archive en cache | Les chiffres du corpus réel retrouvés par l'implémentation Rust, aux tolérances du §4. C'est ici, et seulement ici, que 0,591 et 0,652 sont vérifiés |
+| **14** | Le niveau 2 | Contrôles 8, 9, 10, 11 de positionnement.md §9, sur archive en cache | Les chiffres du corpus réel retrouvés par l'implémentation Rust, aux tolérances du §4. C'est ici, et seulement ici, que 0,608 et 0,652 sont vérifiés. **0,608, pas 0,591** : la valeur actée est celle du recomptage sur le corpus retenu (ADR 0003 §3, positionnement.md §11), et un test écrit sur 0,591 épinglerait la mesure écartée |
 
 Deux points d'ordre non négociables : **MAT-01 avant tout code de matrice**
 (cycle 2), parce que l'erreur qu'il attrape est invisible sur la sortie publiée ;
@@ -420,6 +462,7 @@ et pas avant.
 | `AGR` | `pipeline/tests/agregation.rs` |
 | `REG` | `pipeline/tests/registre.rs` |
 | `PRE` | `pipeline/tests/preuves.rs` |
+| `FAM` | `pipeline/tests/familles.rs` |
 | `EXP` | `pipeline/tests/export.rs`, `web/src/contrat.test.ts` |
 
 Pointer le répertoire `pipeline/` aurait fait basculer sept préfixes — 96
@@ -448,7 +491,7 @@ porte, le travail qui l'exécute — ou pourquoi elle ne peut pas encore l'être
 | Porte | Travail de `ci.yml` | État |
 |---|---|---|
 | Porte 1 — identifiants de test déclarés | `portes` → `./scripts/portes-de-ci.sh identifiants` | **Active.** S'applique par préfixe, dès que la suite de ce préfixe existe. Au 2026-08-27 : `REC` et `ADA`, soit dix identifiants écrits ; les 92 autres sont annoncés « en attente », pas passés sous silence |
-| Porte 2 — branches ≥ 90 % sur `matrice` et `estimateur` | `couverture-et-determinisme` | **Squelette**, gardé par `hashFiles('pipeline/src/main.rs')`. Le module n'existe pas ; la commande `cargo llvm-cov --branch` et le seuil sont écrits |
+| Porte 2 — couverture de **lignes** sur `matrice` et `estimateur` | `couverture-et-determinisme` | **Active.** La couverture de **branches** exigerait `-Z coverage-options=branch`, donc le compilateur *nightly* : l'épingler contredirait la reproductibilité que l'ADR 0001 impose, *nightly* étant une cible mouvante. Le seuil de branches reste **déclaré et non tenu**, et c'est dit ici plutôt que masqué par un drapeau qui échoue |
 | Porte 3 — lignes ≥ 70 % sur le binaire | `couverture-et-determinisme` | **Squelette**, même garde, même commande |
 | Lexique sur le diff | `garde-fous` → `./scripts/lexique.sh code` et `docs` | **Active** depuis l'origine |
 | Deux exécutions consécutives, artefacts identiques | `couverture-et-determinisme` | **Squelette.** C'est le contrôle 1 de contrats.md §8.2 ; il exige le binaire `contrepoint` |
@@ -473,7 +516,7 @@ par `hashFiles` ne publiant aucun contexte quand il saute
 ### Porte 1 — la liste nominative des invariants, bloquante
 
 Tout identifiant de test de ce document (`ADA-…`, `ING-…`, `MAT-…`, `EST-…`, `AGR-…`,
-`REG-…`, `PRE-…`, `EXP-…`) doit exister comme fonction de test dans l'arbre, dès
+`REG-…`, `PRE-…`, `FAM-…`, `EXP-…`) doit exister comme fonction de test dans l'arbre, dès
 que la PR touche le module concerné. La vérification est une boucle de grep en
 CI : les identifiants sont dans le document, les noms de fonctions sont dans le
 code, l'un cite l'autre.
@@ -494,7 +537,7 @@ rien couvre 100 % des lignes. Ce que le projet doit garantir n'est pas un taux,
 c'est une liste — celle de definition-of-done.md §9, de positionnement.md §9 et
 des 25 règles du registre. Une liste se vérifie exactement ; un taux s'approche.
 
-### Porte 2 — couverture de branches ≥ 90 % sur deux modules
+### Porte 2 — couverture sur deux modules (lignes ; branches hors de portée sur stable)
 
 Sur `matrice` (codage, filtre) et sur `estimateur` (ancrage, alarmes)
 uniquement.
@@ -544,9 +587,9 @@ et laquelle chaque cycle aurait figée sans arbitrage.
 
 | # | Contradiction | Cycle bloqué | Version actée |
 |---|---|---|---|
-| 1 | **Source du rattachement au groupe.** ingestion-votes.md §8 : le bloc de ventilation, AMO30 en recours. positionnement.md §1 : « le rattachement ne peut pas être lu dans le fichier de scrutin ; il doit venir des mandats » | 4 | **Acté** — ADR 0003 §1 : le bloc de ventilation du scrutin, mesuré sur 1 270 476 cellules (2 255 désaccords, 0,2 %, tous par retard de `dateFin` du mandat de non-inscrit). AMO30 : recours pour les blocs `PO0`, périodes de validité, contrôle croisé. `ING-16` à `ING-19` peuvent être écrits |
+| 1 | **Source du rattachement au groupe.** ingestion-votes.md §8 : le bloc de ventilation, AMO30 en recours. positionnement.md §1 : « le rattachement ne peut pas être lu dans le fichier de scrutin ; il doit venir des mandats » | 4 | **Acté** — ADR 0003 §1 : le bloc de ventilation du scrutin, mesuré sur 1 270 476 lignes nominatives (280 désaccords sur cellules exprimées, tous par retard de `dateFin` du mandat de non-inscrit). AMO30 : recours pour les blocs `PO0`, périodes de validité, contrôle croisé. `ING-16` à `ING-19` peuvent être écrits |
 | 2 | **Nombre de scrutins à `PO0`.** ingestion-votes.md §8 : 14 scrutins, dont 13 le 2024-12-02 et un le 2026-04-16. positionnement.md §1 : 14 scrutins, dont 13 le 2024-12-02, un le 2025-04-07 **et** un le 2026-04-16 — soit 15 énumérés pour 14 annoncés | 4 | **Acté** — ADR 0003 §3 : recompté sur l'archive complète, **14** au total, **12** le 2024-12-02, 1 le 2025-04-07, 1 le 2026-04-16. Juste sur le total, faux sur la ventilation dans les deux documents |
-| 3 | **Gain du rang 1.** ADR 0001 §1.3 : 2,1 %. positionnement.md §1 et blocage 1 : 59,1 %, invariant au codage | 14 | **Acté** — ADR 0003 §3 : **60,8 % du résidu** après constante par scrutin, recompté ; 51,5 % de la variance totale. L'ADR 0001 se trompait d'un facteur trente |
+| 3 | **Gain du rang 1.** ADR 0001 §1.3 : 2,1 %. positionnement.md §1 et blocage 1 **portaient** 59,1 %, invariant au codage | 14 | **Acté** — ADR 0003 §3 : **60,8 % du résidu** après constante par scrutin, recompté ; 51,5 % de la variance totale, corpus retenu de 7 979 scrutins. L'ADR 0001 se trompait d'un facteur trente. Les 59,1 % venaient d'une autre matrice d'entrée, pas d'une convergence moindre (positionnement.md §11) ; les six occurrences et les trois `0,591` de ce plan sont corrigés depuis le 2026-08-28 |
 | 4 | **Dispersion publiée.** ROADMAP.md v0.2 et methode.md §2 : « variance intra-groupe publiée ». positionnement.md §6 : IQR et étendue, « aucune variance » | 9 | **Acté** — ADR 0003 §3, tranché par la relecture juridique : **IQR et écart-type de rééchantillonnage, jamais la variance, jamais l'étendue** — une borne d'étendue est la coordonnée d'un membre identifiable. `AGR-03` l'épingle ; ROADMAP.md v0.2 et methode.md §2 mis à jour dans la PR de l'ADR |
 | 5 | **Fixture du cas `votant` objet nu.** ADR 0001 §7 étape 0 cite `VTANR5L17V5646`. `echantillons/README.md` livre `VTANR5L17V5268` | 0 | **Acté** — ADR 0003 §3 : `VTANR5L17V5268`, la fixture qui existe |
 | 6 | **Filtre de participation.** ROADMAP.md v0.1 et methode.md exigent « un seuil documenté ». ingestion-votes.md §6 : aucun seuil, la mesure dit que le seuil justifiable est l'absence de seuil | 3 | **Acté** — ADR 0003 §2 : **aucun seuil**. Filtre unique `min(pour, contre) ≥ 1` — 455 écartés sur 8 434, dont les 23 motions de censure, 7 979 retenus. `nombreVotants` publié, jamais une porte. `MAT-05` l'épingle ; ROADMAP.md v0.1 et methode.md §1 mis à jour dans la PR de l'ADR |

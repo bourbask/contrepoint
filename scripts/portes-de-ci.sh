@@ -26,7 +26,7 @@ signaler() { echec=1; printf '::error::%s\n' "$1"; }
 # sens : un identifiant déclaré et non écrit est une porte fantôme, un
 # identifiant écrit et non déclaré est un test que le plan ne connaît pas.
 PLAN=docs/brique0/plan-de-tests.md
-PREFIXES='REC|ADA|ING|MAT|EST|AGR|REG|PRE|EXP'
+PREFIXES='REC|ADA|ING|MAT|EST|AGR|REG|PRE|FAM|EXP'
 
 # Une suite par préfixe, désignée par SON FICHIER et non par le répertoire qui
 # la contiendra. C'est ce qui évite la falaise : pointer `pipeline` faisait
@@ -43,6 +43,7 @@ suites_de() {
     AGR) echo pipeline/tests/agregation.rs ;;
     REG) echo pipeline/tests/registre.rs ;;
     PRE) echo pipeline/tests/preuves.rs ;;
+    FAM) echo pipeline/tests/familles.rs ;;
     EXP) echo pipeline/tests/export.rs web/src/contrat.test.ts ;;
     *)   echo "" ;;
   esac
@@ -51,7 +52,7 @@ suites_de() {
 identifiants() {
   echo "── porte 1 : identifiants de test déclarés contre suites écrites"
   local prefixe presents id trouve suites s
-  for prefixe in REC ADA ING MAT EST AGR REG PRE EXP; do
+  for prefixe in REC ADA ING MAT EST AGR REG PRE FAM EXP; do
     presents=""
     for s in $(suites_de "$prefixe"); do
       [ -e "$s" ] && presents="$presents $s"
@@ -203,7 +204,7 @@ tests_ignores() {
   # « à réactiver plus tard » de durer trois ans.
   r=$(find pipeline web \( -name target -o -name node_modules -o -name dist \) -prune -o \
         \( -name '*.rs' -o -name '*.ts' -o -name '*.tsx' \) -print0 2>/dev/null \
-      | xargs -0 -r grep -nHE -- '#\[ignore|\.(skip|todo)\(|it\.skip|describe\.skip|xit\(' \
+      | xargs -0 -r grep -nHE -- '#\[ignore|\b(it|test|describe)\.(skip|todo)\(|\bxit\(|\bxdescribe\(' \
       | grep -vE '[0-9]{4}-[0-9]{2}-[0-9]{2}' || true)
   if [ -n "$r" ]; then
     signaler "test sauté sans date de reprise sur la ligne :"
@@ -213,12 +214,58 @@ tests_ignores() {
   fi
 }
 
+
+# ---- porte 4 : la taille du registre citée dans la documentation ------------
+#
+# `data/registre/partis.json` voit sa taille citée dans trois documents. Elle a
+# été fausse trois fois : 42 972 pour un fichier de 42 970, puis 42 970 après
+# une bascule d'URL qui l'avait mis à 42 961, puis encore après la correction de
+# l'empreinte du nuancier. C'est le seul chiffre du dépôt qui bouge à chaque
+# correction du registre, et personne ne pense à le suivre.
+#
+# La porte ne regarde **que** les lignes qui nomment `partis.json` : une première
+# version, qui balayait toutes les tailles de la documentation, signalait
+# vingt-sept lignes justes. Une porte qui crie faux se fait désactiver.
+#
+# L'empreinte n'est volontairement pas contrôlée ici : REG-23 la compare entre
+# l'échantillon et le registre, et l'invariant I3 la confronte à la source à
+# chaque exécution du pipeline. Un troisième motif, forcément approximatif sur
+# de la prose, n'ajouterait que du bruit.
+taille_du_registre() {
+  printf '\n── porte 4 : taille du registre citée dans la documentation\n'
+  local fichier=data/registre/partis.json
+  if [ ! -f "$fichier" ]; then
+    signaler "$fichier absent — la porte ne peut rien affirmer"
+    return
+  fi
+  local octets attendu code=0 lignes r
+  octets=$(LC_ALL=C wc -c < "$fichier" | tr -d ' ')
+  # La prose groupe les milliers par une espace ordinaire, insécable ou fine.
+  attendu="${octets:0:2}[  ]?${octets:2}"
+
+  lignes=$(grep -rn "partis\.json" docs/ 2>/dev/null) || code=$?
+  if [ "$code" -gt 1 ]; then
+    signaler "grep en erreur — la porte n'a rien pu affirmer"
+    return
+  fi
+  r=$(printf '%s\n' "$lignes" \
+        | grep -E "[0-9]{2}[  ]?[0-9]{3} (o|octets)" \
+        | grep -vE "$attendu (o|octets)" || true)
+  if [ -n "$r" ]; then
+    signaler "taille citée pour partis.json qui n'est pas la sienne ($octets octets) :"
+    printf '%s\n' "$r" | cut -c1-150 | sed 's/^/      /'
+  else
+    echo "  ✓ toute taille citée pour partis.json vaut $octets octets"
+  fi
+}
+
 case "${1:-tout}" in
   identifiants)   identifiants ;;
   invariants)     invariants ;;
   tests-ignores)  tests_ignores ;;
-  tout)           identifiants; echo; invariants; echo; tests_ignores ;;
-  *) echo "usage: $0 [identifiants|invariants|tests-ignores|tout]" >&2; exit 2 ;;
+  registre)       taille_du_registre ;;
+  tout)           identifiants; echo; invariants; echo; tests_ignores; echo; taille_du_registre ;;
+  *) echo "usage: $0 [identifiants|invariants|tests-ignores|registre|tout]" >&2; exit 2 ;;
 esac
 
 echo

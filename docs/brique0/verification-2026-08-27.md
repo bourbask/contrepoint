@@ -172,8 +172,36 @@ sans générateur aléatoire.
 | **Gain du rang 1 sur le résidu** | **60,8 %** |
 | Gain du rang 1 sur la variance totale | 51,5 % |
 
-**`positionnement.md` avait raison** ; l'écart de 59,1 à 60,8 tient à la
-convergence de l'estimateur. **L'ADR 0001 se trompait d'un facteur trente**, et
+**`positionnement.md` avait raison sur l'ordre de grandeur**, et l'explication
+que ce document donnait de l'écart 59,1 → 60,8 était **fausse**.
+
+Elle attribuait l'écart à la convergence de l'estimateur. Ce n'était pas une
+mesure, c'était une supposition — et le cycle 2 l'a mise à l'épreuve en ajustant
+les deux modèles côte à côte, mêmes itérations, même initialisation :
+
+| Modèle | Résidu | Gain |
+|---|---|---|
+| Constante par scrutin calculée **une fois**, puis rang 1 | 383 381,1 | 59,2 % |
+| Constante **réajustée à chaque itération**, conjointement au rang 1 | **368 791,6** | **60,8 %** |
+
+**L'écart de 1,6 point est de modèle, pas de convergence.** Les 59,1 % de
+`positionnement.md` §4 décrivent le premier ; les 60,8 % consignés ici exigent le
+second. Les deux sont défendables, mais ce ne sont pas les mêmes chiffres, et le
+document en publiait un en décrivant l'autre.
+
+Un second signe le confirme, indépendant du tableau : la part prise par la
+constante par scrutin passe elle aussi de 19,8 % (`positionnement.md` §1,
+mesure 8) à 15,2 % ici. Or cette constante est la moyenne des valeurs observées
+de chaque scrutin — une forme close, qu'aucun nombre d'itérations ne déplace.
+Deux matrices d'entrée, donc, et non un même ajustement mieux convergé.
+
+Celle du présent recomptage est déclarée ci-dessus — 7 979 scrutins retenus ;
+celle de `positionnement.md` §1 ne l'est pas. `A VERIFIER` : rejouer
+l'ajustement sur les 8 434 scrutins puis sur les 7 979, et comparer les trois
+sommes des carrés à celles du tableau ci-dessus.
+
+C'est l'estimateur conjoint qui est implémenté : c'est celui dont ce document
+publie les nombres, et `positionnement.md` §4 est à aligner. **L'ADR 0001 se trompait d'un facteur trente**, et
 la phrase qu'il en tirait — « l'axe ne résume qu'une petite part du comportement
 de vote » — était destinée au site. Corrigée.
 

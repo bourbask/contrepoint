@@ -14,8 +14,8 @@ référence, fixture du test REG-01 :
 [`data/registre/partis.json`](../../data/registre/partis.json). La fixture de test qui lui correspond vit avec les autres, dans [`echantillons/registre-l17.json`](echantillons/registre-l17.json).
 
 **Les deux fichiers sont identiques octet pour octet au 2026-08-27**, et
-`186fc8195d357d08c65ba0bceb45da90a0132df3bd859e039e7303eee96a9680` est leur
-empreinte commune, pour 42 970 octets. L'extrait couvre la XVIIe législature en
+`b7bdb819be8b6773a8af5d2a939a78120e710e6f3cf6e86e87db0443168aaf2b` est leur
+empreinte commune, pour 42 950 octets. L'extrait couvre la XVIIe législature en
 entier — 14 groupes, 12 entités, 9 sources — il n'y avait donc rien à ajouter
 Le fichier réel est `data/registre/partis.json`. Il n'existe qu'un seul registre sous `data/` : la fixture de test est un fichier distinct, sous `echantillons/`, et rien ne se recopie à la main.
 
@@ -80,8 +80,17 @@ Pièges relevés dans la source, tous vérifiés :
 - **`libelleAbrev` ≠ `libelleAbrege` sur `PO872880`** : `UDDPLR` d'un côté,
   `UDR` de l'autre. Aucune clé ne se fait sur une abréviation.
 - **`NI` n'est pas un groupe** : c'est l'agrégat des députés sans groupe. Il a
-  un `uid` et des dates comme les autres, et son écart-type intra est de 0,649
-  contre 0,065 pour le RN (ADR 0001, §1.3). Ne jamais l'agréger comme un parti.
+  un `uid` et des dates comme les autres, et sa dispersion est la plus grande du
+  jeu — **IQR 0,623 contre 0,052 pour le RN**, `positionnement.md` §6, corpus
+  retenu de 7 979 scrutins. Ne jamais l'agréger comme un parti.
+
+  Ce point portait « écart-type intra de 0,649 contre 0,065 pour le RN (ADR 0001
+  §1.3) ». Deux raisons de ne plus l'écrire ainsi, et la seconde suffirait :
+  l'ADR 0001 §1.3 est encadré comme tableau d'exploration remplacé par
+  `positionnement.md` §6, dont le recomptage du 2026-08-27 confirme les effectifs
+  et non les siens ; et l'**écart-type intra-groupe** n'est pas une grandeur que
+  ce projet publie — RG-42, `ton.md` §3 et l'ADR 0003 §3 point 4 retiennent l'IQR
+  et l'écart-type de rééchantillonnage, jamais lui.
 - **AMO50 est inutilisable** : figé au 2024-07-11, il ne contient pas
   `PO845401` (groupe RN) pourtant référencé par les scrutins de 2025.
 
@@ -217,12 +226,12 @@ COM DIV DSV DVC DVD DVG ECO ENS EXD EXG FI
 HOR LR RDG REC REG RN SOC UDI UG UXD VEC
 ```
 
-Le fichier `resultats-definitifs-par-circonscription.csv` du 2nd tour porte en
-outre, par candidat, `Nuance candidat n`, `Nom candidat n` et `Elu n`. **Ces
-trois colonnes ne sont pas ingérées** : l'appariement d'une nuance administrative
-à une personne physique est hors périmètre (RG-111). Seul l'ensemble des codes
-distincts constatés est utilisé — la famille `administratif` mesure des partis et
-des coalitions, jamais des personnes.
+Le fichier retenu est `resultats-definitifs-par-region.csv` du 2nd tour, qui
+**ne porte aucune colonne nominative** et constate exactement les **mêmes 17
+codes** que la version par circonscription — vérifié le 2026-08-28, ensembles
+identiques. Le fichier par circonscription est écarté pour cette seule raison :
+il porte `Nuance candidat n` et `Nom candidat n` sur la même ligne, et RG-111
+interdit ce rattachement dans tout fichier du projet, cache compris.
 
 Trois faits à conserver avec la donnée :
 
@@ -537,11 +546,15 @@ toutes deux : **V13** exige l'inclusion, **V16** exige l'égalité stricte avec
 `viMoDe`. Retenir V13 obligeait à écrire une `dateDebut` fausse ; retenir V16
 obligeait à violer V13.
 
-**V13 cède, nommément, pour ce seul organe.** La raison est celle du §2.1 :
-`PO840056` **n'est pas un groupe**. C'est l'agrégat administratif des députés sans
-groupe, ouvert avec la mandature et non constitué au sein de la législature — son
-écart-type intra est de 0,649 contre 0,065 pour le RN, et le registre ne l'agrège
-jamais comme un parti. Une exception nommée à une règle de période est
+**V13 cède, nommément, pour ce seul organe.** La raison est **de définition**, et
+elle se suffit : `PO840056` **n'est pas un groupe**. C'est l'agrégat administratif
+des députés sans groupe, ouvert avec la mandature et non constitué au sein de la
+législature, et le registre ne l'agrège jamais comme un parti. Cette exception
+était auparavant adossée à un écart-type intra-groupe de 0,649 lu dans l'ADR 0001
+§1.3 : chiffre d'un tableau que l'ADR déclare lui-même remplacé, et grandeur que
+le projet ne publie pas (RG-42). Une règle de validation adossée à une mesure
+retirée ne peut plus être refusée sur pièces ; adossée à la définition, elle
+peut. Une exception nommée à une règle de période est
 vérifiable ; une date recopiée de travers ne l'est pas. V16 ne cède pas : c'est
 elle qui rend le registre falsifiable contre sa source, et une exception y
 ouvrirait la porte à la correction à la main que le contrôle existe pour attraper.

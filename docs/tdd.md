@@ -87,7 +87,7 @@ existe. Une référence non lue épingle le premier bug rencontré.
 Cela arrive : la méthode change, une mesure invalide une spécification, une
 tolérance était mal placée. La procédure, dans cet ordre :
 
-1. **Le motif est écrit dans la description de la PR**, avec la mesure ou l'arbitrage qui l'exige. « Le test était trop strict » n'est pas un motif ; « la mesure du §X donne 59,1 % et non 2,1 % » l'est.
+1. **Le motif est écrit dans la description de la PR**, avec la mesure ou l'arbitrage qui l'exige. « Le test était trop strict » n'est pas un motif ; « la mesure du §X donne 60,8 % et non 2,1 % » l'est.
 2. **La documentation change dans la même PR** — docs/methode.md si la méthode bouge, l'ADR concerné si l'arbitrage bouge (definition-of-done.md §19). Pas de PR de rattrapage documentaire.
 3. **Le changement de test est seul dans son commit**, séparé du code qu'il autorise. Un diff où le test et le code changent ensemble ne permet pas de voir lequel a cédé.
 4. **La version du contrat de sortie est incrémentée** si l'attendu publié bouge (ADR 0000 §6).
