@@ -60,6 +60,15 @@ present() { # empreinte
 deposer() { # dossier de cache, nommé par l'empreinte
   local dossier="${1%/}" empreinte archive
   empreinte=$(basename "$dossier")
+  # Le refus de redistribuer vient AVANT la recherche d'archive. Sinon une
+  # source non redistribuable — donc de forme `fichier`, sans zip — fait
+  # echouer l'etape, le pipeline s'arrete sous `bash -e`, et `deposer-index`
+  # n'est jamais atteint : la garde anti-modification-silencieuse se desarme
+  # sans que rien ne le dise. Refus par liste blanche, mais refus propre.
+  if ! grep -qE '^url=https://data\.assemblee-nationale\.fr/' "$dossier/descripteur.txt"; then
+    echo "$dossier : source hors de la liste redistribuable (RG-118, ADR 0000 §8) — non déposée"
+    return 0
+  fi
   archive=$(find "$dossier" -maxdepth 1 -name '*.zip' | head -1)
   if [ -z "$archive" ]; then
     echo "::error::aucune archive dans $dossier" >&2
@@ -71,13 +80,6 @@ deposer() { # dossier de cache, nommé par l'empreinte
   reelle=$(sha256sum "$archive" | cut -d' ' -f1)
   if [ "$reelle" != "$empreinte" ]; then
     echo "::error::$dossier : l'archive vaut $reelle, le dossier annonce $empreinte." >&2
-    return 1
-  fi
-  # RG-118 et ADR 0000 §8 : seule une source dont la licence autorise la
-  # redistribution est déposée. Liste blanche par préfixe d'URL, donc refus par
-  # défaut — ajouter une source exige de modifier cette ligne, licence citée.
-  if ! grep -qE '^url=https://data\.assemblee-nationale\.fr/' "$dossier/descripteur.txt"; then
-    echo "::error::$dossier : source hors de la liste redistribuable (RG-118, ADR 0000 §8)." >&2
     return 1
   fi
   if present "$empreinte"; then

@@ -507,19 +507,45 @@ puis comparé au groupe du bloc pour les 1 270 476 cellules :
 
 | Comparaison | Cellules |
 |---|---|
-| Identique | 1 250 505 (98,4 %) |
-| **Plusieurs mandats GP valides à la date** | **17 716 (1,4 %)** |
-| **Groupe différent** | **2 255 (0,2 %)** |
+| Identique | **1 268 189** (99,82 %), dont 1 244 918 exprimées |
+| ~~Plusieurs mandats GP valides à la date~~ | **0** après dédoublonnage — voir ci-dessous |
+| Groupe différent, hors `PO0` | **371**, dont **280** exprimées — c'est ce que le code publie |
+| Blocs `PO0`, non résolubles par la ventilation | **1 916**, dont **1 895** exprimées |
+| **Total** | **1 270 476** |
 
-Les 2 255 désaccords vont tous dans le même sens : AMO30 dit encore `NI`
+> **La colonne compte des lignes nominatives, pas des cellules.** La base de
+> 1 270 476 inclut les 23 383 non-votants — `1 270 476 − 1 247 093 = 9 991 + 7 508
+> + 5 884`. Une cellule est une position exprimée ; un non-votant n'en produit
+> aucune. Les deux décomptes sont donnés côte à côte pour que la distinction ne
+> se perde pas : c'est en la perdant qu'une « correction » a un moment inscrit
+> 1 916 cellules là où il y en a 1 895.
+>
+> `371 + 1 916 = 2 287`, ce qui rend lisible le troisième nombre de la note
+> ci-dessous.
+
+> **Recompté le 2026-08-28 par le code du cycle 1**, sur l'archive dont
+> l'empreinte de contenu est `c8457f34…`. Les valeurs annoncées auparavant —
+> 17 716 cellules ambiguës et 2 255 désaccords — ne se reproduisent pas.
+>
+> **L'ambiguïté disparaît entièrement** une fois la règle de dédoublonnage
+> appliquée : aucun acteur ne porte deux mandats de groupe valides à une même
+> date. Les 17 716 comptaient des doublons de la source, pas des ambiguïtés.
+>
+> Le désaccord vaut **2 287** si l'on compte les blocs `PO0` comme des
+> désaccords, **371** hors `PO0` toutes positions confondues, et **280** sur les
+> seules cellules exprimées. Trois nombres pour trois questions différentes : le
+> document en annonçait un seul sans dire laquelle.
+
+Les 280 désaccords vont tous dans le même sens : AMO30 dit encore `NI`
 (PO840056) là où la ventilation dit un groupe constitué. Exemple réel :
 PA642725, scrutin `VTANR5L17V10` du 2024-10-22 — ventilation `PO845425` (DR),
 mandat AMO30 `PO840056` (NI). Le mandat de non-inscrit porte une `dateFin` en
 retard sur la constitution du groupe. Une jointure par mandat classerait ces
 votes chez les non-inscrits.
 
-Les 17 716 cellules ambiguës viennent de **18 chevauchements de périodes** sur
-648 députés. Ils sont de deux natures :
+Les chevauchements de périodes relevés dans AMO30 — **18** sur 648 députés —
+sont de deux natures. Ils ne produisent aucune cellule ambiguë une fois le
+dédoublonnage appliqué, mais ils expliquent pourquoi il est nécessaire :
 
 - des **mandats dupliqués à périodes identiques** — PA267285 porte deux fois
   `PO845425` du 2024-07-19 à `null` ;
@@ -548,8 +574,10 @@ concentre sur **14 scrutins** (0,17 %) : **12** le 2024-12-02, un le 2025-04-07
 et `VTANR5L17V6256` le 2026-04-16 — ventilation recomptée sur l'archive complète
 ([verification-2026-08-27.md](verification-2026-08-27.md) §2), une version
 antérieure de ce document annonçant 13 pour la seule date de décembre. Dans ces
-14 fichiers, **tous** les blocs de groupe ont perdu leur `organeRef`, pas
-seulement un.
+14 fichiers, **146 blocs sur 168** ont perdu leur `organeRef` —
+`VTANR5L17V6256` en porte 1 sur 12. Une version antérieure de ce document
+annonçait « tous » : recompté le 2026-08-28, c'est faux, et la distinction
+compte puisqu'un scrutin peut mêler blocs résolus et blocs pendants.
 
 Traitement : pour un bloc `PO0`, le groupe est résolu par le mandat GP AMO30 des
 votants du bloc à la date du scrutin. Vérifié sur les 146 blocs — la résolution

@@ -77,9 +77,9 @@ possibilité de reconstituer l'historique par minage des révisions git.
 
 ### v0.6 — le graphe
 
-- [ ] Une bande par parti, trois marqueurs — votes, experts, administration — jamais moyennés
+- [x] Une bande par parti, trois marqueurs — votes, experts, administration — jamais moyennés
 - ~~Curseur temporel~~ — **hors v0** : une seule législature. Le manifeste porte déjà une liste d'instantanés, aucun champ ne changera le jour où le curseur arrivera
-- [ ] Clic sur une position → les preuves, la méthode, le lien vers la source brute
+- [x] Clic sur une position → les preuves, la méthode, le lien vers la source brute
 - ~~Vue des dérives~~ — **hors périmètre, pas seulement hors v0** : aucun artefact ne porte d'écart entre deux dates (invariant I18). Deux législatures s'affichent côte à côte, jamais superposées
 
 ### v0.7 — publication

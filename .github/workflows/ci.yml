@@ -77,10 +77,24 @@ jobs:
         if: steps.exists.outputs.yes == 'true'
         working-directory: web
         run: npm test --if-present
+      # La construction de publication refuse une racine d'artefacts absente :
+      # c'est voulu, sinon la porte est muette exactement quand la publication
+      # est cassée. Mais une PR qui ne porte pas d'artefacts — celle du front,
+      # par exemple — doit pouvoir se construire. La CI choisit selon ce qui
+      # existe, et le dit ; la publication réelle passe par deploy.yml, qui
+      # part de main et porte toujours les artefacts.
       - name: build
         if: steps.exists.outputs.yes == 'true'
         working-directory: web
-        run: npm run build
+        run: |
+          if [ -d ../public/api ]; then
+            echo "artefacts présents : construction de publication"
+            npm run build
+          else
+            echo "::notice::aucun artefact dans public/api — construction tolérante."
+            echo "La porte de publication n'est pas exercée par cette PR."
+            npm run build:local
+          fi
 
   artefacts:
     name: artefacts et schémas
@@ -158,6 +172,11 @@ jobs:
         run: ./scripts/lexique.sh code
       - name: lexique (documentation)
         run: ./scripts/lexique.sh docs
+      # Le glossaire est la source : le script le lit, il ne recopie aucune
+      # liste. Un glossaire vidé de ses formes interdites rend 2, pas 0 — une
+      # porte qui ne lit rien n'affirme rien.
+      - name: glossaire (un terme, un concept)
+        run: ./scripts/glossaire.sh
       # securite.sh n'était lancé que par le crochet local, en mode index. Un
       # défaut latent est donc passé sur develop, et quiconque n'a pas posé
       # core.hooksPath committait sans aucun contrôle. En CI, sur l'arbre entier.
@@ -184,6 +203,10 @@ jobs:
       # plan-de-tests.md §15, portes non chiffrées.
       - name: tests sautés sans date de reprise
         run: ./scripts/portes-de-ci.sh tests-ignores
+      # La taille du registre citée dans la prose a été fausse trois fois : elle
+      # bouge à chaque correction du registre, et personne ne la suit.
+      - name: taille du registre citée dans la documentation
+        run: ./scripts/portes-de-ci.sh registre
 
   # Squelettes. Ces portes sont déclarées bloquantes et ne peuvent PAS être
   # vérifiées aujourd'hui : elles portent sur du code et des artefacts qui
@@ -217,11 +240,16 @@ jobs:
       # `estimateur`, lignes ≥ 70 % sur le binaire. Le seuil de 90 % est marqué
       # `A VERIFIER` au §17 : mesurer au cycle 5, et si le chiffre est
       # inatteignable c'est le chiffre qui change avec son motif, pas la porte.
+      # La couverture de branches exige `-Z coverage-options=branch`, donc le
+      # compilateur nightly. L'epingler contredirait la reproductibilite que le
+      # projet revendique : nightly est une cible mouvante, et l'ADR 0001 exige
+      # des dependances a construction reproductible. Couverture de lignes sur
+      # stable ; le seuil de branches reste declare et non tenu, dit comme tel.
       - name: couverture
         if: steps.exists.outputs.yes == 'true'
         working-directory: pipeline
         run: |
-          cargo llvm-cov --locked --branch --json --output-path /tmp/couverture.json
+          cargo llvm-cov --locked --json --output-path /tmp/couverture.json
           python3 - <<'PY'
           import json, sys
           d = json.load(open("/tmp/couverture.json"))
@@ -242,24 +270,35 @@ jobs:
       # contrats.md §8.2 — les trois contrôles de non-régression du déterminisme.
       # Repris mot pour mot du contrat : idempotence, isolement de l'horloge,
       # ajout seul. Ils exigent le binaire `contrepoint`, qui n'existe pas.
+      # Les trois contrôles exigent le cache des archives, que la CI de PR ne
+      # télécharge pas — 40 Mo par exécution pour un contrôle qui porte sur le
+      # corpus, pas sur le diff. Leur place est le pipeline hebdomadaire, où le
+      # cache existe. Ici, le travail dit ce qu'il n'a PAS vérifié plutôt que de
+      # passer au vert en silence.
       - name: déterminisme — les trois contrôles du contrat
         if: steps.exists.outputs.yes == 'true'
         working-directory: pipeline
         run: |
           set -euo pipefail
+          if [ ! -d ../data/cache ]; then
+            echo "::notice::déterminisme non vérifié ici : le cache des archives est absent."
+            echo "Les trois contrôles du contrat §8.2 tournent dans pipeline.yml, où le"
+            echo "cache existe. Cette exécution n'affirme rien à leur sujet."
+            exit 0
+          fi
           cargo build --locked --release
           bin=target/release/contrepoint
           D=2026-08-27T00:00:00Z
           # 1. Idempotence — même entrée, même date injectée, même octet.
-          CONTREPOINT_DATE_CALCUL=$D "$bin" construire --sortie /tmp/a
-          CONTREPOINT_DATE_CALCUL=$D "$bin" construire --sortie /tmp/b
+          CONTREPOINT_DATE_CALCUL=$D "$bin" construire --racine .. --sortie /tmp/a
+          CONTREPOINT_DATE_CALCUL=$D "$bin" construire --racine .. --sortie /tmp/b
           diff -r /tmp/a /tmp/b
           # 2. Isolement de l'horloge — seule la date de calcul bouge.
-          CONTREPOINT_DATE_CALCUL=2027-01-01T00:00:00Z "$bin" construire --sortie /tmp/c
+          CONTREPOINT_DATE_CALCUL=2027-01-01T00:00:00Z "$bin" construire --racine .. --sortie /tmp/c
           "$bin" diff-hors-date_calcul /tmp/a /tmp/c
           # 3. Ajout seul — l'existant est un préfixe octet pour octet du nouveau.
           if [ -f ../data/preuves/positions.jsonl ]; then
-            head -c "$(stat -c%s ../data/preuves/positions.jsonl)" /tmp/a/positions.jsonl \
+            head -c "$(stat -c%s ../data/preuves/positions.jsonl)" /tmp/a/data/preuves/positions.jsonl \
               | cmp - ../data/preuves/positions.jsonl
           fi
 

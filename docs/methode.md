@@ -28,6 +28,8 @@ sources brutes.
 
 ### 1. Matrice de votes
 
+> **cellule**, **bloc**, **acteur**, **corpus**, **densité**, **porte** : chacun de ces mots a un sens exact et un seul, fixé par [glossaire.md](glossaire.md).
+
 Scrutins nominatifs de l'Assemblée nationale, open data, JSON.
 
 Codage `pour / contre / abstention`. L'**absence est une donnée manquante**, pas

@@ -48,7 +48,7 @@ document. Les deux ne pouvaient pas être vrais, et le cycle 4 des tests
 
 `positionnement.md` §1 tire sa conclusion d'un seul cas — les blocs
 `organeRef: "PO0"`, référence pendante qui ne se résout pas dans AMO30 : 146
-blocs, sur 14 scrutins, 1 895 cellules et 335 acteurs. Le cas est réel ; il ne
+blocs, sur 14 scrutins, 1 895 cellules et 335 acteurs. Recomptés le 2026-08-28 : la valeur d'origine était juste. Une « correction » à 1 916 / 336 avait été inscrite puis retirée — elle additionnait les 21 non-votants aux 1 895 cellules exprimées, ce qui compte une absence comme une position et inverse l'invariant central du projet. Le cas est réel ; il ne
 suffit pas à disqualifier la source. `ingestion-votes.md` §8 a mesuré le
 remplacement complet.
 
@@ -66,19 +66,21 @@ du corpus complet, contre un index des mandats AMO30 `typeOrgane = "GP"`,
 | Comparaison | Cellules |
 |---|---|
 | Groupe identique | 1 250 505 (98,4 %) |
-| Plusieurs mandats GP valides à la date du scrutin | 17 716 (1,4 %) |
-| Groupe différent | 2 255 (0,2 %) |
+| Plusieurs mandats GP valides à la date du scrutin | ~~17 716~~ → **0** après dédoublonnage |
+| Groupe différent | ~~2 255~~ → **371** hors `PO0`, dont **280** exprimées |
 
-Les **2 255 désaccords vont tous dans le même sens** : AMO30 dit encore `NI`
+Les **280 désaccords vont tous dans le même sens** : AMO30 dit encore `NI`
 (`PO840056`) là où la ventilation dit un groupe constitué, parce que le mandat de
 non-inscrit porte une `dateFin` en retard sur la constitution du groupe. Une
 jointure par mandat classerait ces votes chez les non-inscrits — dont la
 dispersion interne est la plus grande du jeu, et qui ne sont pas un parti. Le cas
 réel est documenté dans `ingestion-votes.md` §8.
 
-Les **17 716 cellules ambiguës** proviennent de **18 chevauchements de périodes**
-sur 648 députés : mandats dupliqués à périodes identiques, ou `dateFin`
-concurrentes. La jointure devrait donc trancher, sans que la source dise comment.
+Les **18 chevauchements de périodes** relevés sur 648 députés — mandats dupliqués
+à périodes identiques, ou `dateFin` concurrentes — ne produisent **aucune cellule
+ambiguë** une fois le dédoublonnage appliqué. Ils expliquent pourquoi il est
+nécessaire, pas ce qu'il resterait sans lui : la valeur de 17 716 annoncée
+auparavant comptait les doublons de la source, pas des ambiguïtés.
 
 **Rôle d'AMO30**, non supprimé mais borné à trois emplois :
 
