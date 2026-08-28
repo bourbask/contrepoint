@@ -983,22 +983,65 @@ fn non_publication_motivee_est_une_ligne_publiee() {
         DISPERSION_INTERNE,
         DISPERSION_REECHANTILLONNAGE,
     ] {
-        let motif = contrepoint::preuves::motif_de_non_publication(motif_agregation, 25);
+        let motif = contrepoint::preuves::motif_de_non_publication(
+            motif_agregation,
+            25,
+            Some(0.687),
+            Some(0.0176),
+        );
         assert!(motif.chars().count() <= 140, "I20 et V21 : {motif}");
         assert!(!motif.is_empty());
 
         // Sur un groupe qui n'est pas une ancre : I9 exige d'une ancre la
         // valeur exacte ±1,0000, donc une ancre non publiée est un refus — et
         // c'est juste, l'axe n'existerait plus.
+        //
+        // §2.4 — `sous_seuil_de_publication` est la seule occurrence où
+        // `dispersion` est renseignée sans `valeur` : les chiffres qui
+        // justifient la non-publication sont publiés, la valeur non.
         let mut ligne = ligne_nominale();
         ligne["entite"] = json!("groupe.an17.liot");
         ligne["valeur"] = json!(null);
-        ligne["dispersion"] = json!(null);
+        ligne["dispersion"] =
+            json!({"effectif": 25, "iqr": 0.687, "ecart_type_reechantillonnage": 0.0176});
         ligne["motif_code"] = json!("sous_seuil_de_publication");
         ligne["motif"] = json!(motif);
-        construire(ligne)
+        construire(ligne.clone())
             .unwrap_or_else(|e| panic!("une non-publication motivée est une ligne valide : {e}"));
+
+        // I10 — le motif d'absence n'est jamais comblé par un vide : une
+        // non-publication sans ses chiffres est refusée.
+        //
+        // Mutant qui survivait avant ce test : `dispersion: null` sur les deux
+        // lignes non publiées du pipeline, sortie sans qu'aucune porte ne bouge.
+        ligne["dispersion"] = json!(null);
+        let refus = contrepoint::preuves::verifier(&ligne);
+        assert!(
+            refus.iter().any(|r| r.starts_with("I10")),
+            "une non-publication sans `dispersion` est refusée : {refus:?}"
+        );
     }
+
+    // Le motif porte la **mesure**, pas seulement le seuil : un lecteur qui voit
+    // « 0,25 » sans la valeur mesurée lit le seuil comme l'IQR du groupe. §2.4 :
+    // « IQR 0,687 pour un maximum de 0,25 ».
+    let interne =
+        contrepoint::preuves::motif_de_non_publication(DISPERSION_INTERNE, 25, Some(0.687), None);
+    assert_eq!(
+        interne,
+        "Dispersion interne au-delà du seuil publié : IQR 0,687 pour un maximum de 0,25."
+    );
+    let reechantillonnage = contrepoint::preuves::motif_de_non_publication(
+        DISPERSION_REECHANTILLONNAGE,
+        25,
+        Some(0.1),
+        Some(0.0621),
+    );
+    assert!(
+        reechantillonnage.contains("écart-type 0,0621 pour un maximum de 0,05"),
+        "{reechantillonnage}"
+    );
+
     // Les trois motifs sont distincts : une case non mesurée porte **sa**
     // raison, jamais une raison générique.
     let distincts: std::collections::BTreeSet<String> = [
@@ -1007,7 +1050,7 @@ fn non_publication_motivee_est_une_ligne_publiee() {
         DISPERSION_REECHANTILLONNAGE,
     ]
     .iter()
-    .map(|m| contrepoint::preuves::motif_de_non_publication(m, 25))
+    .map(|m| contrepoint::preuves::motif_de_non_publication(m, 25, Some(0.687), Some(0.0176)))
     .collect();
     assert_eq!(distincts.len(), 3);
 }

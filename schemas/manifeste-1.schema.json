@@ -35,11 +35,14 @@
       "items": {
         "type": "object",
         "additionalProperties": false,
-        "required": ["id", "libelle", "echelle"],
+        "required": ["id", "libelle", "echelle", "min", "max", "decimales"],
         "properties": {
           "id": { "type": "string", "pattern": "^[a-z_]+$" },
           "libelle": { "type": "string", "minLength": 1, "maxLength": 40 },
-          "echelle": { "type": "string", "minLength": 1 }
+          "echelle": { "type": "string", "minLength": 1 },
+          "min": { "type": ["number", "null"], "description": "Borne basse de la graduation, recopiée de `echelle.min` des lignes de preuve de cette famille. Le front la lit au lieu de la dériver des valeurs observées : trois échelles étirées sur la même plage de pixels fabriquent des concordances qui n'existent pas. `null` pour une famille sans graduation." },
+          "max": { "type": ["number", "null"], "description": "Borne haute de la graduation, recopiée de `echelle.max`. `null` pour une famille sans graduation." },
+          "decimales": { "type": ["integer", "null"], "minimum": 0, "description": "Décimales d'affichage, recopiées de `echelle.decimales`. `null` pour une famille sans graduation — `administratif` porte un code, pas une position." }
         }
       }
     },

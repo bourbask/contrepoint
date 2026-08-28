@@ -267,15 +267,15 @@ jobs:
           bin=target/release/contrepoint
           D=2026-08-27T00:00:00Z
           # 1. Idempotence — même entrée, même date injectée, même octet.
-          CONTREPOINT_DATE_CALCUL=$D "$bin" construire --sortie /tmp/a
-          CONTREPOINT_DATE_CALCUL=$D "$bin" construire --sortie /tmp/b
+          CONTREPOINT_DATE_CALCUL=$D "$bin" construire --racine .. --sortie /tmp/a
+          CONTREPOINT_DATE_CALCUL=$D "$bin" construire --racine .. --sortie /tmp/b
           diff -r /tmp/a /tmp/b
           # 2. Isolement de l'horloge — seule la date de calcul bouge.
-          CONTREPOINT_DATE_CALCUL=2027-01-01T00:00:00Z "$bin" construire --sortie /tmp/c
+          CONTREPOINT_DATE_CALCUL=2027-01-01T00:00:00Z "$bin" construire --racine .. --sortie /tmp/c
           "$bin" diff-hors-date_calcul /tmp/a /tmp/c
           # 3. Ajout seul — l'existant est un préfixe octet pour octet du nouveau.
           if [ -f ../data/preuves/positions.jsonl ]; then
-            head -c "$(stat -c%s ../data/preuves/positions.jsonl)" /tmp/a/positions.jsonl \
+            head -c "$(stat -c%s ../data/preuves/positions.jsonl)" /tmp/a/data/preuves/positions.jsonl \
               | cmp - ../data/preuves/positions.jsonl
           fi
 

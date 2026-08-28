@@ -571,9 +571,34 @@ fn instantane_de_lexport_complet() {
         r#""motif":"Dispersion interne au-delà du seuil publié : IQR 0,687 pour un maximum de 0,25.","#,
         r#""dispersion":{"effectif":25,"iqr":0.6870},"#,
         r#""preuve":"d9cae6ddde51b6ecac6e365fc1bb24e1d97ebcbb7d90eeb8ffe9e6bd8363bcef"}]}],"#,
+        // §4.3 règle 5 — l'univers de `sans_mesure` est le **registre**, pas les
+        // seules entités qui portent une ligne : une entité sans aucune ligne
+        // n'a aucun marqueur, donc aucun marqueur ne porte de valeur. Le jeu
+        // minimal ne mesure que LFI, RN et LIOT, donc les dix autres entités
+        // `parti.*` et `coalition.*` valides à la date sont dites. Place
+        // publique garde le motif de **sa** ligne, qui est plus précis.
+        // Les Écologistes est dit par son sigle : son nom compte 43 caractères.
         r#""sans_mesure":["#,
+        r#"{"entite":"coalition.ensemble","libelle":"Ensemble","motif_code":"hors_source","#,
+        r#""motif":"Aucune ligne de preuve ne porte cette entité : aucune famille de mesure ne l'a produite."},"#,
+        r#"{"entite":"coalition.nfp","libelle":"Nouveau Front populaire","motif_code":"hors_source","#,
+        r#""motif":"Aucune ligne de preuve ne porte cette entité : aucune famille de mesure ne l'a produite."},"#,
+        r#"{"entite":"parti.ecologistes","libelle":"Les Écologistes","motif_code":"hors_source","#,
+        r#""motif":"Aucune ligne de preuve ne porte cette entité : aucune famille de mesure ne l'a produite."},"#,
+        r#"{"entite":"parti.horizons","libelle":"Horizons","motif_code":"hors_source","#,
+        r#""motif":"Aucune ligne de preuve ne porte cette entité : aucune famille de mesure ne l'a produite."},"#,
+        r#"{"entite":"parti.lr","libelle":"Les Républicains","motif_code":"hors_source","#,
+        r#""motif":"Aucune ligne de preuve ne porte cette entité : aucune famille de mesure ne l'a produite."},"#,
+        r#"{"entite":"parti.pcf","libelle":"Parti communiste français","motif_code":"hors_source","#,
+        r#""motif":"Aucune ligne de preuve ne porte cette entité : aucune famille de mesure ne l'a produite."},"#,
         r#"{"entite":"parti.place-publique","libelle":"Place publique","#,
-        r#""motif_code":"hors_source","motif":"Absente des quatre sources d'identifiants et de la grille de nuances."}]}"#
+        r#""motif_code":"hors_source","motif":"Absente des quatre sources d'identifiants et de la grille de nuances."},"#,
+        r#"{"entite":"parti.ps","libelle":"Parti socialiste","motif_code":"hors_source","#,
+        r#""motif":"Aucune ligne de preuve ne porte cette entité : aucune famille de mesure ne l'a produite."},"#,
+        r#"{"entite":"parti.renaissance","libelle":"Renaissance","motif_code":"hors_source","#,
+        r#""motif":"Aucune ligne de preuve ne porte cette entité : aucune famille de mesure ne l'a produite."},"#,
+        r#"{"entite":"parti.udr","libelle":"Union des droites pour la République","motif_code":"hors_source","#,
+        r#""motif":"Aucune ligne de preuve ne porte cette entité : aucune famille de mesure ne l'a produite."}]}"#
     );
     assert_eq!(vue, attendu);
 }
@@ -634,6 +659,55 @@ fn date_arretee_derivee_et_jamais_saisie() {
     .unwrap();
     assert_eq!(manifeste["date_arretee"], CALCUL);
 
+    // I17 porte sur « le manifeste **et** chaque instantané » (§6). La porte le
+    // vérifie sur les deux : une date saisie à la main dans l'un ou l'autre est
+    // refusée.
+    //
+    // Mutant qui survivait avant ce test : `date_arretee` du manifeste
+    // remplacée par n'importe quel horodatage, `verifier_artefacts` muet.
+    let vue_texte = instantane();
+    let lignes = lignes();
+    let eclats = construire_eclats(&lignes, std::slice::from_ref(&vue_texte)).unwrap();
+    for saisie in ["manifeste", "instantane"] {
+        let mut manifeste_faux =
+            construire_manifeste("0.3.0", &[(description(), vue_texte.clone())], &lignes).unwrap();
+        let mut instantane_faux = vue_texte.clone();
+        let cible = if saisie == "manifeste" {
+            &mut manifeste_faux
+        } else {
+            &mut instantane_faux
+        };
+        *cible = cible.replace(CALCUL, "2030-01-01T00:00:00Z");
+        let refus = verifier_artefacts(
+            &manifeste_faux,
+            std::slice::from_ref(&instantane_faux),
+            &eclats,
+            &lignes,
+        );
+        assert!(
+            refus.iter().any(|r| r.starts_with("I17")),
+            "{saisie} : une `date_arretee` saisie est refusée — {refus:?}"
+        );
+    }
+
+    // I20 est produit par le validateur de ligne **et retenu** par la porte
+    // d'artefact : les plafonds de longueur sont épinglés.
+    //
+    // Mutant qui survivait avant ce test : le filtre de `verifier_artefacts`
+    // jetait I20 avec le reste.
+    let mut trop_long: Value = serde_json::from_str(&vue_texte).unwrap();
+    trop_long["ancrage"]["note"] = json!("é".repeat(201));
+    let refus = verifier_artefacts(
+        &construire_manifeste("0.3.0", &[(description(), vue_texte.clone())], &lignes).unwrap(),
+        &[trop_long.to_string()],
+        &eclats,
+        &lignes,
+    );
+    assert!(
+        refus.iter().any(|r| r.starts_with("I20")),
+        "une chaîne de 201 caractères est refusée — {refus:?}"
+    );
+
     // La mention de paternité est dérivée, pas saisie : `producteur` et
     // `derniere_mise_a_jour` de l'entrée amont des lignes référencées.
     let mention = manifeste["mention_paternite"].as_str().unwrap();
@@ -672,6 +746,78 @@ fn date_arretee_derivee_et_jamais_saisie() {
         manifeste["preuves"]["fonction"],
         "deux premiers caractères hexadécimaux de l'id"
     );
+}
+
+#[test]
+fn chaque_famille_du_manifeste_porte_les_bornes_de_son_echelle() {
+    // §4.1 — `familles[]` porte `min`, `max` et `decimales`, **recopiés** de
+    // `echelle.*` des lignes de preuve. Le front les lit au lieu de dériver la
+    // graduation des valeurs observées : trois échelles étirées sur la même
+    // plage de pixels fabriquent des concordances qui n'existent pas, et
+    // rendent la moyenne entre familles visuellement dessinable.
+    let lignes = lignes();
+    let vue = instantane();
+    let manifeste_texte =
+        construire_manifeste("0.3.0", &[(description(), vue.clone())], &lignes).unwrap();
+    let manifeste: Value = serde_json::from_str(&manifeste_texte).unwrap();
+    let bornes: Vec<(&str, Value, Value, Value)> = manifeste["familles"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|f| {
+            (
+                f["id"].as_str().unwrap(),
+                f["min"].clone(),
+                f["max"].clone(),
+                f["decimales"].clone(),
+            )
+        })
+        .collect();
+    assert_eq!(
+        bornes,
+        vec![
+            ("votes", json!(-1.0), json!(1.0), json!(4)),
+            ("experts", json!(0.0), json!(10.0), json!(2)),
+            // `administratif` porte un code, pas une position : pas de
+            // graduation, donc pas de bornes. Aucune valeur de remplissage.
+            ("administratif", json!(null), json!(null), json!(null)),
+        ]
+    );
+    // Les bornes sont celles de l'échelle, pas des valeurs observées : la seule
+    // valeur `experts` de la fixture vaut 8,82 et la borne haute reste 10.
+    assert_eq!(manifeste["familles"][1]["max"], 10.0);
+    assert_ne!(manifeste["familles"][1]["max"], 8.82);
+
+    // L'invariant : des bornes absentes ou fausses sont refusées.
+    //
+    // Mutants qui survivaient avant ce test : `familles[]` sans bornes, et
+    // `min` recopié d'ailleurs.
+    let eclats = construire_eclats(&lignes, std::slice::from_ref(&vue)).unwrap();
+    for mutant in [
+        manifeste_texte.replace(
+            r#""min":-1.0,"max":1.0,"decimales":4"#,
+            r#""min":-10.0,"max":10.0,"decimales":4"#,
+        ),
+        manifeste_texte.replace(r#","min":-1.0,"max":1.0,"decimales":4"#, ""),
+    ] {
+        assert_ne!(mutant, manifeste_texte, "le mutant n'a rien changé");
+        let refus = verifier_artefacts(&mutant, std::slice::from_ref(&vue), &eclats, &lignes);
+        assert!(
+            !refus.is_empty(),
+            "un manifeste sans bornes justes est refusé — {refus:?}"
+        );
+    }
+
+    // Deux lignes d'une même famille sur deux échelles divergentes : erreur
+    // bloquante, jamais un arbitrage silencieux.
+    let mut divergente: Value =
+        serde_json::from_str(&ligne_votes("groupe.an17.soc", json!(-0.5), 0.1, 68)).unwrap();
+    divergente["echelle"]["max"] = json!(2.0);
+    let mut deux = lignes.clone();
+    deux.push(divergente.to_string());
+    let erreur = construire_manifeste("0.3.0", &[(description(), vue)], &deux)
+        .expect_err("deux échelles divergentes pour une famille sont un refus");
+    assert!(erreur.contains("divergentes"), "{erreur}");
 }
 
 #[test]

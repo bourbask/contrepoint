@@ -496,7 +496,7 @@ désormais `ancre_axe`.
 | `date_arretee` | maximum des `date_calcul` des lignes référencées. **Dérivé, jamais saisi** |
 | `licence` | `Licence Ouverte / Open Licence (Etalab)` |
 | `mention_paternite` | `Assemblée nationale — Licence Ouverte v1.0 — données du 2026-08-27`. **Dérivée**, jamais saisie : `producteur` et `derniere_mise_a_jour` de l'entrée amont des lignes référencées (§2.1) |
-| `familles` | tableau `{id, libelle, echelle}` — la légende, close, dans l'ordre d'affichage |
+| `familles` | tableau `{id, libelle, echelle, min, max, decimales}` — la légende, close, dans l'ordre d'affichage. `min`, `max` et `decimales` sont **recopiés** de `echelle.*` des lignes de preuve de la famille, jamais dérivés des valeurs observées ; `null` pour une famille sans graduation (`administratif` porte un code). Deux lignes d'une même famille qui déclarent des échelles divergentes arrêtent la construction : ce n'est pas un arbitrage à rendre |
 | `instantanes` | tableau `{id, chambre, legislature, date, url, empreinte_sha256, octets, bandes}` |
 | `preuves` | `{racine, eclats, fonction}` — où sont les preuves et comment en dériver le chemin |
 
@@ -504,16 +504,19 @@ Le manifeste ne porte **aucune valeur mesurée**. Il porte de quoi choisir un
 fichier et de quoi afficher le bandeau de date exigé par ROADMAP.md v0.7, dérivé
 sans saisie humaine (ADR 0000 §6, conséquences).
 
-Le manifeste réel de la v0, **935 octets** — 928 avant le contrat `0.3.0`, plus
-les sept caractères que `votes_an17_ancre_v1` ajoute à `familles[0].echelle` ;
-`contrat` n'y change rien, les versions ayant toutes cinq caractères. En
+Le manifeste réel de la v0, **935 octets** avant que `familles[]` ne porte ses
+bornes — 928 avant le contrat `0.3.0`, plus les sept caractères que
+`votes_an17_ancre_v1` ajoute à `familles[0].echelle` ; `contrat` n'y change rien,
+les versions ayant toutes cinq caractères. Depuis que `familles[]` porte ses
+bornes, il fait **1 044 octets**, mesurés par `stat -c%s` sur le manifeste
+reconstruit le 2026-08-28. En
 revanche `instantanes[0].empreinte_sha256` porte l'empreinte d'un instantané dont
 le contenu vient de changer, les `preuve` de ses marqueurs ayant été recalculés :
 la valeur `c23fc935…` ci-dessous est **`A VERIFIER`**, à recalculer par
 `sha256sum` sur l'instantané reconstruit (§10).
 
 ```json
-{"schema":"contrepoint/manifeste/1","contrat":"0.3.0","schemas":["contrepoint/preuve/1","contrepoint/instantane/1","contrepoint/eclat-preuves/1"],"date_arretee":"2026-08-27T00:00:00Z","licence":"Licence Ouverte / Open Licence (Etalab)","mention_paternite":"Assemblée nationale — Licence Ouverte v1.0 — données du 2026-08-27","familles":[{"id":"votes","libelle":"Votes nominatifs","echelle":"votes_an17_ancre_v1"},{"id":"experts","libelle":"Enquête d'experts","echelle":"ches_lrgen_0_10"},{"id":"administratif","libelle":"Nuance administrative","echelle":"nuance_leg2024"}],"instantanes":[{"id":"an17-2026-07-21","chambre":"AN","legislature":"17","date":"2026-07-21","url":"instantanes/an17-2026-07-21.json","empreinte_sha256":"c23fc935f89647fabff052b92497beeb3fd7518a4e7fee207d1eb1e8a379d50c","octets":10064,"bandes":16}],"preuves":{"racine":"preuves/","eclats":256,"fonction":"deux premiers caractères hexadécimaux de l'id"}}
+{"schema":"contrepoint/manifeste/1","contrat":"0.3.0","schemas":["contrepoint/preuve/1","contrepoint/instantane/1","contrepoint/eclat-preuves/1"],"date_arretee":"2026-08-27T00:00:00Z","licence":"Licence Ouverte / Open Licence (Etalab)","mention_paternite":"Assemblée nationale — Licence Ouverte v1.0 — données du 2026-08-27","familles":[{"id":"votes","libelle":"Votes nominatifs","echelle":"votes_an17_ancre_v1","min":-1.0,"max":1.0,"decimales":4},{"id":"experts","libelle":"Enquête d'experts","echelle":"ches_lrgen_0_10","min":0.0,"max":10.0,"decimales":2},{"id":"administratif","libelle":"Nuance administrative","echelle":"nuance_leg2024","min":null,"max":null,"decimales":null}],"instantanes":[{"id":"an17-2026-07-21","chambre":"AN","legislature":"17","date":"2026-07-21","url":"instantanes/an17-2026-07-21.json","empreinte_sha256":"c23fc935f89647fabff052b92497beeb3fd7518a4e7fee207d1eb1e8a379d50c","octets":10064,"bandes":16}],"preuves":{"racine":"preuves/","eclats":256,"fonction":"deux premiers caractères hexadécimaux de l'id"}}
 ```
 
 Le manifeste ne porte **pas** les citations exigées par les sources : une
@@ -780,7 +783,7 @@ contrepoint diff-hors-date_calcul /tmp/a /tmp/c        # vide
 #    et : mêmes id, même nombre de lignes, mêmes valeurs
 
 # 3. Ajout seul — l'existant est un préfixe du nouveau
-head -c $(stat -c%s data/preuves/positions.jsonl) /tmp/a/positions.jsonl \
+head -c $(stat -c%s data/preuves/positions.jsonl) /tmp/a/data/preuves/positions.jsonl \
   | cmp - data/preuves/positions.jsonl                 # identiques
 ```
 

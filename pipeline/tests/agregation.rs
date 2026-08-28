@@ -67,13 +67,13 @@ fn mesure(publication: &Publication) -> (f64, f64, f64) {
             iqr,
             ecart_type_reechantillonnage,
         } => (*mediane, *iqr, *ecart_type_reechantillonnage),
-        Publication::NonMesuree { motif } => panic!("groupe non mesuré : {motif}"),
+        Publication::NonMesuree { motif, .. } => panic!("groupe non mesuré : {motif}"),
     }
 }
 
 fn motif(publication: &Publication) -> &str {
     match publication {
-        Publication::NonMesuree { motif } => motif,
+        Publication::NonMesuree { motif, .. } => motif,
         Publication::Mesuree { mediane, .. } => panic!("groupe mesuré à {mediane}"),
     }
 }

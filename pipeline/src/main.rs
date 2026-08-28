@@ -4,6 +4,9 @@
 //! CONTREPOINT_DATE_CALCUL=2026-08-27T00:00:00Z contrepoint construire --sortie .
 //! ```
 //!
+//! `--racine` désigne le dépôt lu (registre d'entités et cache) ; par défaut le
+//! répertoire courant. `--sortie` désigne le dépôt écrit ; par défaut la racine.
+//!
 //! **Le pipeline ne lit jamais l'horloge.** `date_calcul` vient de
 //! `CONTREPOINT_DATE_CALCUL`, et son absence est une **erreur**, pas un défaut à
 //! combler (contrats.md §8.1) : un défaut d'horloge rendrait le contrôle
@@ -30,9 +33,11 @@ use std::path::{Path, PathBuf};
 
 /// Version du contrat de sortie qui produit ces lignes (ADR 0000 §6).
 const CONTRAT: &str = "0.3.0";
-/// Version du logiciel. `logiciel.commit` reste nul tant que le dépôt n'a pas
-/// de version publiée : le champ est hors de la clé du §3 et n'est qu'une trace.
-const VERSION_LOGICIELLE: &str = "0.1.0";
+/// Version du logiciel, **lue du paquet** : un littéral recopié ici diverge du
+/// `Cargo.toml` sans que rien ne le dise, et `logiciel.version` est un champ de
+/// traçabilité. `logiciel.commit` reste nul tant que le dépôt n'a pas de version
+/// publiée : le champ est hors de la clé du §3 et n'est qu'une trace.
+const VERSION_LOGICIELLE: &str = env!("CARGO_PKG_VERSION");
 const METHODE_VOTES: &str = "votes_rang1_ancre";
 const VERSION_METHODE_VOTES: &str = "1.0.0";
 const ECHELLE_VOTES: &str = "votes_an17_ancre_v1";
@@ -200,22 +205,31 @@ fn executer() -> Result<(), String> {
             // le résultat, et elle occupe une bande. Elle est écartée du graphe
             // seulement si elle n'est pas mesurable du tout.
             //
-            // `A VERIFIER` — défaut relevé hors de ce ticket : la variante
-            // `agregation::Publication::NonMesuree` du cycle 2 ne porte que le
-            // motif, pas l'IQR ni l'écart-type qui l'ont déclenchée. Le §2.4 veut
-            // que « les chiffres qui justifient la non-publication soient publiés,
-            // la valeur non » : `dispersion` sort donc nulle ici. Correction :
-            // porter `iqr` et `ecart_type_reechantillonnage` dans `NonMesuree`.
-            Publication::NonMesuree { motif } => {
+            // §2.4 — c'est la seule occurrence où `dispersion` est renseignée
+            // sans `valeur` : les chiffres qui justifient la non-publication
+            // sont publiés, la valeur non. Le motif porte la **mesure**, pas le
+            // seuil : « IQR 0,687 pour un maximum de 0,25 ».
+            Publication::NonMesuree {
+                motif,
+                iqr,
+                ecart_type_reechantillonnage,
+            } => {
                 ecartees.push(((*motif).to_owned(), position.groupe.clone()));
                 (
                     Value::Null,
                     json!("sous_seuil_de_publication"),
                     json!(contrepoint::preuves::motif_de_non_publication(
                         motif,
-                        position.effectif_retenu
+                        position.effectif_retenu,
+                        *iqr,
+                        *ecart_type_reechantillonnage
                     )),
-                    Value::Null,
+                    json!({
+                        "effectif": position.effectif_retenu,
+                        "iqr": iqr.map(|x| arrondir(x, 4)),
+                        "ecart_type_reechantillonnage":
+                            ecart_type_reechantillonnage.map(|x| arrondir(x, 4)),
+                    }),
                 )
             }
         };
@@ -599,11 +613,11 @@ fn entree_registre(empreinte: &str, date_registre: &str) -> Value {
 
 // ------------------------------------------------------------------ outils --
 
+/// La racine du dépôt : `--racine`, sinon le répertoire courant. Elle n'est
+/// **jamais** compilée dans le binaire : `env!("CARGO_MANIFEST_DIR")` y grave le
+/// chemin de la machine qui a construit, et un binaire distribué le porte.
 fn racine_du_depot() -> PathBuf {
-    Path::new(env!("CARGO_MANIFEST_DIR"))
-        .parent()
-        .map(Path::to_path_buf)
-        .unwrap_or_else(|| PathBuf::from("."))
+    argument("--racine").map_or_else(|| PathBuf::from("."), PathBuf::from)
 }
 
 fn argument(nom: &str) -> Option<String> {

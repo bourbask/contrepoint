@@ -349,19 +349,44 @@ pub fn construire(mut ligne: Value) -> Result<String, String> {
 /// valeur accompagnée d'un avertissement, qui serait citée sans l'avertissement.
 /// Le `motif_code` qui l'accompagne est toujours `sous_seuil_de_publication` :
 /// la mesure existe, elle n'est pas publiable (§2.4).
-pub fn motif_de_non_publication(motif_agregation: &str, effectif: usize) -> String {
+pub fn motif_de_non_publication(
+    motif_agregation: &str,
+    effectif: usize,
+    iqr: Option<f64>,
+    ecart_type: Option<f64>,
+) -> String {
     match motif_agregation {
         crate::agregation::EFFECTIF_INSUFFISANT => {
             format!("Effectif retenu de {effectif} membres pour un minimum de {EFFECTIF_MINIMAL}.")
         }
-        crate::agregation::DISPERSION_INTERNE => format!(
-            "Dispersion interne au-delà du seuil publié : IQR maximal {IQR_MAXIMAL} sur {effectif} membres."
-        ),
-        crate::agregation::DISPERSION_REECHANTILLONNAGE => format!(
-            "Dispersion de rééchantillonnage au-delà du seuil publié : maximum {ECART_TYPE_MAXIMAL} sur {effectif} membres."
-        ),
+        crate::agregation::DISPERSION_INTERNE => match iqr {
+            Some(mesure) => format!(
+                "Dispersion interne au-delà du seuil publié : IQR {} pour un maximum de {}.",
+                decimal_francais(mesure),
+                decimal_francais(IQR_MAXIMAL)
+            ),
+            None => "Dispersion interne non calculable : le groupe compte trop peu de membres pour un écart interquartile.".to_owned(),
+        },
+        crate::agregation::DISPERSION_REECHANTILLONNAGE => match ecart_type {
+            Some(mesure) => format!(
+                "Dispersion de rééchantillonnage au-delà du seuil publié : écart-type {} pour un maximum de {}.",
+                decimal_francais(mesure),
+                decimal_francais(ECART_TYPE_MAXIMAL)
+            ),
+            None => "Dispersion de rééchantillonnage non mesurable : moins de deux tirages comparables.".to_owned(),
+        },
         autre => format!("Règle de non-publication appliquée : {autre}, sur {effectif} membres."),
     }
+}
+
+/// Un nombre tel que le contrat l'écrit **en prose** : virgule décimale, zéros
+/// terminaux retirés — « IQR 0,687 pour un maximum de 0,25 » (§2.4). La forme
+/// canonique du §7 ne gouverne que le JSON ; une phrase française n'y écrit pas
+/// un point décimal.
+fn decimal_francais(valeur: f64) -> String {
+    let brut = format!("{valeur:.4}");
+    let taille = brut.trim_end_matches('0').trim_end_matches('.');
+    taille.replace('.', ",")
 }
 
 // ------------------------------------------------------------ invariants ----
@@ -698,6 +723,16 @@ fn i9_ancrage(ligne: &Value, refus: &mut Vec<String>) {
 }
 
 fn i10_non_publication(ligne: &Value, refus: &mut Vec<String>) {
+    // §2.4 — `sous_seuil_de_publication` est la seule occurrence où `dispersion`
+    // est renseignée sans `valeur` : les chiffres qui justifient la
+    // non-publication sont publiés, la valeur non. Un motif d'absence comblé par
+    // un vide est exactement ce que le projet refuse.
+    if ligne["motif_code"] == "sous_seuil_de_publication" && !ligne["dispersion"].is_object() {
+        refus.push(
+            "I10 : `sous_seuil_de_publication` sans `dispersion` — les chiffres qui justifient la non-publication sont publiés, la valeur non (§2.4)"
+                .to_owned(),
+        );
+    }
     if !ligne["dispersion"].is_object() {
         return;
     }
