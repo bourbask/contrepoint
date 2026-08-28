@@ -483,7 +483,7 @@ pub fn construire_instantane(
         sans_mesure.push(serde_json::json!({
             "entite": id,
             "libelle": libelle_de_bande(registre, id),
-            "motif_code": "hors_source",
+            "motif_code": "aucune_mesure",
             "motif": "Aucune ligne de preuve ne porte cette entité : aucune famille de mesure ne l'a produite.",
         }));
     }

@@ -92,7 +92,7 @@ fn entrees_ches() -> Value {
 fn ligne_votes(entite: &str, valeur: Value, iqr: f64, effectif: u64) -> String {
     let publiee = !valeur.is_null();
     construire(json!({
-        "contrat": "0.3.0",
+        "contrat": "0.4.0",
         "famille": "votes",
         "entite": entite,
         "valeur": valeur,
@@ -101,7 +101,7 @@ fn ligne_votes(entite: &str, valeur: Value, iqr: f64, effectif: u64) -> String {
             "id": "votes_an17_ancre_v1",
             "min": -1.0,
             "max": 1.0,
-            "decimales": 4,
+            "decimales": 2,
             "libelle": "Votes XVIIe législature, unités médianes ancrées"
         },
         "motif_code": if publiee { json!(null) } else { json!("sous_seuil_de_publication") },
@@ -136,7 +136,7 @@ fn ligne_votes(entite: &str, valeur: Value, iqr: f64, effectif: u64) -> String {
 
 fn ligne_experts(entite: &str, valeur: f64) -> String {
     construire(json!({
-        "contrat": "0.3.0",
+        "contrat": "0.4.0",
         "famille": "experts",
         "entite": entite,
         "valeur": valeur,
@@ -170,7 +170,7 @@ fn ligne_experts(entite: &str, valeur: f64) -> String {
 /// sources d'identifiants et de la grille de nuances (registre-entites.md §5.2).
 fn ligne_absence(entite: &str) -> String {
     construire(json!({
-        "contrat": "0.3.0",
+        "contrat": "0.4.0",
         "famille": "experts",
         "entite": entite,
         "valeur": null,
@@ -223,7 +223,7 @@ fn lignes() -> Vec<String> {
 }
 
 fn instantane() -> String {
-    construire_instantane(&description(), "0.3.0", &lignes(), &registre())
+    construire_instantane(&description(), "0.4.0", &lignes(), &registre())
         .expect("instantané construit")
 }
 
@@ -295,7 +295,7 @@ fn aucune_comparaison_inter_legislature() {
     // législatures, deux dates ou deux instantanés.
     let vue = instantane();
     let manifeste = construire_manifeste(
-        "0.3.0",
+        "0.4.0",
         &[(description(), vue.clone())],
         &lignes(),
         &licences(),
@@ -317,7 +317,7 @@ fn aucune_comparaison_inter_legislature() {
     seconde.id = "an17-2026-01-01".to_owned();
     seconde.date = "2026-01-01".to_owned();
     let deux = construire_manifeste(
-        "0.3.0",
+        "0.4.0",
         &[(description(), vue.clone()), (seconde, vue)],
         &lignes(),
         &licences(),
@@ -444,7 +444,7 @@ fn lexique_interdit_absent_de_lexport() {
     // diff : un terme introduit par une donnée plutôt que par du code y échappe.
     let vue = instantane();
     let manifeste = construire_manifeste(
-        "0.3.0",
+        "0.4.0",
         &[(description(), vue.clone())],
         &lignes(),
         &licences(),
@@ -545,7 +545,7 @@ fn schema_publie_et_verifie_a_la_construction() {
     };
     ordre_ecrit(&vue, &attendues("instantane-1", &[]));
     let manifeste = construire_manifeste(
-        "0.3.0",
+        "0.4.0",
         &[(description(), vue.clone())],
         &lignes(),
         &licences(),
@@ -580,21 +580,21 @@ fn instantane_de_lexport_complet() {
     // contrôlée, jamais recopiée d'une sortie (docs/tdd.md §2).
     let vue = instantane();
     let attendu = concat!(
-        r#"{"schema":"contrepoint/instantane/1","contrat":"0.3.0","id":"an17-2026-07-21","#,
+        r#"{"schema":"contrepoint/instantane/1","contrat":"0.4.0","id":"an17-2026-07-21","#,
         r#""chambre":"AN","legislature":"17","date":"2026-07-21","#,
         r#""date_arretee":"2026-08-27T00:00:00Z","#,
         r#""ancrage":{"famille":"votes","ancre_gauche":"groupe.an17.lfi-nfp","#,
         r#""ancre_droite":"groupe.an17.rn","#,
         r#""note":"Échelle ancrée sur deux groupes de cette législature : deux instantanés ne se superposent pas."},"#,
         r#""bandes":[{"id":"parti.lfi","libelle":"La France insoumise","marqueurs":["#,
-        r#"{"famille":"votes","echelle":"votes_an17_ancre_v1","valeur":-1.0000,"valeur_code":null,"#,
+        r#"{"famille":"votes","echelle":"votes_an17_ancre_v1","valeur":-1.00,"valeur_code":null,"#,
         r#""libelle":"Votes du groupe LFI-NFP","motif_code":null,"motif":null,"#,
-        r#""dispersion":{"effectif":73,"iqr":0.0470},"#,
+        r#""dispersion":{"effectif":73,"iqr":0.05},"#,
         r#""preuve":"58dddb470ebac0b3da987e46a74a1bf48b0ebfb6945219f1d10ba1eb3f6466e9"}]},"#,
         r#"{"id":"parti.rn","libelle":"Rassemblement national","marqueurs":["#,
-        r#"{"famille":"votes","echelle":"votes_an17_ancre_v1","valeur":1.0000,"valeur_code":null,"#,
+        r#"{"famille":"votes","echelle":"votes_an17_ancre_v1","valeur":1.00,"valeur_code":null,"#,
         r#""libelle":"Votes du groupe RN","motif_code":null,"motif":null,"#,
-        r#""dispersion":{"effectif":129,"iqr":0.0520},"#,
+        r#""dispersion":{"effectif":129,"iqr":0.05},"#,
         r#""preuve":"8fde0f5f78afe28503821f8194a91dca7022105eaaad831bad9b6d4ef8489e2b"},"#,
         r#"{"famille":"experts","echelle":"ches_lrgen_0_10","valeur":8.82,"valeur_code":null,"#,
         r#""libelle":"CHES 2024, lrgen","motif_code":null,"motif":null,"dispersion":null,"#,
@@ -603,7 +603,7 @@ fn instantane_de_lexport_complet() {
         r#"{"famille":"votes","echelle":"votes_an17_ancre_v1","valeur":null,"valeur_code":null,"#,
         r#""libelle":"Votes du groupe LIOT","motif_code":"sous_seuil_de_publication","#,
         r#""motif":"Dispersion interne au-delà du seuil publié : IQR 0,687 pour un maximum de 0,25.","#,
-        r#""dispersion":{"effectif":25,"iqr":0.6870},"#,
+        r#""dispersion":{"effectif":25,"iqr":0.69},"#,
         r#""preuve":"32fb76691440af055b9863b258a59c400b00775d7598630c2cdcc1441a192b61"}]}],"#,
         // §4.3 règle 5 — l'univers de `sans_mesure` est le **registre**, pas les
         // seules entités qui portent une ligne : une entité sans aucune ligne
@@ -613,25 +613,25 @@ fn instantane_de_lexport_complet() {
         // publique garde le motif de **sa** ligne, qui est plus précis.
         // Les Écologistes est dit par son sigle : son nom compte 43 caractères.
         r#""sans_mesure":["#,
-        r#"{"entite":"coalition.ensemble","libelle":"Ensemble","motif_code":"hors_source","#,
+        r#"{"entite":"coalition.ensemble","libelle":"Ensemble","motif_code":"aucune_mesure","#,
         r#""motif":"Aucune ligne de preuve ne porte cette entité : aucune famille de mesure ne l'a produite."},"#,
-        r#"{"entite":"coalition.nfp","libelle":"Nouveau Front populaire","motif_code":"hors_source","#,
+        r#"{"entite":"coalition.nfp","libelle":"Nouveau Front populaire","motif_code":"aucune_mesure","#,
         r#""motif":"Aucune ligne de preuve ne porte cette entité : aucune famille de mesure ne l'a produite."},"#,
-        r#"{"entite":"parti.ecologistes","libelle":"Les Écologistes","motif_code":"hors_source","#,
+        r#"{"entite":"parti.ecologistes","libelle":"Les Écologistes","motif_code":"aucune_mesure","#,
         r#""motif":"Aucune ligne de preuve ne porte cette entité : aucune famille de mesure ne l'a produite."},"#,
-        r#"{"entite":"parti.horizons","libelle":"Horizons","motif_code":"hors_source","#,
+        r#"{"entite":"parti.horizons","libelle":"Horizons","motif_code":"aucune_mesure","#,
         r#""motif":"Aucune ligne de preuve ne porte cette entité : aucune famille de mesure ne l'a produite."},"#,
-        r#"{"entite":"parti.lr","libelle":"Les Républicains","motif_code":"hors_source","#,
+        r#"{"entite":"parti.lr","libelle":"Les Républicains","motif_code":"aucune_mesure","#,
         r#""motif":"Aucune ligne de preuve ne porte cette entité : aucune famille de mesure ne l'a produite."},"#,
-        r#"{"entite":"parti.pcf","libelle":"Parti communiste français","motif_code":"hors_source","#,
+        r#"{"entite":"parti.pcf","libelle":"Parti communiste français","motif_code":"aucune_mesure","#,
         r#""motif":"Aucune ligne de preuve ne porte cette entité : aucune famille de mesure ne l'a produite."},"#,
         r#"{"entite":"parti.place-publique","libelle":"Place publique","#,
         r#""motif_code":"hors_source","motif":"Absente des quatre sources d'identifiants et de la grille de nuances."},"#,
-        r#"{"entite":"parti.ps","libelle":"Parti socialiste","motif_code":"hors_source","#,
+        r#"{"entite":"parti.ps","libelle":"Parti socialiste","motif_code":"aucune_mesure","#,
         r#""motif":"Aucune ligne de preuve ne porte cette entité : aucune famille de mesure ne l'a produite."},"#,
-        r#"{"entite":"parti.renaissance","libelle":"Renaissance","motif_code":"hors_source","#,
+        r#"{"entite":"parti.renaissance","libelle":"Renaissance","motif_code":"aucune_mesure","#,
         r#""motif":"Aucune ligne de preuve ne porte cette entité : aucune famille de mesure ne l'a produite."},"#,
-        r#"{"entite":"parti.udr","libelle":"Union des droites pour la République","motif_code":"hors_source","#,
+        r#"{"entite":"parti.udr","libelle":"Union des droites pour la République","motif_code":"aucune_mesure","#,
         r#""motif":"Aucune ligne de preuve ne porte cette entité : aucune famille de mesure ne l'a produite."}]}"#
     );
     assert_eq!(vue, attendu);
@@ -647,7 +647,7 @@ fn aucun_orphelin_dans_les_deux_sens() {
     let lignes = lignes();
     let vue = instantane();
     let manifeste = construire_manifeste(
-        "0.3.0",
+        "0.4.0",
         &[(description(), vue.clone())],
         &lignes,
         &licences(),
@@ -694,7 +694,7 @@ fn date_arretee_derivee_et_jamais_saisie() {
     assert_eq!(vue["date_arretee"], CALCUL);
     let manifeste: Value = serde_json::from_str(
         &construire_manifeste(
-            "0.3.0",
+            "0.4.0",
             &[(description(), instantane())],
             &lignes(),
             &licences(),
@@ -715,7 +715,7 @@ fn date_arretee_derivee_et_jamais_saisie() {
     let eclats = construire_eclats(&lignes, std::slice::from_ref(&vue_texte)).unwrap();
     for saisie in ["manifeste", "instantane"] {
         let mut manifeste_faux = construire_manifeste(
-            "0.3.0",
+            "0.4.0",
             &[(description(), vue_texte.clone())],
             &lignes,
             &licences(),
@@ -749,7 +749,7 @@ fn date_arretee_derivee_et_jamais_saisie() {
     trop_long["ancrage"]["note"] = json!("é".repeat(201));
     let refus = verifier_artefacts(
         &construire_manifeste(
-            "0.3.0",
+            "0.4.0",
             &[(description(), vue_texte.clone())],
             &lignes,
             &licences(),
@@ -840,7 +840,7 @@ fn chaque_famille_du_manifeste_porte_les_bornes_de_son_echelle() {
     let lignes = lignes();
     let vue = instantane();
     let manifeste_texte = construire_manifeste(
-        "0.3.0",
+        "0.4.0",
         &[(description(), vue.clone())],
         &lignes,
         &licences(),
@@ -863,7 +863,7 @@ fn chaque_famille_du_manifeste_porte_les_bornes_de_son_echelle() {
     assert_eq!(
         bornes,
         vec![
-            ("votes", json!(-1.0), json!(1.0), json!(4)),
+            ("votes", json!(-1.0), json!(1.0), json!(2)),
             ("experts", json!(0.0), json!(10.0), json!(2)),
             // `administratif` porte un code, pas une position : pas de
             // graduation, donc pas de bornes. Aucune valeur de remplissage.
@@ -882,10 +882,10 @@ fn chaque_famille_du_manifeste_porte_les_bornes_de_son_echelle() {
     let eclats = construire_eclats(&lignes, std::slice::from_ref(&vue)).unwrap();
     for mutant in [
         manifeste_texte.replace(
-            r#""min":-1.0,"max":1.0,"decimales":4"#,
-            r#""min":-10.0,"max":10.0,"decimales":4"#,
+            r#""min":-1.0,"max":1.0,"decimales":2"#,
+            r#""min":-10.0,"max":10.0,"decimales":2"#,
         ),
-        manifeste_texte.replace(r#","min":-1.0,"max":1.0,"decimales":4"#, ""),
+        manifeste_texte.replace(r#","min":-1.0,"max":1.0,"decimales":2"#, ""),
     ] {
         assert_ne!(mutant, manifeste_texte, "le mutant n'a rien changé");
         let refus = verifier_artefacts(&mutant, std::slice::from_ref(&vue), &eclats, &lignes);
@@ -902,7 +902,7 @@ fn chaque_famille_du_manifeste_porte_les_bornes_de_son_echelle() {
     divergente["echelle"]["max"] = json!(2.0);
     let mut deux = lignes.clone();
     deux.push(divergente.to_string());
-    let erreur = construire_manifeste("0.3.0", &[(description(), vue)], &deux, &licences())
+    let erreur = construire_manifeste("0.4.0", &[(description(), vue)], &deux, &licences())
         .expect_err("deux échelles divergentes pour une famille sont un refus");
     assert!(erreur.contains("divergentes"), "{erreur}");
 }
@@ -922,7 +922,7 @@ fn regle_de_construction_des_bandes() {
     lignes.push(ligne_votes("groupe.an17.epr", json!(0.3), 0.1, 92));
 
     let vue: Value = serde_json::from_str(
-        &construire_instantane(&description(), "0.3.0", &lignes, &registre()).unwrap(),
+        &construire_instantane(&description(), "0.4.0", &lignes, &registre()).unwrap(),
     )
     .unwrap();
     let bandes: Vec<&str> = vue["bandes"]
@@ -979,7 +979,7 @@ fn aucun_identifiant_dacteur_dans_un_artefact() {
     // I13 — `grep -E '\bPA[0-9]{4,}\b'` sur les artefacts publiés est vide.
     let vue = instantane();
     let manifeste = construire_manifeste(
-        "0.3.0",
+        "0.4.0",
         &[(description(), vue.clone())],
         &lignes(),
         &licences(),
@@ -1006,7 +1006,7 @@ fn artefact_fautif_refuse_bruyamment() {
     let lignes = lignes();
     let vue = instantane();
     let manifeste = construire_manifeste(
-        "0.3.0",
+        "0.4.0",
         &[(description(), vue.clone())],
         &lignes,
         &licences(),

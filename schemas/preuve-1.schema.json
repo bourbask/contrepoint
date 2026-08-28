@@ -20,7 +20,7 @@
     "valeur_code": { "type": ["string", "null"], "minLength": 1 },
     "echelle": { "$ref": "#/$defs/echelle" },
     "motif_code": {
-      "enum": ["hors_source", "sous_seuil_de_publication", "source_indeterminee", "source_non_recuperable", null]
+      "enum": ["hors_source", "aucune_mesure", "sous_seuil_de_publication", "source_indeterminee", "source_non_recuperable", null]
     },
     "motif": { "$ref": "#/$defs/phrase" },
     "dispersion": {

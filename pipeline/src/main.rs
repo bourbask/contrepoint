@@ -36,7 +36,7 @@ use std::collections::{BTreeMap, BTreeSet};
 use std::path::{Path, PathBuf};
 
 /// Version du contrat de sortie qui produit ces lignes (ADR 0000 §6).
-const CONTRAT: &str = "0.3.0";
+const CONTRAT: &str = "0.4.0";
 /// Version du logiciel, **lue du paquet** : un littéral recopié ici diverge du
 /// `Cargo.toml` sans que rien ne le dise, et `logiciel.version` est un champ de
 /// traçabilité. `logiciel.commit` reste nul tant que le dépôt n'a pas de version
@@ -216,6 +216,17 @@ fn executer() -> Result<(), String> {
         entree_source("an_organe", &amo30),
     ]);
 
+    // Les décimales viennent de la table close du §2.3, jamais d'un littéral :
+    // écrites en dur ici, elles divergeaient de `echelle.decimales` sans que
+    // rien ne le dise, et le front reformate depuis ce champ.
+    let echelle_votes = contrepoint::preuves::ECHELLES
+        .iter()
+        .find(|(id, ..)| *id == ECHELLE_VOTES)
+        .ok_or("échelle `votes_an17_ancre_v1` absente de la table close du §2.3")?;
+    let decimales = echelle_votes
+        .3
+        .ok_or("échelle `votes_an17_ancre_v1` sans décimales déclarées")?;
+
     let mut lignes = Vec::new();
     let mut ecartees: Vec<(String, String)> = Vec::new();
     for position in &positions {
@@ -225,13 +236,13 @@ fn executer() -> Result<(), String> {
                 iqr,
                 ecart_type_reechantillonnage,
             } => (
-                json!(arrondir(*mediane, 4)),
+                json!(arrondir(*mediane, decimales)),
                 Value::Null,
                 Value::Null,
                 json!({
                     "effectif": position.effectif_retenu,
-                    "iqr": arrondir(*iqr, 4),
-                    "ecart_type_reechantillonnage": arrondir(*ecart_type_reechantillonnage, 4),
+                    "iqr": arrondir(*iqr, decimales),
+                    "ecart_type_reechantillonnage": arrondir(*ecart_type_reechantillonnage, decimales),
                 }),
             ),
             // §2.4 et §4.3 règle 4 — une mesure retenue puis non publiée est
@@ -260,9 +271,9 @@ fn executer() -> Result<(), String> {
                     )),
                     json!({
                         "effectif": position.effectif_retenu,
-                        "iqr": iqr.map(|x| arrondir(x, 4)),
+                        "iqr": iqr.map(|x| arrondir(x, decimales)),
                         "ecart_type_reechantillonnage":
-                            ecart_type_reechantillonnage.map(|x| arrondir(x, 4)),
+                            ecart_type_reechantillonnage.map(|x| arrondir(x, decimales)),
                     }),
                 )
             }
@@ -273,11 +284,14 @@ fn executer() -> Result<(), String> {
             "entite": position.groupe,
             "valeur": valeur,
             "valeur_code": Value::Null,
+            // Bornes **recopiées** de la table close du §2.3, jamais réécrites
+            // ici : c'était une troisième définition des mêmes valeurs, et elle
+            // a divergé dès que la table a changé — I7 l'a refusée.
             "echelle": {
                 "id": ECHELLE_VOTES,
-                "min": -1.0,
-                "max": 1.0,
-                "decimales": 4,
+                "min": echelle_votes.1,
+                "max": echelle_votes.2,
+                "decimales": echelle_votes.3,
                 "libelle": LIBELLE_ECHELLE_VOTES,
             },
             "motif_code": motif_code,
