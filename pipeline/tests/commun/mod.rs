@@ -79,3 +79,14 @@ pub fn entete() -> Entete {
         empreinte_amo30: "b".repeat(64),
     }
 }
+
+/// Les tolérances de `plan-de-tests.md` §4, dans **un seul** module. T1 est
+/// l'égalité d'octet du fichier arrondi : elle n'a pas de constante, et n'est
+/// jamais appliquée à un flottant intermédiaire.
+///
+/// T2 — invariance (permutations, initialisations, idempotence de l'ancrage).
+/// Mesuré à 1,6·10⁻¹⁵ : trois ordres de grandeur de marge.
+pub const T2: f64 = 1e-12;
+
+/// T3 — non-régression de valeur sur une médiane ancrée, amplitude 2,0.
+pub const T3: f64 = 0.02;

@@ -5,6 +5,8 @@
 //! Le JSON publié est une transcription automatique de XML : l'arité et le type
 //! y sont perdus. Ces trois fonctions les rendent, et rien d'autre.
 
+pub mod agregation;
+pub mod estimateur;
 pub mod ingestion;
 pub mod matrice;
 
