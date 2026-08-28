@@ -26,10 +26,17 @@ pub const IQR_MAXIMAL: f64 = 0.25;
 pub const ECART_TYPE_MAXIMAL: f64 = 0.05;
 pub const EFFECTIF_MINIMAL: usize = 10;
 
-/// En deçà de ce nombre de membres, Q1 et Q3 sont le minimum et le maximum du
-/// groupe : l'écart interquartile y est une **étendue**, que le projet ne
-/// calcule ni ne publie (positionnement.md §6, I19).
-pub const MEMBRES_MINIMAUX_POUR_LIQR: usize = 4;
+/// En deçà de ce nombre de membres, Q1 est le minimum du groupe : l'écart
+/// interquartile y porte une borne d'étendue, que le projet ne calcule ni ne
+/// publie (positionnement.md §6, I19).
+///
+/// Le seuil vaut **six** et non quatre. Avec la médiane basse de
+/// [`crate::estimateur::mediane`], la moitié inférieure d'un groupe de quatre
+/// ou cinq membres compte deux éléments, dont la médiane basse est le premier
+/// — c'est-à-dire le minimum du groupe. Six est le premier effectif où ni Q1
+/// ni Q3 n'est un extrême. Recompté sur n = 4 à 10, pas déduit du nom
+/// « charnières » : la méthode ne moyenne rien.
+pub const MEMBRES_MINIMAUX_POUR_LIQR: usize = 6;
 
 /// Un député n'entre dans la médiane de son groupe qu'au-delà de ce nombre de
 /// votes exprimés. Le seuil ne porte **que** là : il n'est jamais un filtre
@@ -197,10 +204,9 @@ fn publier(membres: &[Membre], reechantillons: &[Vec<f64>], retenus: &[usize]) -
 /// avec la médiane basse de l'estimateur des deux côtés : **un seul estimateur
 /// de position dans toute la chaîne**, celui qui définit déjà l'ancrage.
 ///
-/// Aucune autre statistique d'ordre n'est calculée. En deçà de quatre membres,
-/// Q1 et Q3 **sont** le minimum et le maximum : l'IQR y serait une étendue,
-/// donc les coordonnées de deux membres identifiables (I19), et rien n'est
-/// calculé. Au-delà, l'IQR est une différence et non une coordonnée — il est
+/// Aucune autre statistique d'ordre n'est calculée. En deçà de six membres, Q1
+/// est le minimum : l'IQR y porterait la coordonnée d'un membre identifiable
+/// (I19), et rien n'est calculé. Au-delà, l'IQR est une différence et non une coordonnée — il est
 /// calculé même sous le seuil d'effectif, parce que c'est lui qui justifie la
 /// non-publication (§2.4).
 fn centre_et_dispersion(positions: &[f64]) -> Option<(f64, f64)> {

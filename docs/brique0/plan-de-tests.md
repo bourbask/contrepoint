@@ -235,6 +235,7 @@ sont au niveau 2.
 | AGR-07 | `effectif_retenu_publie_avec_la_valeur` | groupe construit dans le test | Chaque valeur porte son effectif et sa date | ADR 0000 §5 : « Chiffres : jamais seuls ». Une médiane sans effectif est incitation à comparer deux groupes de 9 et de 129 membres |
 | AGR-08 | `seuil_de_200_votes_ne_sapplique_quau_calcul_de_la_mediane` | groupe avec un membre à 12 votes exprimés | Le membre entre dans la matrice et dans l'estimation, il n'entre pas dans la médiane du groupe | L'ordre de ces deux opérations est inversable sans que rien ne casse visiblement, et l'inverser appauvrit la matrice sans corriger le mécanisme d'absence |
 | AGR-09 | `deux_uid_pour_une_meme_entite_ne_sont_pas_fusionnes_par_lestimateur` | `PO847173` et `PO872880` | Deux lignes de groupe distinctes ; la réconciliation appartient au registre d'entités | Un `libelleAbrev` égal fusionnerait deux périodes distinctes ; ici les deux abrégés diffèrent (`UDR` / `UDDPLR`) et évitent la fusion par accident. Le test empêche de compter sur cet accident |
+| AGR-11 | `le_seuil_de_liqr_est_le_premier_effectif_sans_extreme` | effectifs 2 à 32, positions distinctes croissantes | Le seuil de calcul de l'IQR égale le premier effectif où ni Q1 ni Q3 n'est un extrême, et rien n'est calculé en deçà | Le seuil valait **4**, et à 4 comme à 5 membres la médiane basse de la moitié inférieure **est** le minimum du groupe : l'IQR y portait une borne d'étendue (I19). Le test recompte la propriété par balayage plutôt que de comparer la constante à elle-même — les mutants 4, 5 et 7 sont tués |
 
 ---
 
@@ -388,7 +389,7 @@ première ligne d'implémentation.
 | **6** | L'estimateur | EST-01, EST-02, EST-03, EST-04 | Un axe sur matrice synthétique, exact. Rien de publiable encore, et c'est voulu : les invariances viennent avant les vraies données |
 | **7** | Les invariances | EST-05, EST-06, EST-07, EST-13, EST-14 | Six permutations et quatre initialisations qui donnent le même axe. Le déterminisme cesse d'être une intention |
 | **8** | L'ancrage | EST-08, EST-09, EST-10, EST-11, EST-12 | Un axe où LFI-NFP vaut −1 et RN +1, ancres lues dans le registre, pipeline qui s'arrête si l'ancre manque |
-| **9** | L'agrégation et la règle de non-publication | AGR-01 → AGR-09 | Les bandes de partis avec médiane, IQR, étendue, effectif, date — et NI et LIOT en « non mesuré » avec leur raison. La première sortie qui ressemble au produit |
+| **9** | L'agrégation et la règle de non-publication | AGR-01 → AGR-11 | Les bandes de partis avec médiane, IQR, étendue, effectif, date — et NI et LIOT en « non mesuré » avec leur raison. La première sortie qui ressemble au produit |
 | **10** | Les alarmes | EST-15, EST-16 | Deux corpus synthétiques dégradés qui font passer la famille « votes » en « non mesuré ». Le risque accepté de l'ADR 0000 §8 devient un comportement observable |
 | **11** | Le registre d'entités | REG-01 → REG-22 | Un validateur qui refuse vingt-deux fichiers fautifs et accepte l'extrait. Une PR de correction du registre devient possible |
 | **12** | Le registre de preuves | PRE-01 → PRE-13 | Le JSONL en ajout seul, rejouable, idempotent. Le contrat des briques 1-3 existe |

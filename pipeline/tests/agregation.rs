@@ -11,8 +11,8 @@ mod commun;
 use commun::T2;
 use contrepoint::agregation::{
     DISPERSION_INTERNE, DISPERSION_REECHANTILLONNAGE, ECART_TYPE_MAXIMAL, EFFECTIF_INSUFFISANT,
-    EFFECTIF_MINIMAL, IQR_MAXIMAL, Membre, Publication, VOTES_MINIMAUX, agreger, groupes_valides,
-    rendre,
+    EFFECTIF_MINIMAL, IQR_MAXIMAL, MEMBRES_MINIMAUX_POUR_LIQR, Membre, Publication, VOTES_MINIMAUX,
+    agreger, groupes_valides, rendre,
 };
 use serde_json::Value;
 
@@ -341,5 +341,64 @@ fn deux_uid_pour_une_meme_entite_ne_sont_pas_fusionnes_par_lestimateur() {
     );
     for ligne in &resultat {
         assert_eq!(ligne.effectif_retenu, 12, "AGR-09 : effectifs non cumulés");
+    }
+}
+
+/// AGR-11 [C] — le seuil d'effectif du calcul de l'IQR protège la propriété
+/// « Q1 n'est pas le minimum », et non un nombre.
+///
+/// Avec la médiane basse, la moitié inférieure d'un groupe de quatre ou cinq
+/// membres compte deux éléments, dont la médiane basse **est** le minimum du
+/// groupe : l'IQR y porterait la coordonnée d'un membre identifiable (I19).
+/// Six est le premier effectif où ni Q1 ni Q3 n'est un extrême.
+///
+/// Le test recompte la propriété par balayage plutôt que de comparer une
+/// constante à elle-même : abaisser `MEMBRES_MINIMAUX_POUR_LIQR` le casse, et
+/// changer la méthode de médiane aussi.
+#[test]
+fn le_seuil_de_liqr_est_le_premier_effectif_sans_extreme() {
+    /// Réplique exacte des charnières de `agregation::centre_et_dispersion`,
+    /// qui est privée : moitiés hautes et basses, médiane basse sur chacune.
+    fn charnieres(triees: &[f64]) -> (f64, f64) {
+        let basse_de = |v: &[f64]| v[(v.len() - 1) / 2];
+        let moitie = triees.len() / 2;
+        (
+            basse_de(&triees[..moitie]),
+            basse_de(&triees[triees.len() - moitie..]),
+        )
+    }
+
+    let premier_sans_extreme = (2..=32)
+        .find(|n| {
+            let positions: Vec<f64> = (0..*n).map(|k| k as f64).collect();
+            let (q1, q3) = charnieres(&positions);
+            q1 != positions[0] && q3 != positions[positions.len() - 1]
+        })
+        .expect("AGR-11 : aucun effectif sans extrême sous 32, la méthode a changé");
+
+    assert_eq!(
+        premier_sans_extreme, MEMBRES_MINIMAUX_POUR_LIQR,
+        "AGR-11 : le seuil vaut {MEMBRES_MINIMAUX_POUR_LIQR}, alors que Q1 ou Q3 \
+         reste un extrême jusqu'à {} membres exclus. Toute valeur inférieure \
+         publie une borne d'étendue (I19)",
+        premier_sans_extreme
+    );
+
+    // Et le comportement observable : sous le seuil, rien n'est calculé.
+    for effectif in 2..MEMBRES_MINIMAUX_POUR_LIQR {
+        let positions: Vec<f64> = (0..effectif).map(|k| k as f64 / 100.0).collect();
+        let liste = membres(LFI, &positions, 900);
+        let tirages = reechantillons(&liste, &[0.010, -0.010]);
+        let resultat = agreger(&liste, &tirages, &[LFI.to_owned()], DATE);
+        match &resultat[0].publication {
+            Publication::NonMesuree { iqr, .. } => assert!(
+                iqr.is_none(),
+                "AGR-11 : à {effectif} membres, aucun IQR ne doit être calculé"
+            ),
+            Publication::Mesuree { mediane, .. } => panic!(
+                "AGR-11 : groupe de {effectif} membres mesuré à {mediane}, \
+                 alors que Q1 y est le minimum du groupe"
+            ),
+        }
     }
 }
