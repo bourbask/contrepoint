@@ -26,7 +26,11 @@ use std::collections::{BTreeMap, BTreeSet};
 pub const FAMILLES: [(&str, &str, &str); 3] = [
     ("votes", "Votes nominatifs", "votes_an17_ancre_v1"),
     ("experts", "Enquête d'experts", "ches_lrgen_0_10"),
-    ("administratif", "Nuance — Ministère de l'intérieur", "nuance_leg2024"),
+    (
+        "administratif",
+        "Nuance — Ministère de l'intérieur",
+        "nuance_leg2024",
+    ),
 ];
 
 /// Le libellé d'un marqueur, par famille. Quarante caractères au plus
