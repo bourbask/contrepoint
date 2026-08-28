@@ -126,6 +126,22 @@ du corpus réel n'est nécessaire, aucune horloge n'est lue.
 | REC-07 | `paternite` | producteur, licence et date de source de deux sources différentes | La mention est dérivée des trois arguments ; celle de CHES ne nomme ni l'Assemblée nationale ni une Licence Ouverte | Deux des quatre sources ne sont pas de l'Assemblée. La mention était écrite en dur : elle attribuait à l'Assemblée un fichier du Chapel Hill Expert Survey et un fichier du ministère de l'intérieur, sous une licence qu'aucun des deux ne porte. C'est une fausse attribution, pas une approximation (RG-76) |
 | REC-08 | `archives.sh deposer` sur une source hors liste blanche | descripteurs portant l'URL de CHES, celle du nuancier, et une URL qui imite celle de l'Assemblée sans en être une | Refus dans les trois cas, **avant tout appel réseau** à `gh` | RG-118 et ADR 0000 §8 : CHES ne publie aucune licence, et la condition obtenue le 2026-08-27 est une exigence de citation, pas une cession de droits. Un dépôt de release est public et immuable ; l'asset mal déposé ne se reprend pas |
 
+### §4ter — les portes de contrôle elles-mêmes
+
+`scripts/test-portes.sh`. Un contrôle qui ne peut plus rien affirmer ne protège
+plus rien, et ce mode de panne ne se voit pas : la sortie reste plausible.
+
+| Id | Suite | Entrée | Attendu | Ce qui casse sans lui |
+|---|---|---|---|---|
+| POR-01 | `par_lots` | 23 000 chemins longs, ~3,3 Mio d'`argv` | Sans découpage `grep` rend 126 ; avec découpage, « rien trouvé » reste distinct de « rien lu » | Le 2026-08-28, une copie de cache égarée a mis 22 490 fichiers dans l'index : `securite.sh` et `lexique.sh` ont rendu 126 sur **chaque** motif. Le même défaut avait frappé une porte de CI sur 22 426 fichiers, et n'avait été corrigé que là |
+| POR-02 | `par_lots` | une occurrence placée dans le **dernier** lot | Elle est trouvée, et une seule ligne est rapportée | Une boucle qui s'arrête un lot trop tôt, ou qui recopie le même lot, ne planterait pas : elle rendrait vert |
+| POR-03 | `par_lots` | un fichier illisible au milieu de la liste | « rien lu », jamais « rien trouvé » | Le découpage ne doit pas avaler l'erreur d'un lot. C'est la distinction que tout ce contrôle existe pour tenir |
+
+Le découpage est écrit à la main et non délégué à `xargs` : `xargs` rend 123 dès
+qu'une invocation rend entre 1 et 125, sans dire laquelle ni pourquoi — « rien
+trouvé » et « grep en erreur » y deviendraient le même code.
+
+
 Les contrôles de niveau 3 restants — reprise réelle sur troncature, empreinte de contenu,
 fraîcheur d'une source censée être vivante — sont exercés par une exécution
 manuelle de `scripts/recuperer-sources.sh` et consignés dans

@@ -26,7 +26,7 @@ signaler() { echec=1; printf '::error::%s\n' "$1"; }
 # sens : un identifiant déclaré et non écrit est une porte fantôme, un
 # identifiant écrit et non déclaré est un test que le plan ne connaît pas.
 PLAN=docs/brique0/plan-de-tests.md
-PREFIXES='REC|ADA|ING|MAT|EST|AGR|REG|PRE|FAM|EXP'
+PREFIXES='REC|POR|ADA|ING|MAT|EST|AGR|REG|PRE|FAM|EXP'
 
 # Une suite par préfixe, désignée par SON FICHIER et non par le répertoire qui
 # la contiendra. C'est ce qui évite la falaise : pointer `pipeline` faisait
@@ -36,6 +36,7 @@ PREFIXES='REC|ADA|ING|MAT|EST|AGR|REG|PRE|FAM|EXP'
 suites_de() {
   case "$1" in
     REC) echo scripts/test-recuperer-sources.sh ;;
+    POR) echo scripts/test-portes.sh ;;
     ADA) echo pipeline/tests/adaptateurs.rs ;;
     ING) echo pipeline/tests/ingestion.rs ;;
     MAT) echo pipeline/tests/matrice.rs ;;
@@ -52,7 +53,10 @@ suites_de() {
 identifiants() {
   echo "── porte 1 : identifiants de test déclarés contre suites écrites"
   local prefixe presents id trouve suites s
-  for prefixe in REC ADA ING MAT EST AGR REG PRE FAM EXP; do
+  # Dérivé de `PREFIXES`, jamais recopié : les deux listes ont divergé au premier
+  # préfixe ajouté — `POR` était dans le tableau des suites et absent de la
+  # boucle, donc la porte l'ignorait en silence tout en affichant « tout passe ».
+  for prefixe in $(printf '%s' "$PREFIXES" | tr '|' ' '); do
     presents=""
     for s in $(suites_de "$prefixe"); do
       [ -e "$s" ] && presents="$presents $s"
