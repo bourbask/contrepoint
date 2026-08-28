@@ -56,11 +56,24 @@ par_lots() { # motif fichiers...
   printf '%s' "${sortie%$'\n'}"
 }
 
+# La reproduction du defaut est un **constat**, pas un invariant : `ARG_MAX`
+# depend du noyau et de la limite de pile, donc du coureur. Chez moi 23 000
+# chemins la depassent, sur un coureur GitHub non — la premiere version de ce
+# test l'affirmait et echouait en CI, ce qui etait ma faute et non la sienne.
+# On mesure, on l'affiche, on n'en fait pas une assertion.
 code=0
 grep -nHIE -- 'motif-absent' "${TOUS[@]}" >/dev/null 2>&1 || code=$?
-verifier POR-01 "sans découpage, ${#TOUS[@]} chemins font échouer grep" oui \
-  "$([ "$code" -gt 1 ] && echo oui || echo non)"
+octets=$(printf '%s\0' "${TOUS[@]}" | wc -c)
+if [ "$code" -gt 1 ]; then
+  printf '  ⧗ POR-01 constat : sans découpage, %s chemins (%s Kio) font échouer grep\n' \
+    "${#TOUS[@]}" "$((octets / 1024))"
+else
+  printf '  ⧗ POR-01 constat : %s chemins (%s Kio) passent sans découpage sur cette machine — ARG_MAX y est plus haut\n' \
+    "${#TOUS[@]}" "$((octets / 1024))"
+fi
 
+# L'invariant, lui, ne depend d'aucune limite : avec decoupage, « rien trouve »
+# reste distinct de « rien lu », quelle que soit la taille de la liste.
 r=$(par_lots 'motif-absent' "${TOUS[@]}")
 verifier POR-01 "avec découpage, rien trouvé se distingue de rien lu" "" "$r"
 

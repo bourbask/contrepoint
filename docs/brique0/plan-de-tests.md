@@ -133,7 +133,7 @@ plus rien, et ce mode de panne ne se voit pas : la sortie reste plausible.
 
 | Id | Suite | Entrée | Attendu | Ce qui casse sans lui |
 |---|---|---|---|---|
-| POR-01 | `par_lots` | 23 000 chemins longs, ~3,3 Mio d'`argv` | Sans découpage `grep` rend 126 ; avec découpage, « rien trouvé » reste distinct de « rien lu » | Le 2026-08-28, une copie de cache égarée a mis 22 490 fichiers dans l'index : `securite.sh` et `lexique.sh` ont rendu 126 sur **chaque** motif. Le même défaut avait frappé une porte de CI sur 22 426 fichiers, et n'avait été corrigé que là |
+| POR-01 | `par_lots` | 23 000 chemins longs, ~2,6 Mio d'`argv` | Avec découpage, « rien trouvé » reste distinct de « rien lu ». Que `grep` échoue **sans** découpage est un constat affiché, jamais une assertion : `ARG_MAX` dépend du noyau et de la limite de pile, donc de la machine — la première version l'affirmait et échouait en CI, où la limite est plus haute | Le 2026-08-28, une copie de cache égarée a mis 22 490 fichiers dans l'index : `securite.sh` et `lexique.sh` ont rendu 126 sur **chaque** motif. Le même défaut avait frappé une porte de CI sur 22 426 fichiers, et n'avait été corrigé que là |
 | POR-02 | `par_lots` | une occurrence placée dans le **dernier** lot | Elle est trouvée, et une seule ligne est rapportée | Une boucle qui s'arrête un lot trop tôt, ou qui recopie le même lot, ne planterait pas : elle rendrait vert |
 | POR-03 | `par_lots` | un fichier illisible au milieu de la liste | « rien lu », jamais « rien trouvé » | Le découpage ne doit pas avaler l'erreur d'un lot. C'est la distinction que tout ce contrôle existe pour tenir |
 
