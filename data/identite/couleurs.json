@@ -1,0 +1,65 @@
+{
+ "schema": "contrepoint/couleurs-identite/1",
+ "source": "wikidata",
+ "propriete": "P465",
+ "licence": "CC0 1.0",
+ "note": "Couleur d'identite declaree par la source, jamais choisie ici. Presentation seule : aucune valeur mesuree n'en depend, et ce fichier n'entre pas dans la cle de deduplication du §3.",
+ "recupere_le": "2026-08-28",
+ "couleurs": [
+  {
+   "entite": "coalition.nfp",
+   "wikidata": "Q126487286",
+   "srgb": "#FB2C59"
+  },
+  {
+   "entite": "parti.ecologistes",
+   "wikidata": "Q613786",
+   "srgb": "#4BB166"
+  },
+  {
+   "entite": "parti.horizons",
+   "wikidata": "Q108846587",
+   "srgb": "#0000BA"
+  },
+  {
+   "entite": "parti.lfi",
+   "wikidata": "Q27978402",
+   "srgb": "#CC2443"
+  },
+  {
+   "entite": "parti.lr",
+   "wikidata": "Q20012759",
+   "srgb": "#034EA2"
+  },
+  {
+   "entite": "parti.pcf",
+   "wikidata": "Q192821",
+   "srgb": "#E4002B"
+  },
+  {
+   "entite": "parti.place-publique",
+   "wikidata": "Q58366009",
+   "srgb": "#FFF100"
+  },
+  {
+   "entite": "parti.ps",
+   "wikidata": "Q170972",
+   "srgb": "#E30040"
+  },
+  {
+   "entite": "parti.renaissance",
+   "wikidata": "Q23731823",
+   "srgb": "#00205B"
+  },
+  {
+   "entite": "parti.rn",
+   "wikidata": "Q205150",
+   "srgb": "#104E8B"
+  },
+  {
+   "entite": "parti.udr",
+   "wikidata": "Q127038760",
+   "srgb": "#004B8F"
+  }
+ ]
+}

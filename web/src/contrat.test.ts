@@ -416,3 +416,44 @@ describe('EXP-09 fond declare des systemes', () => {
     ).toBe(true)
   })
 })
+
+describe('EXP-10 ordre des lignes dans un panneau gradue', () => {
+  test('les lignes d un panneau sont croissantes en abscisse', () => {
+    // Support de l'amendement GV-07 du 2026-08-28. Le panneau des experts
+    // rendait dans l'ordre de `bandes[]`, qui est un ordre de VOTES : le
+    // pipeline y range par mediane ancree et ajoute a la fin les entites qui
+    // n'en portent pas. Le trace sortait 0,82 · 3,45 · 6,60 · 7,73 · 8,82 ·
+    // 2,30 · 1,73 · 6,27 — un zigzag qui detruisait la lecture, et qui ne
+    // disait rien d'autre que « ces trois-la sont absentes d'une autre
+    // famille ».
+    //
+    // Ce que ce test NE valide PAS, et que GV-07 continue d'interdire : un tri
+    // par effectif, par dispersion ou par etat de mesure. Trier par l'abscisse
+    // deja dessinee ne publie rien de neuf — l'oeil lit cet ordre sur l'axe
+    // avant de le lire dans la colonne des noms.
+    // L'entree est DESORDONNEE a dessein. Sur les fixtures livrees, les bandes
+    // sont deja croissantes : le test y passait meme apres avoir retire le tri
+    // — mutant verifie, il survivait. Un test qui ne distingue pas les deux
+    // implementations ne garde rien.
+    const melange = {
+      ...instantane,
+      bandes: [...instantane.bandes].reverse(),
+    }
+    const disposition = disposer(manifeste, melange, 760)
+    expect(disposition.panneaux.length).toBeGreaterThan(0)
+
+    for (const panneau of disposition.panneaux) {
+      const abscisses = panneau.lignes.map((l) => l.x)
+      const triees = [...abscisses].sort((a, b) => a - b)
+      expect(
+        abscisses,
+        `panneau « ${panneau.libelleFamille} » : les lignes doivent etre croissantes ` +
+          `en abscisse, obtenu ${JSON.stringify(abscisses)}`,
+      ).toEqual(triees)
+    }
+
+    // Le cas de test doit mordre : au moins un panneau porte assez de lignes
+    // pour qu'un ordre soit observable.
+    expect(Math.max(...disposition.panneaux.map((p) => p.lignes.length))).toBeGreaterThan(2)
+  })
+})

@@ -26,6 +26,25 @@
 //
 // Les bornes de graduation sont DECLAREES par le manifeste (contrats.md §4.1),
 // jamais derivees des valeurs affichees.
+//
+// ORDRE DES LIGNES D'UN PANNEAU. Chaque panneau range ses lignes par leur
+// PROPRE abscisse, c'est-a-dire par la valeur qu'il dessine deja.
+//
+// L'ordre de `instantane.bandes[]` est un ordre de VOTES : le pipeline y range
+// les entites par leur mediane ancree, et met a la fin celles qui n'en portent
+// pas. Repris tel quel dans le panneau des experts, il donnait
+// 0,82 · 3,45 · 6,60 · 7,73 · 8,82 · 2,30 · 1,73 · 6,27 — un trace en zigzag,
+// ou les trois dernieres entites paraissent hors du rang parce qu'elles sont
+// absentes de la famille votes, pas parce que leur valeur le veut.
+//
+// GV-07 interdit de suggerer une fiabilite par l'ordre. Un tri par l'abscisse
+// deja dessinee ne publie rien de neuf : l'oeil lit cet ordre sur l'axe avant
+// de le lire dans la colonne des noms, et deux lignes qui echangent leur rang
+// echangent aussi leur abscisse. Ce qui reste interdit, et le reste ici : trier
+// par effectif, par dispersion, par etat de mesure, ou reléguer en bas les
+// entites non mesurees — aucune n'entre dans un panneau, elles se disent en
+// toutes lettres. Amendement ecrit dans docs/design/garde-fous-visuels.md
+// GV-07. Le modele `systemes[]`, lui, garde l'ordre du contrat.
 
 import { scaleLinear } from 'd3-scale'
 import type { Instantane, Manifeste, Marqueur } from './contrat.ts'
@@ -131,9 +150,12 @@ const SEUIL_ETROIT = 560
 /** Hauteur d'une ligne d'entite. Deux constantes de disposition, pas une echelle. */
 const H_LIGNE = 46
 const H_LIGNE_ETROIT = 76
-/** Part de la largeur reservee a la colonne de texte, et colonne des valeurs. */
-const PART_TEXTE = 0.42
-const TEXTE_MAX = 300
+/** Part de la largeur reservee a la colonne de texte, et colonne des valeurs.
+ *  La colonne porte le carre d'identite, le nom et sa nature : elle a ete
+ *  elargie de 300 a 340 px pour que « Union des droites pour la Republique ·
+ *  parti » n'aille pas mordre sur la graduation. */
+const PART_TEXTE = 0.46
+const TEXTE_MAX = 340
 const COLONNE_VALEUR = 92
 const ECART = 12
 
@@ -337,13 +359,15 @@ export function disposer(
   }
 
   // ---- Les panneaux, groupes par echelle : la mise en page ------------------
-  // L'ordre des lignes est celui de `instantane.bandes` : le front ne trie
-  // jamais, un tri serait un classement (GV-07).
+  // L'ordre des lignes d'un panneau est celui de leur PROPRE abscisse. Voir la
+  // note « ordre des lignes » plus bas et GV-07 amende.
   const toutes = systemes.flatMap((s) => s.voix)
   let y = 0
   const panneaux: Panneau[] = []
   for (const echelle of grilles) {
-    const lignes = toutes.filter((v) => v.etat === 'mesuree' && v.marqueur.echelle === echelle.id)
+    const lignes = toutes
+      .filter((v) => v.etat === 'mesuree' && v.marqueur.echelle === echelle.id)
+      .sort((a, b) => a.x - b.x)
     if (lignes.length === 0) continue
     const premiere = lignes[0] as Voix
     y += 26
