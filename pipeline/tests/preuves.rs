@@ -1,4 +1,4 @@
-//! PRE-01 à PRE-13 — le registre de preuves : la ligne, sa clé de
+//! PRE-01 à PRE-15 — le registre de preuves : la ligne, sa clé de
 //! déduplication, sa forme canonique et l'ajout seul.
 //!
 //! Spécification : `docs/brique0/contrats.md` §2, §3, §6 et §7.
@@ -37,7 +37,6 @@ fn lignes_de_reference() -> Vec<String> {
 fn ligne_nominale() -> Value {
     json!({
         "schema": SCHEMA,
-        "contrat": "0.4.0",
         "famille": "votes",
         "entite": "groupe.an17.rn",
         "valeur": 1.0,
@@ -208,12 +207,12 @@ fn cle_amputee_dun_champ_change_lidentifiant() {
     archive["entrees"][0]["empreinte_sha256"] = json!("3".repeat(64));
     assert_eq!(identifiant(&archive).unwrap(), reference);
 
-    // Hors de la clé : valeur, date_calcul, contrat, logiciel, url, producteur,
-    // date de mise à jour, citation.
+    // Hors de la clé : valeur, date_calcul, logiciel, url, producteur,
+    // date de mise à jour, citation. `contrat` n'y figure plus parce qu'il
+    // n'est plus un champ de la ligne (contrat 0.6.0, PRE-15).
     for (nom, mut hors) in [
         ("valeur", ligne.clone()),
         ("date_calcul", ligne.clone()),
-        ("contrat", ligne.clone()),
         ("logiciel", ligne.clone()),
         ("url", ligne.clone()),
         ("producteur", ligne.clone()),
@@ -222,7 +221,6 @@ fn cle_amputee_dun_champ_change_lidentifiant() {
         match nom {
             "valeur" => hors["valeur"] = json!(0.5),
             "date_calcul" => hors["date_calcul"] = json!("2027-01-01T00:00:00Z"),
-            "contrat" => hors["contrat"] = json!("9.9.9"),
             "logiciel" => hors["logiciel"]["version"] = json!("9.9.9"),
             "url" => hors["entrees"][0]["url"] = json!("https://example.invalid/y"),
             "producteur" => hors["entrees"][0]["producteur"] = json!("Autre producteur"),
@@ -304,15 +302,23 @@ fn ligne_sans_preuve_de_source_refusee() {
 
 #[test]
 fn ligne_porte_la_version_qui_la_produite() {
-    // PRE-03 — sans ce champ, la politique de version est décorative et une
-    // preuve publiée devient non interprétable.
-    let mut sans = ligne_nominale();
-    sans.as_object_mut().unwrap().remove("contrat");
-    refuse_par(&sans, "I1");
-
+    // PRE-03 — la version que la ligne porte est celle de la **méthode** et
+    // celle du **logiciel**, pas celle du contrat : depuis le contrat 0.6.0 la
+    // version du contrat décrit le format et vit dans le manifeste et dans
+    // l'instantané (PRE-15). Sans `methode.version`, la politique de version
+    // est décorative et une preuve publiée devient non interprétable — c'est
+    // aussi le levier sémantique que I8 surveille.
     let mut mauvaise = ligne_nominale();
-    mauvaise["contrat"] = json!("0.3");
+    mauvaise["methode"]["version"] = json!("0.3");
     refuse_par(&mauvaise, "I1");
+
+    let mut logiciel = ligne_nominale();
+    logiciel["logiciel"]["version"] = json!("0.3");
+    refuse_par(&logiciel, "I1");
+
+    let mut sans_logiciel = ligne_nominale();
+    sans_logiciel.as_object_mut().unwrap().remove("logiciel");
+    refuse_par(&sans_logiciel, "I1");
 
     let mut sans_methode = ligne_nominale();
     sans_methode["methode"]
@@ -1178,4 +1184,65 @@ fn motif_et_dispersion_a_la_meme_precision() {
         motif.contains(&ecrit_arrondi),
         "PRE-14 : le motif doit porter la valeur publiée « {ecrit_arrondi} » — {motif}"
     );
+}
+
+// ---------------------------------------------------------------- PRE-15 ----
+
+/// PRE-15 [C] — une ligne de preuve **ne porte pas** `contrat`.
+///
+/// Le champ y figurait sans entrer dans la clé du §3 : chaque bascule de
+/// version produisait 34 lignes de même `id` et de contenu différent, I8
+/// arrêtait le pipeline, et il fallait réécrire un registre en ajout seul —
+/// donc enfreindre I15. C'est arrivé en `0.4.0` puis en `0.5.0` ; ce n'était pas
+/// un accident, c'était structurel. La version du contrat décrit le **format**,
+/// pas la **mesure** : elle vit dans le manifeste et dans l'instantané (EXP-12).
+///
+/// Sans ce test, quelqu'un la remet : le champ était plausible, et rien d'autre
+/// que la liste close [`CLES`] ne l'interdit.
+#[test]
+fn contrat_absent_de_la_ligne_de_preuve() {
+    assert!(
+        !CLES.contains(&"contrat"),
+        "PRE-15 : `contrat` est revenu dans la liste close des clés de la ligne"
+    );
+
+    // Le producteur est strict (§5.1) : une clé hors de la liste est refusée,
+    // pas ignorée. Sans ce refus, la remise du champ passerait en silence.
+    let mut remise = ligne_nominale();
+    remise
+        .as_object_mut()
+        .expect("ligne objet")
+        .insert("contrat".to_owned(), json!("0.6.0"));
+    refuse_par(&remise, "I1");
+
+    // Et la ligne nominale, elle, passe : le refus vient bien de la clé
+    // ajoutée, pas d'une autre faute de la fixture.
+    let mut nominale = ligne_nominale();
+    nominale["id"] = json!(identifiant(&nominale).expect("`id` calculable"));
+    assert_eq!(
+        verifier(&nominale),
+        Vec::<String>::new(),
+        "la ligne nominale doit être valide"
+    );
+
+    // Le producteur n'écrit pas non plus la ligne : `construire` passe par
+    // `verifier` avant de rendre. `rendre` seul, lui, recopie les clés
+    // étrangères en fin d'objet — c'est voulu, le refus est le rôle de
+    // `verifier` — donc c'est bien `construire` qu'il faut interroger ici.
+    let erreur = construire(remise).expect_err("PRE-15 : le producteur doit refuser d'écrire");
+    assert!(
+        erreur.contains("contrat"),
+        "PRE-15 : le refus doit nommer la clé — {erreur}"
+    );
+
+    // Les cinq lignes réelles du §2.6, qui sont la spécification, ne le portent
+    // pas non plus.
+    for texte in lignes_de_reference() {
+        let ligne: Value = serde_json::from_str(&texte).expect("ligne du §2.6 conforme au JSON");
+        assert!(
+            ligne.get("contrat").is_none(),
+            "PRE-15 : le §2.6 publie encore une ligne portant `contrat` — {}",
+            ligne["entite"]
+        );
+    }
 }

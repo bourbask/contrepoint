@@ -1,4 +1,4 @@
-//! EXP-01 à EXP-11 — le contrat d'export : manifeste, instantané, éclats de
+//! EXP-01 à EXP-12 — le contrat d'export : manifeste, instantané, éclats de
 //! preuves. Spécification : `docs/brique0/contrats.md` §4, §6 et §7.
 //!
 //! Les trois artefacts sont des **projections** du registre de preuves et ne
@@ -92,7 +92,6 @@ fn entrees_ches() -> Value {
 fn ligne_votes(entite: &str, valeur: Value, iqr: f64, effectif: u64) -> String {
     let publiee = !valeur.is_null();
     construire(json!({
-        "contrat": "0.4.0",
         "famille": "votes",
         "entite": entite,
         "valeur": valeur,
@@ -136,7 +135,6 @@ fn ligne_votes(entite: &str, valeur: Value, iqr: f64, effectif: u64) -> String {
 
 fn ligne_experts(entite: &str, valeur: f64) -> String {
     construire(json!({
-        "contrat": "0.4.0",
         "famille": "experts",
         "entite": entite,
         "valeur": valeur,
@@ -170,7 +168,6 @@ fn ligne_experts(entite: &str, valeur: f64) -> String {
 /// sources d'identifiants et de la grille de nuances (registre-entites.md §5.2).
 fn ligne_absence(entite: &str) -> String {
     construire(json!({
-        "contrat": "0.4.0",
         "famille": "experts",
         "entite": entite,
         "valeur": null,
@@ -1320,4 +1317,61 @@ fn un_effectif_glisse_dans_la_composition_est_refuse() {
         refus.iter().any(|r| r.contains("effectif")),
         "un effectif glissé dans la composition doit être refusé, obtenu {refus:?}"
     );
+}
+
+// ---------------------------------------------------------------- EXP-12 ----
+
+/// EXP-12 [C] — `contrat` est porté par les artefacts qui décrivent le
+/// **format** — manifeste et instantané — et par **aucune** ligne de preuve.
+///
+/// Le versant artefact de PRE-15. Le champ vivait aussi dans la ligne, où il
+/// n'entre pas dans la clé du §3 : chaque bascule ré-émettait 34 lignes de même
+/// `id` et de contenu différent, I8 arrêtait le pipeline, et le registre en
+/// ajout seul devait être réécrit (I15). Retirer le champ des deux côtés à la
+/// fois aurait été l'autre faute : la version du format doit rester lisible
+/// quelque part, et c'est ici.
+#[test]
+fn contrat_porte_par_le_format_jamais_par_la_mesure() {
+    let vue = instantane();
+    let lignes = lignes();
+    let manifeste = construire_manifeste(
+        "0.6.0",
+        &[(description(), vue.clone())],
+        &lignes,
+        &licences(),
+    )
+    .unwrap();
+    let eclats = construire_eclats(&lignes, std::slice::from_ref(&vue)).unwrap();
+
+    let manifeste_json: Value = serde_json::from_str(&manifeste).unwrap();
+    assert_eq!(
+        manifeste_json["contrat"], "0.6.0",
+        "EXP-12 : le manifeste porte la version du contrat"
+    );
+    let vue_json: Value = serde_json::from_str(&vue).unwrap();
+    assert_eq!(
+        vue_json["contrat"], "0.4.0",
+        "EXP-12 : l'instantané porte la version du contrat qu'on lui donne"
+    );
+
+    // Et aucune ligne de preuve servie au front ne le porte — ni dans un éclat,
+    // ni dans le registre dont l'éclat est la copie octet pour octet (I16).
+    for (prefixe, contenu) in &eclats {
+        let tableau: Value = serde_json::from_str(contenu).unwrap();
+        for ligne in tableau.as_array().expect("un éclat est un tableau") {
+            assert!(
+                ligne.get("contrat").is_none(),
+                "EXP-12 : l'éclat {prefixe} sert une ligne portant `contrat` — {}",
+                ligne["id"]
+            );
+        }
+    }
+    for texte in &lignes {
+        let ligne: Value = serde_json::from_str(texte).unwrap();
+        assert!(
+            ligne.get("contrat").is_none(),
+            "EXP-12 : une ligne du registre porte `contrat` — {}",
+            ligne["id"]
+        );
+    }
 }

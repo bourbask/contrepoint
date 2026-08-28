@@ -27,10 +27,17 @@ use std::path::Path;
 pub const SCHEMA: &str = "contrepoint/preuve/1";
 
 /// L'ordre des clés du §2.1, qui est aussi l'ordre d'écriture du §7.
+///
+/// **`contrat` n'y est pas, et ne doit pas y revenir** (contrat 0.6.0). La
+/// version du contrat décrit le **format**, pas la **mesure** : dans une ligne
+/// dont l'identité est celle d'une mesure, elle produisait à chaque bascule 34
+/// lignes de même `id` et de contenu différent — I8 arrêtait le pipeline, et il
+/// fallait réécrire un registre en ajout seul, donc enfreindre I15. C'est
+/// arrivé en `0.4.0` puis en `0.5.0`. Elle vit dans le manifeste et dans
+/// l'instantané, qui sont les artefacts qui décrivent le format.
 pub const CLES: &[&str] = &[
     "schema",
     "id",
-    "contrat",
     "famille",
     "entite",
     "valeur",
@@ -154,7 +161,7 @@ pub const TOLERANCE_ANCRAGE: f64 = 1e-12;
 /// champ : deux clés différentes ne peuvent pas produire la même chaîne.
 ///
 /// Ce qui y est, et pourquoi : tout ce qui **détermine la valeur**. Ce qui n'y
-/// est pas — `valeur`, `date_calcul`, `contrat`, `logiciel`, `entrees[].url`,
+/// est pas — `valeur`, `date_calcul`, `logiciel`, `entrees[].url`,
 /// `entrees[].empreinte_sha256`, `producteur`, `derniere_mise_a_jour`,
 /// `citation` — ne détermine aucune valeur, et l'y mettre ré-émettrait des
 /// lignes sans cause.
@@ -500,9 +507,6 @@ fn i1_structure(ligne: &Value, refus: &mut Vec<String>) {
             "I1 : `schema` vaut {} et non {SCHEMA}",
             ligne["schema"]
         ));
-    }
-    if !semver(&ligne["contrat"]) {
-        refus.push("I1 : `contrat` n'est pas une version de la forme X.Y.Z".to_owned());
     }
     if !hexa64(&ligne["id"]) {
         refus.push("I1 : `id` n'est pas 64 hexadécimaux minuscules".to_owned());

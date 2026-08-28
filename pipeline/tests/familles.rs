@@ -104,7 +104,6 @@ fn experts() -> Vec<Value> {
         &entrees_experts(),
         "2026-08-04",
         "2026-08-27T00:00:00Z",
-        "0.4.0",
         "0.1.0",
     )
     .expect("lignes experts")
@@ -117,7 +116,6 @@ fn administratif() -> Vec<Value> {
         &entrees_administratif(),
         "2024-07-10",
         "2026-08-27T00:00:00Z",
-        "0.4.0",
         "0.1.0",
     )
     .expect("lignes administratif")
@@ -370,7 +368,6 @@ fn fam_09_referentiel_et_observation_ne_se_traitent_pas_pareil() {
         &entrees_administratif(),
         "2024-07-10",
         "2026-08-27T00:00:00Z",
-        "0.4.0",
         "0.1.0",
     )
     .expect("un code non constaté n'arrête pas l'exécution");
@@ -405,7 +402,6 @@ fn fam_09_referentiel_et_observation_ne_se_traitent_pas_pareil() {
         &entrees_experts(),
         "2026-08-04",
         "2026-08-27T00:00:00Z",
-        "0.4.0",
         "0.1.0",
     );
     assert!(refus.is_err(), "le party_id 901 n'est pas dans la source");

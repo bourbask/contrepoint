@@ -101,10 +101,12 @@ export type Entree = {
   recupere_le: string
 }
 
+/** Une ligne de preuve. Elle ne porte PAS `contrat` : la version du contrat
+ *  decrit le format, pas la mesure, et elle vit dans le manifeste et dans
+ *  l'instantane (contrats.md, contrat 0.6.0). */
 export type Preuve = {
   schema: string
   id: string
-  contrat: string
   famille: string
   entite: string
   valeur: number | null

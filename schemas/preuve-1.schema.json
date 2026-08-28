@@ -2,14 +2,13 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "preuve-1.schema.json",
   "title": "Ligne du registre de preuves",
-  "description": "Une ligne = une position mesurée. Contrat : docs/brique0/contrats.md §2. Ce schéma ne peut pas exprimer l'ordre des clés (§7), le calcul de `id` (§3) ni les invariants I1 à I23 (§6) : le validateur du pipeline les vérifie en plus.",
+  "description": "Une ligne = une position mesurée. Contrat : docs/brique0/contrats.md §2. Ce schéma ne peut pas exprimer l'ordre des clés (§7), le calcul de `id` (§3) ni les invariants I1 à I23 (§6) : le validateur du pipeline les vérifie en plus. La ligne ne porte **pas** `contrat` : la version du contrat décrit le format, pas la mesure, et elle vit dans le manifeste et dans l'instantané (contrat 0.6.0). `additionalProperties: false` la refuse ici.",
   "type": "object",
   "additionalProperties": false,
-  "required": ["schema", "id", "contrat", "famille", "entite", "valeur", "valeur_code", "echelle", "motif_code", "motif", "dispersion", "observation", "date_source", "date_calcul", "methode", "epingles", "entrees", "logiciel"],
+  "required": ["schema", "id", "famille", "entite", "valeur", "valeur_code", "echelle", "motif_code", "motif", "dispersion", "observation", "date_source", "date_calcul", "methode", "epingles", "entrees", "logiciel"],
   "properties": {
     "schema": { "const": "contrepoint/preuve/1" },
     "id": { "$ref": "#/$defs/sha256" },
-    "contrat": { "$ref": "#/$defs/semver" },
     "famille": { "enum": ["votes", "experts", "administratif"] },
     "entite": {
       "type": "string",

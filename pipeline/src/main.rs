@@ -35,8 +35,10 @@ use serde_json::{Value, json};
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::{Path, PathBuf};
 
-/// Version du contrat de sortie qui produit ces lignes (ADR 0000 §6).
-const CONTRAT: &str = "0.5.0";
+/// Version du contrat de sortie (ADR 0000 §6). Elle décrit le **format** des
+/// artefacts, pas la **mesure** : elle est portée par le manifeste et par
+/// l'instantané, et **jamais** par une ligne de preuve — voir `preuves::CLES`.
+const CONTRAT: &str = "0.6.0";
 /// Version du logiciel, **lue du paquet** : un littéral recopié ici diverge du
 /// `Cargo.toml` sans que rien ne le dise, et `logiciel.version` est un champ de
 /// traçabilité. `logiciel.commit` reste nul tant que le dépôt n'a pas de version
@@ -286,7 +288,6 @@ fn executer() -> Result<(), String> {
             }
         };
         let ligne = json!({
-            "contrat": CONTRAT,
             "famille": "votes",
             "entite": position.groupe,
             "valeur": valeur,
@@ -355,7 +356,6 @@ fn executer() -> Result<(), String> {
             ]),
             &entree.date_source[..10],
             &date_calcul,
-            CONTRAT,
             VERSION_LOGICIELLE,
         )?);
     }
@@ -372,7 +372,6 @@ fn executer() -> Result<(), String> {
             ]),
             &entree.date_source[..10],
             &date_calcul,
-            CONTRAT,
             VERSION_LOGICIELLE,
         )?);
     }
