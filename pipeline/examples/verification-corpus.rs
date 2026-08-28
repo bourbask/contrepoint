@@ -9,10 +9,8 @@
 //! dans la bibliothèque : la suite hors ligne ne porte aucun échantillon
 //! d'acteur AMO30 brut, donc aucun test ne la contraindrait encore.
 
-use contrepoint::agregation::{
-    Membre, Publication, VOTES_MINIMAUX, agreger, groupes_valides, rendre,
-};
-use contrepoint::estimateur::{ajuster, ancrer, ancres, mediane};
+use contrepoint::agregation::{Membre, Publication, agreger, groupes_valides, rendre};
+use contrepoint::estimateur::{ajuster, ancrer_sur_groupes, ancres};
 use contrepoint::ingestion::{CAUSES_DE_NON_VOTANT, index_mandats, lire_scrutin};
 use contrepoint::matrice::{Entete, Matrice, construire};
 use contrepoint::{uid, un_ou_plusieurs};
@@ -312,13 +310,9 @@ fn positions(matrice: &Matrice) {
     print!("{}", rendre(&triees));
 }
 
-/// Ancrage affine sur les médianes des deux groupes déclarés ancres.
-///
-/// La médiane d'ancrage porte sur **le même ensemble que la médiane publiée** :
-/// les membres au-delà du seuil de votes exprimés. Sans cette coïncidence, la
-/// valeur publiée pour une ancre n'est plus exactement ±1 — mesuré à +1,0002
-/// pour l'ancre droite le 2026-08-28. positionnement.md §5 ne dit pas sur quel
-/// ensemble la médiane d'ancrage se calcule : c'est l'`A VERIFIER` de ce cycle.
+/// Les deux tranches parallèles qu'exige [`ancrer_sur_groupes`], construites
+/// depuis le rattachement « dernier groupe observé ». L'ancrage lui-même vit
+/// dans la bibliothèque, sous test : cet exemple ne le réimplémente plus.
 fn ancrage(
     acteurs: &[String],
     positions: &[f64],
@@ -327,19 +321,13 @@ fn ancrage(
     gauche: &str,
     droite: &str,
 ) -> Vec<f64> {
-    let mediane_de = |cherche: &str| {
-        let valeurs: Vec<f64> = acteurs
-            .iter()
-            .enumerate()
-            .filter(|(_, a)| {
-                groupe_de
-                    .get(a.as_str())
-                    .is_some_and(|(_, g)| *g == cherche)
-            })
-            .filter(|(_, a)| votes.get(a.as_str()).copied().unwrap_or(0) >= VOTES_MINIMAUX)
-            .map(|(n, _)| positions[n])
-            .collect();
-        mediane(&valeurs).unwrap_or_else(|| panic!("groupe d'ancrage {cherche} sans membre"))
-    };
-    ancrer(positions, mediane_de(gauche), mediane_de(droite)).expect("ancrage")
+    let groupes: Vec<&str> = acteurs
+        .iter()
+        .map(|a| groupe_de.get(a.as_str()).map_or("", |(_, g)| *g))
+        .collect();
+    let exprimes: Vec<usize> = acteurs
+        .iter()
+        .map(|a| votes.get(a.as_str()).copied().unwrap_or(0))
+        .collect();
+    ancrer_sur_groupes(positions, &groupes, &exprimes, gauche, droite).expect("ancrage")
 }
