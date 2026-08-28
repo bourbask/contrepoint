@@ -1,7 +1,7 @@
-//! Vérification de fin de cycle, pas un test : rejoue l'ingestion et la matrice
-//! sur l'archive complète du cache et affiche les grandeurs de
-//! `docs/brique0/verification-2026-08-27.md`. Exige le cache, donc ne peut pas
-//! vivre dans la suite hors ligne.
+//! Vérification de fin de cycle, pas un test : rejoue l'ingestion, la matrice,
+//! l'estimateur et l'agrégation sur l'archive complète du cache, et affiche les
+//! grandeurs de `docs/brique0/verification-2026-08-27.md` §1 à §4. Exige le
+//! cache, donc ne peut pas vivre dans la suite hors ligne.
 //!
 //!   cargo run --release --example verification-corpus
 //!
@@ -9,10 +9,13 @@
 //! dans la bibliothèque : la suite hors ligne ne porte aucun échantillon
 //! d'acteur AMO30 brut, donc aucun test ne la contraindrait encore.
 
+use contrepoint::agregation::{Membre, Publication, agreger, groupes_valides, rendre};
+use contrepoint::estimateur::{ajuster, ancrer_sur_groupes, ancres};
 use contrepoint::ingestion::{CAUSES_DE_NON_VOTANT, index_mandats, lire_scrutin};
-use contrepoint::matrice::{Entete, construire};
+use contrepoint::matrice::{Entete, Matrice, construire};
 use contrepoint::{uid, un_ou_plusieurs};
 use serde_json::{Value, json};
+use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 
 fn fichiers(racine: &Path) -> Vec<PathBuf> {
@@ -167,4 +170,164 @@ fn main() {
         acteurs_retenus.len(),
         cellules as f64 / (acteurs_retenus.len() * retenus) as f64
     );
+
+    positions(&matrice);
+}
+
+/// Date de référence de l'agrégation. Portée par la ligne de preuve, jamais
+/// lue sur l'horloge : c'est le dernier jour de scrutin du corpus.
+const DATE_DE_REFERENCE: &str = "2026-07-21";
+
+/// Plis de rééchantillonnage. Chaque pli retire un vingt-cinquième des
+/// scrutins, déterminé par le rang du scrutin dans l'ordre canonique — aucun
+/// tirage aléatoire n'entre dans le pipeline.
+const PLIS: usize = 25;
+
+/// §3 et §4 de verification-2026-08-27.md : les trois sommes des carrés
+/// résiduels, le gain du rang 1, et les positions de groupe après ancrage.
+fn positions(matrice: &Matrice) {
+    let registre: Value =
+        lire(&Path::new(env!("CARGO_MANIFEST_DIR")).join("../data/registre/partis.json"));
+    let (ancre_gauche, ancre_droite) =
+        ancres(&registre, DATE_DE_REFERENCE).expect("les deux ancres du registre");
+
+    // Rattachement : dernier groupe observé jusqu'à la date de référence. C'est
+    // l'approximation de verification-2026-08-27.md §4 ; la spécification
+    // retenue reste positionnement.md §6, portée par le cycle du registre.
+    let mut groupe_de: BTreeMap<&str, (&str, &str)> = BTreeMap::new();
+    let mut votes: BTreeMap<&str, usize> = BTreeMap::new();
+    for scrutin in matrice.retenus() {
+        if scrutin.date.as_str() > DATE_DE_REFERENCE {
+            continue;
+        }
+        for cellule in &scrutin.cellules {
+            *votes.entry(cellule.acteur.as_str()).or_default() += 1;
+            let precedent = groupe_de
+                .entry(cellule.acteur.as_str())
+                .or_insert((scrutin.date.as_str(), cellule.groupe.as_str()));
+            if precedent.0 <= scrutin.date.as_str() {
+                *precedent = (scrutin.date.as_str(), cellule.groupe.as_str());
+            }
+        }
+    }
+
+    let triplets: Vec<(&str, &str, f64)> = matrice
+        .cellules()
+        .map(|(s, a, v)| (s, a, f64::from(v)))
+        .collect();
+    let ajustement = ajuster(triplets.iter().copied(), None).expect("ajustement");
+    println!(
+        "\nsomme des carrés résiduels : {:.1} autour de la moyenne, {:.1} après constante \
+         par scrutin, {:.1} après constante + rang 1",
+        ajustement.scr_moyenne, ajustement.scr_constante, ajustement.scr_rang1
+    );
+    println!(
+        "gain du rang 1 sur le résidu : {:.1} % ; sur la variance totale : {:.1} % ; \
+         part de la constante seule : {:.1} %",
+        100.0 * ajustement.gain_rang1(),
+        100.0 * (ajustement.scr_constante - ajustement.scr_rang1) / ajustement.scr_moyenne,
+        100.0 * ajustement.part_de_la_constante()
+    );
+    println!(
+        "séparation des axes s2/s1 : {:.3} — alarmes {:?}",
+        ajustement.separation_des_axes(),
+        ajustement.alarmes()
+    );
+
+    let ancrees = ancrage(
+        &ajustement.acteurs,
+        &ajustement.positions,
+        &groupe_de,
+        &votes,
+        &ancre_gauche,
+        &ancre_droite,
+    );
+    let membres: Vec<Membre> = ajustement
+        .acteurs
+        .iter()
+        .enumerate()
+        .map(|(n, acteur)| Membre {
+            acteur: acteur.clone(),
+            groupe: groupe_de
+                .get(acteur.as_str())
+                .map_or_else(String::new, |(_, g)| (*g).to_owned()),
+            votes_exprimes: votes.get(acteur.as_str()).copied().unwrap_or(0),
+            position: ancrees[n],
+        })
+        .collect();
+
+    // Rééchantillonnage par plis déterminés : le pli k retire les scrutins dont
+    // le rang canonique vaut k modulo PLIS, et l'axe est réajusté puis réancré.
+    let mut tirages: Vec<Vec<f64>> = Vec::with_capacity(PLIS);
+    for k in 0..PLIS {
+        let sous_corpus: Vec<(&str, &str, f64)> = triplets
+            .iter()
+            .copied()
+            .filter(|(s, _, _)| {
+                ajustement
+                    .scrutins
+                    .binary_search_by(|n| n.as_str().cmp(s))
+                    .unwrap()
+                    % PLIS
+                    != k
+            })
+            .collect();
+        let pli = ajuster(sous_corpus.into_iter(), None).expect("ajustement du pli");
+        let ancrees_pli = ancrage(
+            &pli.acteurs,
+            &pli.positions,
+            &groupe_de,
+            &votes,
+            &ancre_gauche,
+            &ancre_droite,
+        );
+        tirages.push(
+            ajustement
+                .acteurs
+                .iter()
+                .enumerate()
+                .map(|(n, acteur)| {
+                    pli.acteurs
+                        .binary_search_by(|a| a.as_str().cmp(acteur.as_str()))
+                        .map_or(ancrees[n], |i| ancrees_pli[i])
+                })
+                .collect(),
+        );
+    }
+
+    let groupes = groupes_valides(&registre, DATE_DE_REFERENCE);
+    let lignes = agreger(&membres, &tirages, &groupes, DATE_DE_REFERENCE);
+    let mut triees = lignes.clone();
+    triees.sort_by(|a, b| match (&a.publication, &b.publication) {
+        (Publication::Mesuree { mediane: x, .. }, Publication::Mesuree { mediane: y, .. }) => {
+            x.total_cmp(y)
+        }
+        (Publication::Mesuree { .. }, _) => std::cmp::Ordering::Less,
+        (_, Publication::Mesuree { .. }) => std::cmp::Ordering::Greater,
+        _ => a.groupe.cmp(&b.groupe),
+    });
+    println!("\nagrégation au {DATE_DE_REFERENCE}, ordre croissant sur l'axe ancré :");
+    print!("{}", rendre(&triees));
+}
+
+/// Les deux tranches parallèles qu'exige [`ancrer_sur_groupes`], construites
+/// depuis le rattachement « dernier groupe observé ». L'ancrage lui-même vit
+/// dans la bibliothèque, sous test : cet exemple ne le réimplémente plus.
+fn ancrage(
+    acteurs: &[String],
+    positions: &[f64],
+    groupe_de: &BTreeMap<&str, (&str, &str)>,
+    votes: &BTreeMap<&str, usize>,
+    gauche: &str,
+    droite: &str,
+) -> Vec<f64> {
+    let groupes: Vec<&str> = acteurs
+        .iter()
+        .map(|a| groupe_de.get(a.as_str()).map_or("", |(_, g)| *g))
+        .collect();
+    let exprimes: Vec<usize> = acteurs
+        .iter()
+        .map(|a| votes.get(a.as_str()).copied().unwrap_or(0))
+        .collect();
+    ancrer_sur_groupes(positions, &groupes, &exprimes, gauche, droite).expect("ancrage")
 }
