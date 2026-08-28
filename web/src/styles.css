@@ -1,31 +1,60 @@
-/* Contrepoint — ecriture visuelle de la partition.
+/* Contrepoint — le systeme visuel, un seul jeu de variables.
  *
  * Le nom porte la forme : plusieurs voix independantes sur un meme sujet, dont
- * la valeur tient a leur difference. Un systeme par entite, une portee par
- * famille, une accolade qui les relie sans les fondre.
+ * la valeur tient a leur difference. Un panneau gradue par famille, une ligne
+ * par entite, deux graduations qui ne partagent aucun pixel.
  *
  * Aucune police distante : le front ne fait aucun appel reseau hors de
  * `public/api/` (docs/architecture.md). Le caractere vient du traitement —
- * capitales espacees en chasse fixe pour les indications de voix, romain pour
- * les noms, italique pour ce qui se lit et ne se mesure pas.
+ * capitales espacees en chasse fixe pour l'appareil, romain pour les noms,
+ * italique pour ce qui se lit et ne se mesure pas.
  *
- * La couleur ne porte jamais seule : chaque famille a sa tete de note.
- * Les trois teintes sont celles d'une partition annotee — encre, crayon rouge,
- * crayon bleu — et sont indexees sur le RANG de la famille dans le manifeste,
- * jamais sur l'entite : aucune couleur de parti n'entre ici.
+ * La couleur ne porte jamais seule : chaque famille a sa tete de note. Les
+ * teintes sont indexees sur le RANG de la famille dans le manifeste, jamais
+ * sur son identifiant ni sur l'entite — `--f-0` et non `--f-votes` : le code
+ * calcule le rang, le nom de famille serait une promesse que rien ne tient.
+ * Aucun selecteur portant une couleur ne nomme une entite (GV-13, C13).
  */
 
 :root {
   color-scheme: light dark;
 
+  /* teintes de support */
   --papier: #e8eaee;
   --papier-systeme: #f5f6f8;
   --encre: #191e2c;
   --encre-pale: #5c6373;
   --regle: #b7bec9;
-  --crayon-rouge: #a3322a;
-  --crayon-bleu: #2b5490;
-  --crayon-vert: #3f6b3c;
+
+  /* teintes de famille, par rang. Pas de rouge : le seul emploi qu'il
+     trouverait est celui que GV-08 refuse, une alerte sur une absence. */
+  --f-0: #191e2c;
+  --f-1: #2b5490;
+  --f-2: #3f6b3c;
+  --f-3: #5c6373;
+  --f-4: #5c6373;
+
+  /* rythme : une seule echelle, aucune valeur libre hors du SVG */
+  --e1: 0.4rem;
+  --e2: 0.8rem;
+  --e3: 1.2rem;
+  --e4: 1.8rem;
+  --e5: 2.8rem;
+  --e6: 4rem;
+  --gouttiere: 1.25rem;
+  --largeur: 64rem;
+  --mesure: 44rem;
+
+  /* filets : deux epaisseurs, pas trois */
+  --filet: 1px solid var(--regle);
+  --filet-famille: 2px solid var(--famille, var(--regle));
+
+  /* corps : cinq rangs, plancher a 14 px */
+  --t-marque: 2rem;
+  --t-these: 1.0625rem;
+  --t-entite: 1.125rem;
+  --t-valeur: 1rem;
+  --t-appareil: 0.875rem;
 
   --serif: "Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua",
     Charter, Georgia, serif;
@@ -40,13 +69,16 @@
     --encre: #e3e7ee;
     --encre-pale: #939bab;
     --regle: #39404e;
-    --crayon-rouge: #e5897f;
-    --crayon-bleu: #8fb2e4;
-    --crayon-vert: #8bbd84;
+    --f-0: #e3e7ee;
+    --f-1: #8fb2e4;
+    --f-2: #8bbd84;
+    --f-3: #939bab;
+    --f-4: #939bab;
   }
 }
 
 * { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
 
 body {
   margin: 0;
@@ -55,158 +87,264 @@ body {
   font-family: var(--serif);
   font-size: 16px;
   line-height: 1.5;
-  -webkit-text-size-adjust: 100%;
 }
 
 .page {
-  max-width: 64rem;
+  max-width: var(--largeur);
   margin: 0 auto;
-  padding: 2.5rem 1.25rem 4rem;
+  padding: var(--e5) var(--gouttiere) var(--e6);
 }
 
-/* ---- Titre : la marque est un systeme de trois voix ---------------------- */
+a { color: inherit; text-decoration-color: var(--regle); text-underline-offset: 0.18em; }
+a:focus-visible { outline: 2px solid var(--encre); outline-offset: 2px; }
+
+/* Une famille, une teinte, indexee sur son rang dans le manifeste. */
+.marqueur--0 { color: var(--f-0); --famille: var(--f-0); }
+.marqueur--1 { color: var(--f-1); --famille: var(--f-1); }
+.marqueur--2 { color: var(--f-2); --famille: var(--f-2); }
+.marqueur--3 { color: var(--f-3); --famille: var(--f-3); }
+.marqueur--4 { color: var(--f-4); --famille: var(--f-4); }
+
+/* ---- Rubriques et sections : un seul rythme ------------------------------ */
+
+section { margin-top: var(--e5); }
+
+h2,
+h3 {
+  margin: 0 0 var(--e3);
+  padding-bottom: var(--e1);
+  font-family: var(--mono);
+  font-size: var(--t-appareil);
+  font-weight: 400;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--encre-pale);
+  border-bottom: var(--filet);
+}
+h3 { margin-top: var(--e4); margin-bottom: var(--e2); letter-spacing: 0.1em; }
+
+.bloc { max-width: var(--mesure); margin: 0 0 var(--e3); font-size: var(--t-these); line-height: 1.45; }
+.note {
+  max-width: var(--mesure);
+  margin: var(--e2) 0 0;
+  font-style: italic;
+  font-size: 0.9375rem;
+  color: var(--encre-pale);
+}
+
+/* ---- En-tete : la marque porte les glyphes de famille -------------------- */
 
 .marque { display: flex; align-items: center; gap: 0.9rem; }
-
 .marque__cle { flex: none; }
-.marque__cle .accolade { stroke: var(--regle); stroke-width: 1.2; fill: none; }
-.marque__cle .v0 { color: var(--encre); }
-.marque__cle .v1 { color: var(--crayon-rouge); }
-.marque__cle .v2 { color: var(--crayon-bleu); }
-
 .marque h1 {
   margin: 0;
-  font-size: 2rem;
+  font-size: var(--t-marque);
   font-weight: 500;
+  line-height: 1.1;
   letter-spacing: -0.012em;
 }
 
 .these {
-  margin: 0.9rem 0 0;
   max-width: 42rem;
+  margin: 0.9rem 0 0;
+  font-size: var(--t-these);
+  line-height: 1.45;
   color: var(--encre-pale);
-  font-size: 1.02rem;
 }
 
 .bandeau {
-  margin: 1.6rem 0 0;
-  padding: 0.55rem 0;
-  border-top: 1px solid var(--regle);
-  border-bottom: 1px solid var(--regle);
-  font-family: var(--mono);
-  font-size: 0.74rem;
-  letter-spacing: 0.09em;
-  text-transform: uppercase;
-  color: var(--encre-pale);
   display: flex;
   flex-wrap: wrap;
-  gap: 0.4rem 1.6rem;
-}
-
-/* ---- Le graphe ----------------------------------------------------------- */
-
-svg.lecture-svg,
-svg.partition { display: block; max-width: 100%; margin-top: 1.8rem; }
-
-svg text { fill: var(--encre); }
-
-.entete,
-.famille {
+  align-items: baseline;
+  gap: var(--e1) var(--e4);
+  margin: var(--e4) 0 0;
+  padding: 0.55rem 0;
+  border-top: var(--filet);
+  border-bottom: var(--filet);
   font-family: var(--mono);
-  font-size: 10.5px;
-  letter-spacing: 0.11em;
+  font-size: var(--t-appareil);
+  letter-spacing: 0.08em;
   text-transform: uppercase;
-  fill: var(--encre-pale);
-}
-.entete { letter-spacing: 0.2em; }
-
-.entite,
-.dispersion,
-.graduation {
-  font-family: var(--mono);
-  font-size: 10.5px;
-  fill: var(--encre-pale);
+  color: var(--encre-pale);
   font-variant-numeric: tabular-nums;
 }
 
-.titre { font-family: var(--serif); font-size: 16.5px; }
-.motif,
-.note { font-family: var(--serif); font-size: 12px; font-style: italic; fill: var(--encre-pale); }
+/* ---- Legende des familles ------------------------------------------------ */
 
-.valeur {
+.familles {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(12.5rem, 1fr));
+  gap: 0 var(--e4);
+  margin: 0;
+}
+.famille { padding: var(--e2) 0 var(--e3); border-top: var(--filet-famille); }
+.famille dt { font-size: var(--t-entite); font-weight: 500; line-height: 1.25; }
+.famille dd {
+  margin: var(--e1) 0 0;
   font-family: var(--mono);
-  font-size: 12.5px;
+  font-size: var(--t-appareil);
+  line-height: 1.35;
+  color: var(--encre-pale);
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+.famille .graduation { color: var(--encre); }
+
+/* ---- La partition --------------------------------------------------------
+ * Tout remplissage est declare : un <rect> sans `fill` est peint en NOIR, et
+ * une regle qui ne visait que les systemes impairs laissait les autres en
+ * aplat. Les regles de forme sont scopees a `svg.partition` — ecrites sur
+ * `rect, circle, path` nus elles gagneraient contre l'attribut `fill` de la
+ * cle de l'en-tete et l'effaceraient.
+ */
+
+svg.partition { display: block; max-width: 100%; margin-top: var(--e3); }
+svg.partition text { fill: var(--encre); }
+svg.partition rect,
+svg.partition circle,
+svg.partition path,
+svg.partition line { fill: none; }
+
+/* Aucun fond alterne. Le lecteur a froid lisait la partition en LIGNES, comme
+ * un tableau, et jamais en colonne de points — le fait principal, l'amas a
+ * chaque bord et le vide au milieu, ne se formait pas. Les bandes zebrees
+ * fabriquent des rangees ; les rangees mangent la colonne. Constate le
+ * 2026-08-28 par une lecture a froid, qui n'a pas su citer le fait principal.
+ *
+ * Le fond reste DECLARE, jamais laissee au navigateur : un `rect` SVG sans
+ * `fill` est peint en noir. `transparent`, pas d'absence de regle. */
+.partition .fond { fill: transparent; }
+.partition .portee { stroke: var(--regle); stroke-width: 1px; }
+.partition .borne { stroke: var(--regle); stroke-width: 1px; opacity: 0.5; }
+.partition .axe,
+.partition .tick { stroke: var(--encre-pale); stroke-width: 1px; }
+
+svg.partition .famille,
+svg.partition .echelle,
+svg.partition .sigle {
+  font-family: var(--mono);
+  font-size: 14px;
+  fill: var(--encre-pale);
+}
+svg.partition .famille { letter-spacing: 0.1em; text-transform: uppercase; }
+svg.partition .graduation,
+svg.partition .dispersion {
+  font-family: var(--mono);
+  font-size: 14px;
+  font-variant-numeric: tabular-nums;
+  fill: var(--encre-pale);
+}
+svg.partition .titre { font-family: var(--serif); font-size: 18px; font-weight: 500; fill: var(--encre); }
+svg.partition .valeur {
+  font-family: var(--mono);
+  font-size: 16px;
+  font-weight: 500;
   font-variant-numeric: tabular-nums;
   fill: currentColor;
 }
-.valeur--absente {
-  font-size: 11px;
-  letter-spacing: 0.07em;
-  text-transform: uppercase;
-  fill: var(--encre-pale);
-}
 
-.portee { stroke: var(--regle); stroke-width: 1; }
-.barre { stroke: var(--regle); stroke-width: 1; }
-.accolade { stroke: var(--regle); stroke-width: 1.2; }
+/* Gabarit constant : la tete ne depend ni de la valeur, ni de l'effectif,
+   ni de la dispersion (GV-06). */
+.partition .tete--pleine { fill: currentColor; stroke: none; }
+.partition .tete--creuse { fill: none; stroke: currentColor; stroke-width: 1.9; }
 
-/* Le fond par defaut est DECLARE, jamais laisse au navigateur : un `rect` SVG
- * sans `fill` est peint en NOIR. Seule la regle `:nth-child(odd)` existait,
- * donc un systeme sur deux sortait en pave noir avec son texte illisible —
- * invisible en theme sombre, ou le papier est deja presque noir, et flagrant
- * en theme clair. Constate en ligne le 2026-08-28. */
-.fond { fill: var(--papier); }
-.systeme:nth-child(odd) .fond { fill: var(--papier-systeme); }
-
-/* Une famille, une teinte, indexee sur son rang dans le manifeste. */
-.marqueur--0 { color: var(--encre); }
-.marqueur--1 { color: var(--crayon-rouge); }
-.marqueur--2 { color: var(--crayon-bleu); }
-.marqueur--3 { color: var(--crayon-vert); }
-.marqueur--4 { color: var(--encre-pale); }
-
-.tete--pleine { fill: currentColor; }
-.tete--creuse { fill: none; stroke: currentColor; stroke-width: 1.9; }
-.pause { fill: currentColor; }
-
-.marqueur { cursor: pointer; }
-.marqueur .cible { fill: transparent; }
-.marqueur .tete,
-.marqueur .pause { transform-box: fill-box; transform-origin: center; }
-
-@media (prefers-reduced-motion: no-preference) {
-  .marqueur .tete,
-  .marqueur .pause { transition: transform 110ms ease-out; }
-}
-
-.marqueur:hover .tete,
-.marqueur:focus-visible .tete { transform: scale(1.3); }
-
-.marqueur:focus-visible { outline: none; }
-.marqueur:focus-visible .cible {
+.partition .ligne { cursor: pointer; }
+.partition .ligne:focus-visible { outline: none; }
+.partition .ligne:focus-visible .fond {
   stroke: currentColor;
   stroke-width: 2;
-  fill: color-mix(in srgb, currentColor 10%, transparent);
+  fill: color-mix(in srgb, currentColor 8%, var(--papier-systeme));
 }
 
-/* ---- Entites sans mesure ------------------------------------------------- */
+@media (prefers-reduced-motion: no-preference) {
+  .partition .tete { transition: transform 110ms ease-out; }
+}
+.partition .ligne:hover .tete,
+.partition .ligne:focus-visible .tete {
+  transform-box: fill-box;
+  transform-origin: center;
+  transform: scale(1.3);
+}
 
-.sans-mesure { margin-top: 2.6rem; }
-.sans-mesure h2,
-.pied h2 {
+.note-axes {
+  margin: var(--e3) 0 0;
+  max-width: 46rem;
   font-family: var(--mono);
-  font-size: 0.72rem;
-  font-weight: 400;
-  letter-spacing: 0.2em;
+  font-size: var(--t-appareil);
+  line-height: 1.45;
+  color: var(--encre-pale);
+}
+
+/* ---- Ce qui n'a pas de graduation : du texte, aucune geometrie (GV-10) --- */
+
+.retenue { border-top: var(--filet); padding: var(--e2) 0; }
+.retenue[role="button"] { cursor: pointer; }
+.retenue:focus-visible { outline: 2px solid var(--encre); outline-offset: 2px; }
+.retenue__tete {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: var(--e1) var(--e2);
+}
+.retenue__nom { margin: 0; font-size: var(--t-entite); font-weight: 500; }
+.retenue__etat {
+  font-family: var(--mono);
+  font-size: var(--t-valeur);
+  font-weight: 500;
+  letter-spacing: 0.04em;
   text-transform: uppercase;
   color: var(--encre-pale);
-  margin: 0 0 0.7rem;
-  padding-bottom: 0.45rem;
-  border-bottom: 1px solid var(--regle);
 }
-.sans-mesure dl { margin: 0; }
-.sans-mesure dt { font-size: 1rem; margin-top: 0.7rem; }
-.sans-mesure dd { margin: 0.1rem 0 0; color: var(--encre-pale); font-style: italic; font-size: 0.9rem; }
+.retenue__compte {
+  margin: var(--e1) 0 0;
+  font-family: var(--mono);
+  font-size: var(--t-appareil);
+  font-variant-numeric: tabular-nums;
+  color: var(--encre-pale);
+}
+.retenue__motif {
+  max-width: var(--mesure);
+  margin: var(--e1) 0 0;
+  font-style: italic;
+  font-size: 0.9375rem;
+  color: var(--encre-pale);
+}
+
+.sous-titre {
+  margin: 0;
+  max-width: var(--mesure);
+  font-family: var(--mono);
+  font-size: var(--t-appareil);
+  color: var(--encre-pale);
+}
+.pastilles {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
+  gap: var(--e2);
+  margin: var(--e3) 0 0;
+  padding: 0;
+  list-style: none;
+}
+.pastille { text-align: center; }
+.pastille__code {
+  display: block;
+  padding: 0.3rem 0;
+  border: var(--filet);
+  background: var(--papier-systeme);
+  font-family: var(--mono);
+  font-size: var(--t-valeur);
+  font-weight: 500;
+  color: currentColor;
+  cursor: pointer;
+}
+.pastille__code:focus-visible { outline: 2px solid var(--encre); outline-offset: 2px; }
+.pastille__nom {
+  display: block;
+  margin-top: var(--e1);
+  font-size: var(--t-appareil);
+  color: var(--encre-pale);
+}
 
 /* ---- Preuve -------------------------------------------------------------- */
 
@@ -214,7 +352,7 @@ dialog.preuve {
   width: min(46rem, 100vw - 2rem);
   max-height: 86vh;
   padding: 0;
-  border: 1px solid var(--regle);
+  border: var(--filet);
   background: var(--papier);
   color: var(--encre);
 }
@@ -224,36 +362,84 @@ dialog.preuve::backdrop { background: rgb(0 0 0 / 45%); }
   display: flex;
   align-items: baseline;
   justify-content: space-between;
-  gap: 1rem;
-  padding: 1.1rem 1.4rem;
-  border-bottom: 1px solid var(--regle);
+  gap: var(--e3);
+  padding: var(--e3);
+  border-bottom: var(--filet);
   position: sticky;
   top: 0;
   background: var(--papier);
 }
-.preuve__tete h2 { margin: 0; font-size: 1.15rem; font-weight: 500; }
-.preuve__corps { padding: 1.1rem 1.4rem 1.6rem; overflow: auto; }
-
-.preuve__corps dl { display: grid; grid-template-columns: minmax(8rem, 12rem) 1fr; gap: 0.35rem 1.1rem; margin: 0; }
-.preuve__corps dt {
+.preuve__tete h2 {
+  margin: 0;
+  padding: 0;
+  border: none;
   font-family: var(--mono);
-  font-size: 0.7rem;
-  letter-spacing: 0.1em;
+  font-size: var(--t-appareil);
+  letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--encre-pale);
-  padding-top: 0.22rem;
 }
-.preuve__corps dd { margin: 0; font-size: 0.95rem; overflow-wrap: anywhere; }
-.preuve__corps dd .chiffre { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+.preuve__corps { padding: 0 0 var(--e4); overflow: auto; background: var(--papier-systeme); }
 
-.preuve__entree { border-top: 1px solid var(--regle); margin-top: 1.2rem; padding-top: 1rem; }
-.preuve__brut {
-  margin: 1.4rem 0 0;
-  padding: 0.8rem;
-  border: 1px solid var(--regle);
-  background: var(--papier-systeme);
+.cadran {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--e1) var(--e2);
+  margin: 0;
+  padding: var(--e3);
+  border-bottom: var(--filet);
+  background: var(--papier);
+}
+.cadran__valeur {
   font-family: var(--mono);
-  font-size: 0.68rem;
+  font-size: 2rem;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.1;
+}
+.cadran__valeur--texte {
+  font-size: var(--t-entite);
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+.cadran__bornes {
+  font-family: var(--mono);
+  font-size: var(--t-appareil);
+  font-variant-numeric: tabular-nums;
+  color: var(--encre-pale);
+}
+
+.champs {
+  display: grid;
+  grid-template-columns: minmax(9rem, 13rem) 1fr;
+  gap: var(--e1) var(--e3);
+  margin: 0;
+  padding: var(--e3);
+}
+.champs dt {
+  font-family: var(--mono);
+  font-size: var(--t-appareil);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--encre-pale);
+  padding-top: 0.18rem;
+}
+.champs dd { margin: 0; font-size: var(--t-valeur); overflow-wrap: anywhere; }
+.champs dd .chiffre {
+  font-family: var(--mono);
+  font-variant-numeric: tabular-nums;
+  font-size: 0.9375rem;
+}
+
+.preuve__entree { border-top: var(--filet); }
+.preuve__brut {
+  margin: 0 var(--e3);
+  padding: var(--e2);
+  border: var(--filet);
+  background: var(--papier);
+  font-family: var(--mono);
+  font-size: var(--t-appareil);
   line-height: 1.6;
   white-space: pre-wrap;
   overflow-wrap: anywhere;
@@ -263,31 +449,60 @@ dialog.preuve::backdrop { background: rgb(0 0 0 / 45%); }
 
 .bouton {
   font-family: var(--mono);
-  font-size: 0.72rem;
-  letter-spacing: 0.1em;
+  font-size: var(--t-appareil);
+  letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--encre);
   background: none;
-  border: 1px solid var(--regle);
-  padding: 0.35rem 0.7rem;
+  border: var(--filet);
+  padding: 0.2rem 0.55rem;
   cursor: pointer;
 }
 .bouton:hover { border-color: var(--encre-pale); }
 .bouton:focus-visible { outline: 2px solid var(--encre); outline-offset: 2px; }
 
-a { color: inherit; text-decoration-color: var(--regle); text-underline-offset: 0.18em; }
-a:focus-visible { outline: 2px solid var(--encre); outline-offset: 2px; }
-
 /* ---- Pied ---------------------------------------------------------------- */
 
-.pied { margin-top: 3rem; font-size: 0.86rem; color: var(--encre-pale); }
-.pied p { margin: 0.45rem 0; }
-.pied ul { margin: 0.6rem 0 0; padding: 0; list-style: none; display: flex; flex-wrap: wrap; gap: 1.2rem; }
+.pied {
+  margin-top: var(--e6);
+  padding-top: var(--e3);
+  border-top: var(--filet);
+  font-size: 0.9375rem;
+  color: var(--encre-pale);
+}
+.pied p { margin: var(--e2) 0 0; max-width: var(--mesure); }
+.pied .licences,
+.pied__date {
+  font-family: var(--mono);
+  font-size: var(--t-appareil);
+  font-variant-numeric: tabular-nums;
+}
+.pied ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--e2) var(--e3);
+  margin: var(--e3) 0 0;
+  padding: 0;
+  list-style: none;
+  font-family: var(--mono);
+  font-size: var(--t-appareil);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
 
 .refus {
-  margin: 2rem 0;
-  padding: 1rem 1.2rem;
-  border-left: 3px solid var(--crayon-rouge);
+  margin: var(--e4) 0;
+  padding: var(--e2) var(--e3);
+  border-left: 2px solid var(--encre-pale);
   background: var(--papier-systeme);
 }
 .refus p { margin: 0.3rem 0; }
+
+@media (max-width: 30rem) {
+  .page { padding: var(--e4) 1rem var(--e5); }
+  .marque h1 { font-size: 1.75rem; }
+  .champs { grid-template-columns: 1fr; gap: 0.15rem; }
+  .champs dt { padding-top: 0.6rem; }
+  .cadran, .champs, .preuve__tete { padding-left: var(--e2); padding-right: var(--e2); }
+  .preuve__brut { margin-left: var(--e2); margin-right: var(--e2); }
+}

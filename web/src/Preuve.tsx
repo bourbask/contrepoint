@@ -6,6 +6,7 @@
 
 import { useEffect, useRef, type JSX } from 'react'
 import type { Preuve } from './contrat.ts'
+import { direAbsence } from './graphe.ts'
 
 export type EtatPreuve =
   | { etat: 'chargement'; id: string }
@@ -27,10 +28,22 @@ function Corps({ ligne, brut }: { ligne: Preuve; brut: string }): JSX.Element {
       ? String(ligne.valeur)
       : ligne.valeur_code !== null
         ? ligne.valeur_code
-        : 'non mesuré'
+        : direAbsence(ligne.motif_code)
+  const graduee =
+    ligne.echelle.min !== null && ligne.echelle.max !== null && ligne.echelle.decimales !== null
   return (
     <>
-      <dl>
+      <p className="cadran">
+        <span className={`cadran__valeur${ligne.valeur === null ? ' cadran__valeur--texte' : ''}`}>
+          {valeur}
+        </span>
+        <span className="cadran__bornes">
+          {graduee
+            ? `sur une échelle de ${ligne.echelle.min} à ${ligne.echelle.max}, ${String(ligne.echelle.decimales)} décimales`
+            : 'sans échelle graduée'}
+        </span>
+      </p>
+      <dl className="champs">
         <Champ nom="Entité mesurée">
           <span className="chiffre">{ligne.entite}</span>
         </Champ>
@@ -83,7 +96,7 @@ function Corps({ ligne, brut }: { ligne: Preuve; brut: string }): JSX.Element {
 
       {ligne.entrees.map((e) => (
         <div className="preuve__entree" key={e.empreinte_contenu_sha256}>
-          <dl>
+          <dl className="champs">
             <Champ nom="Fichier d'entrée">
               <a href={e.url} rel="noreferrer noopener">
                 {e.url}

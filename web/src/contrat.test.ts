@@ -11,7 +11,7 @@ import { renderToStaticMarkup } from 'react-dom/server'
 
 import { ContratRefuse, cheminEclat, verifierSchemas } from './contrat.ts'
 import type { Instantane, Manifeste, Preuve } from './contrat.ts'
-import { FORMES, disposer } from './graphe.ts'
+import { FORMES, direAbsence, disposer } from './graphe.ts'
 import { Partition } from './Partition.tsx'
 import { verifier } from '../scripts/verifier-artefacts.mjs'
 
@@ -158,16 +158,25 @@ describe('EXP-02 aucune_comparaison_inter_legislature', () => {
 })
 
 describe('EXP-03 absence_dite_jamais_comblee', () => {
-  test('une famille sans mesure affiche « non mesuré » et son motif', () => {
+  // Deux formes d'absence, et deux seulement (docs/ton.md T7, tel que la
+  // direction artistique le reformule) : « Position non publiée » quand la
+  // mesure existe et que ses chiffres sont publies avec le motif
+  // (`sous_seuil_de_publication` — LIOT porte un IQR de 0,687, calcule et
+  // consigne : ce n'est pas la mesure qui manque, c'est la position que le
+  // projet refuse de publier), « Non mesuré » quand aucune valeur n'existe.
+  // Les confondre ferait passer un refus de publier pour une donnee absente.
+  test('une famille sans mesure affiche son etat exact et son motif', () => {
     const absentes = voix.filter((v) => v.etat === 'non_mesuree')
     expect(absentes.length).toBeGreaterThan(0)
     for (const v of absentes) {
       expect(v.marqueur.motif_code).not.toBeNull()
       expect(v.marqueur.motif).not.toBeNull()
-      expect(v.etiquette).toContain('non mesuré')
+      const dit = direAbsence(v.marqueur.motif_code)
+      expect(['Position non publiée', 'Non mesuré']).toContain(dit)
+      expect(v.etiquette.toLocaleLowerCase('fr')).toContain(dit.toLocaleLowerCase('fr'))
+      expect(rendu).toContain(dit)
       expect(rendu).toContain(v.marqueur.motif)
     }
-    expect(rendu).toContain('non mesuré')
   })
 
   test('une entite sans aucune mesure est dite, pas dessinee', () => {
