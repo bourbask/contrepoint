@@ -150,6 +150,12 @@ svg text { fill: var(--encre); }
 .barre { stroke: var(--regle); stroke-width: 1; }
 .accolade { stroke: var(--regle); stroke-width: 1.2; }
 
+/* Le fond par defaut est DECLARE, jamais laisse au navigateur : un `rect` SVG
+ * sans `fill` est peint en NOIR. Seule la regle `:nth-child(odd)` existait,
+ * donc un systeme sur deux sortait en pave noir avec son texte illisible —
+ * invisible en theme sombre, ou le papier est deja presque noir, et flagrant
+ * en theme clair. Constate en ligne le 2026-08-28. */
+.fond { fill: var(--papier); }
 .systeme:nth-child(odd) .fond { fill: var(--papier-systeme); }
 
 /* Une famille, une teinte, indexee sur son rang dans le manifeste. */

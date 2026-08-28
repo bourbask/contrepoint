@@ -375,3 +375,35 @@ describe('artefacts d exemple : provenance verifiable', () => {
     expect(entree.bandes).toBe(instantane.bandes.length)
   })
 })
+
+describe('EXP-09 fond declare des systemes', () => {
+  test('tout rect de fond porte un remplissage declare, hors selecteur alterne', () => {
+    // Un `<rect>` SVG sans `fill` est peint en NOIR par le navigateur. La seule
+    // regle qui existait visait `:nth-child(odd)` : un systeme sur deux sortait
+    // en pave noir, texte illisible. Invisible en theme sombre — le papier y est
+    // deja presque noir — et flagrant en theme clair. Constate en ligne le
+    // 2026-08-28, sur la page publiee.
+    //
+    // Le test lit la feuille de style plutot que le rendu : le rendu fige
+    // n'embarque aucun style, et une porte raster couterait un navigateur.
+    // Les commentaires sont retires d'abord : sans cela ils sont happes dans le
+    // selecteur capture, et le test echoue en accusant une regle qui existe.
+    const styles = readFileSync(new URL('./styles.css', import.meta.url), 'utf-8').replace(
+      /\/\*[\s\S]*?\*\//g,
+      ' ',
+    )
+    const regles = [...styles.matchAll(/(^|\})\s*([^{}@]*?\.fond)\s*\{([^}]*)\}/g)].map((m) => ({
+      selecteur: m[2]!.trim(),
+      corps: m[3]!,
+    }))
+    expect(regles.length).toBeGreaterThan(0)
+
+    const base = regles.filter((r) => !/:nth-child|:nth-of-type/.test(r.selecteur))
+    expect(
+      base.some((r) => /\bfill\s*:/.test(r.corps)),
+      `aucune regle de base ne donne un \`fill\` a .fond — les systemes non vises ` +
+        `par le selecteur alterne seront peints en noir. Selecteurs vus : ` +
+        regles.map((r) => r.selecteur).join(' | '),
+    ).toBe(true)
+  })
+})
