@@ -172,8 +172,25 @@ sans générateur aléatoire.
 | **Gain du rang 1 sur le résidu** | **60,8 %** |
 | Gain du rang 1 sur la variance totale | 51,5 % |
 
-**`positionnement.md` avait raison** ; l'écart de 59,1 à 60,8 tient à la
-convergence de l'estimateur. **L'ADR 0001 se trompait d'un facteur trente**, et
+**`positionnement.md` avait raison sur l'ordre de grandeur**, et l'explication
+que ce document donnait de l'écart 59,1 → 60,8 était **fausse**.
+
+Elle attribuait l'écart à la convergence de l'estimateur. Ce n'était pas une
+mesure, c'était une supposition — et le cycle 2 l'a mise à l'épreuve en ajustant
+les deux modèles côte à côte, mêmes itérations, même initialisation :
+
+| Modèle | Résidu | Gain |
+|---|---|---|
+| Constante par scrutin calculée **une fois**, puis rang 1 | 383 381,1 | 59,2 % |
+| Constante **réajustée à chaque itération**, conjointement au rang 1 | **368 791,6** | **60,8 %** |
+
+**L'écart de 1,6 point est de modèle, pas de convergence.** Les 59,1 % de
+`positionnement.md` §4 décrivent le premier ; les 60,8 % consignés ici exigent le
+second. Les deux sont défendables, mais ce ne sont pas les mêmes chiffres, et le
+document en publiait un en décrivant l'autre.
+
+C'est l'estimateur conjoint qui est implémenté : c'est celui dont ce document
+publie les nombres, et `positionnement.md` §4 est à aligner. **L'ADR 0001 se trompait d'un facteur trente**, et
 la phrase qu'il en tirait — « l'axe ne résume qu'une petite part du comportement
 de vote » — était destinée au site. Corrigée.
 
