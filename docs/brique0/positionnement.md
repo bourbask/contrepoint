@@ -46,7 +46,7 @@ curl -C - -O https://data.assemblee-nationale.fr/static/openData/repository/16/l
 | 6 | Classification correcte, règle « position majoritaire du groupe » | **94,28 %** |
 | 7 | Classification correcte, axe rang 1 + coupure optimale par scrutin | **95,41 %** |
 | 8 | Part de la somme des carrés prise par une constante par scrutin | 19,8 % |
-| 9 | Gain du rang 1 sur le résidu après cette constante | **59,1 %** (60,9 % hors abstentions ; identique en codage 0/1) |
+| 9 | Gain du rang 1 sur le résidu après cette constante | **59,1 %** pour une constante calculée **une fois** (60,9 % hors abstentions ; identique en codage 0/1). **60,8 % pour la constante réajustée à chaque itération**, conjointement au rang 1 — c'est ce modèle qui est implémenté, et l'écart de 1,6 point est de modèle et non de convergence, mesuré le 2026-08-28 en ajustant les deux côte à côte |
 | 10 | Gain du rang 2 sur le résidu après le rang 1 | **50,1 %**, norme relative du second axe **0,652** |
 | 11 | Corrélation entre les deux axes | 0,081 |
 | 12 | Indétermination du signe, 4 initialisations | **2 sur 4 inversées**, \|corrélation\| = 1,000000 |
