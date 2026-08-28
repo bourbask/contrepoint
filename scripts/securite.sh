@@ -46,17 +46,35 @@ for f in "${FICHIERS[@]}"; do
   fi
 done
 
+# Nombre de chemins passés à `grep` en une fois. Toute la liste d'un coup
+# dépasse `ARG_MAX` dès qu'un grand répertoire non suivi traîne dans l'arbre :
+# mesuré le 2026-08-28 sur 23 000 fichiers à chemin long, soit 3,3 Mio d'argv,
+# où chaque motif rendait 126 et où le contrôle n'affirmait plus rien. Le même
+# défaut avait déjà frappé une porte de CI sur 22 426 fichiers ; il n'avait été
+# corrigé que là.
+#
+# Le découpage est fait ici plutôt que par `xargs`, et c'est délibéré : `xargs`
+# rend 123 dès qu'une invocation rend entre 1 et 125, sans dire laquelle ni
+# pourquoi. « Rien trouvé » et « grep en erreur » deviendraient le même code, et
+# c'est précisément la distinction que ce contrôle existe pour tenir.
+LOT=400
+
 # grep rend 0 s'il a trouvé, 1 s'il n'a rien trouvé, >1 s'il a échoué. Les trois
 # ne sont pas la même chose : un contrôle qui a échoué n'affirme rien.
 contenu() {
   [ "${#LISIBLES[@]}" -eq 0 ] && return 0
-  local sortie code
-  sortie=$(grep -nHIE -- "$1" "${LISIBLES[@]}"); code=$?
-  if [ "$code" -gt 1 ]; then
-    signaler "grep en erreur (code $code) sur le motif « $1 » — le contrôle n'a rien pu affirmer"
-    return 0
-  fi
-  printf '%s' "$sortie"
+  local motif="$1" sortie="" partiel code n=0
+  while [ "$n" -lt "${#LISIBLES[@]}" ]; do
+    code=0
+    partiel=$(grep -nHIE -- "$motif" "${LISIBLES[@]:n:LOT}") || code=$?
+    if [ "$code" -gt 1 ]; then
+      signaler "grep en erreur (code $code) sur le motif « $motif » — le contrôle n'a rien pu affirmer"
+      return 0
+    fi
+    [ -n "$partiel" ] && sortie+="$partiel"$'\n'
+    n=$((n + LOT))
+  done
+  printf '%s' "${sortie%$'\n'}"
 }
 
 echo "sécurité ($mode) : ${#FICHIERS[@]} fichiers"

@@ -185,6 +185,10 @@ jobs:
       # Niveau 1 : hors ligne, sans clé, sans jeton (plan-de-tests.md §2).
       - name: tests de la récupération
         run: ./scripts/test-recuperer-sources.sh
+      # Les portes elles-mêmes : un contrôle qui ne peut plus rien affirmer ne
+      # protège plus rien, et ce mode de panne ne se voit pas.
+      - name: tests des portes de contrôle
+        run: ./scripts/test-portes.sh
 
   # Portes déclarées bloquantes par la documentation et vérifiables sans le
   # binaire du pipeline. Recensement : docs/brique0/plan-de-tests.md §15.
