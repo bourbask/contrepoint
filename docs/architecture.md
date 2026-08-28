@@ -152,9 +152,25 @@ ne crée aucun marqueur qui n'existe pas déjà dans le registre.
 
 ### Le front
 
-React + TypeScript, compilé en statique par Vite, publié sur GitHub Pages. SVG
+`web/`. React + TypeScript, compilé en statique par Vite, publié sur GitHub
+Pages. `publicDir` pointe `../public` : les artefacts sont recopiés dans
+`web/dist/` à la construction, jamais dupliqués dans le dépôt (ADR 0002). SVG
 écrit à la main, `d3-scale` pour les seules échelles. Une bande par entité, un
 marqueur par famille, une graduation par échelle, clic vers l'éclat de preuves.
+
+| Fichier | Rôle |
+|---|---|
+| `src/contrat.ts` | types du contrat de sortie, refus d'un majeur de schéma inconnu (contrats.md §5.2), extraction du texte exact d'une ligne de preuve dans un éclat (I16) |
+| `src/graphe.ts` | disposition : une fonction pure du contrat vers des coordonnées, sans DOM |
+| `src/Partition.tsx` | le SVG : un système par entité, une portée par famille, une accolade qui les relie |
+| `src/Preuve.tsx` | la ligne de preuve, dans un `<dialog>` natif |
+| `src/fixtures/` | artefacts d'exemple et leur script de construction, pour le développement et les tests |
+| `scripts/verifier-artefacts.mjs` | contrôle des artefacts contre `schemas/`, exécuté par `npm run prebuild` |
+
+Les graduations affichées sont déduites des valeurs que l'instantané porte sur
+chaque échelle : le contrat ne publie `min`, `max` et `decimales` que dans la
+ligne de preuve, qui n'est chargée qu'au clic. Les bornes affichées sont donc
+des valeurs observées, jamais des bornes supposées.
 
 **Ne fait pas :** aucun appel réseau hors des fichiers de `public/api/`, aucune
 liste de familles, d'échelles ou de motifs codée en dur — donc aucune moyenne
@@ -196,3 +212,9 @@ deux. La couverture retenue : le pipeline publie un schéma JSON, et la
 construction du front échoue si le schéma ne correspond pas. Le contrat est donc
 vérifié à l'exécution de l'intégration continue, pas à la compilation. C'est
 assumé et réévaluable (ADR 0001 §6).
+
+Cette vérification est `web/scripts/verifier-artefacts.mjs`, lancé par
+`npm run prebuild` avant chaque construction et par le test EXP-06. Elle valide
+`public/api/` contre les fichiers de `schemas/` et rien d'autre : réécrire ces
+schémas en TypeScript en ferait une troisième définition des mêmes types, donc
+une aggravation du point faible plutôt qu'une couverture.

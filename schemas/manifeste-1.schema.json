@@ -31,15 +31,18 @@
     "familles": {
       "type": "array",
       "minItems": 1,
-      "description": "Légende et ordre d'affichage des marqueurs. Le front lit cette liste au lieu de coder les familles en dur : c'est ce qui rend l'ajout d'une famille une mineure.",
+      "description": "Légende, bornes de graduation et ordre d'affichage des marqueurs. Le front lit cette liste au lieu de coder les familles en dur : c'est ce qui rend l'ajout d'une famille une mineure.",
       "items": {
         "type": "object",
         "additionalProperties": false,
-        "required": ["id", "libelle", "echelle"],
+        "required": ["id", "libelle", "echelle", "min", "max", "decimales"],
         "properties": {
           "id": { "type": "string", "pattern": "^[a-z_]+$" },
           "libelle": { "type": "string", "minLength": 1, "maxLength": 40 },
-          "echelle": { "type": "string", "minLength": 1 }
+          "echelle": { "type": "string", "minLength": 1 },
+          "min": { "type": ["number", "null"], "description": "Borne basse déclarée de la graduation, recopiée de `echelle.min` des lignes de preuve de cette famille (preuve-1.schema.json, $defs.echelle). `null` pour une famille sans échelle graduée. Le front lit cette borne au lieu de la dériver des valeurs observées : dérivée, la plus petite valeur publiée tomberait au pôle de l'échelle." },
+          "max": { "type": ["number", "null"], "description": "Borne haute déclarée, même règle que `min`." },
+          "decimales": { "type": ["integer", "null"], "minimum": 0, "maximum": 6, "description": "Décimales d'écriture de la famille, recopiées de `echelle.decimales`." }
         }
       }
     },
