@@ -260,20 +260,27 @@ fn executer() -> Result<(), String> {
                 ecart_type_reechantillonnage,
             } => {
                 ecartees.push(((*motif).to_owned(), position.groupe.clone()));
+                // Arrondi **une** fois, servi deux fois. Le motif recevait la
+                // valeur brute quand `dispersion` portait l'arrondie : l'artefact
+                // publiait « IQR 0,6417 » à côté de `"iqr": 0.64`, deux précisions
+                // pour une même mesure, à quelques centimètres l'une de l'autre.
+                // C'est la fausse précision que le contrat 0.4.0 venait d'écarter.
+                let iqr_publie = iqr.map(|x| arrondir(x, decimales));
+                let ecart_type_publie =
+                    ecart_type_reechantillonnage.map(|x| arrondir(x, decimales));
                 (
                     Value::Null,
                     json!("sous_seuil_de_publication"),
                     json!(contrepoint::preuves::motif_de_non_publication(
                         motif,
                         position.effectif_retenu,
-                        *iqr,
-                        *ecart_type_reechantillonnage
+                        iqr_publie,
+                        ecart_type_publie
                     )),
                     json!({
                         "effectif": position.effectif_retenu,
-                        "iqr": iqr.map(|x| arrondir(x, decimales)),
-                        "ecart_type_reechantillonnage":
-                            ecart_type_reechantillonnage.map(|x| arrondir(x, decimales)),
+                        "iqr": iqr_publie,
+                        "ecart_type_reechantillonnage": ecart_type_publie,
                     }),
                 )
             }

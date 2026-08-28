@@ -1134,3 +1134,48 @@ fn sha256_conforme_aux_vecteurs_publies() {
         "cdc76e5c9914fb9281a1c7e284d73e67f1809a48a497200e046d39ccc7112cd0"
     );
 }
+
+/// PRE-14 [C] — le motif de non-publication et le champ `dispersion` portent
+/// la **même** précision : celle de l'échelle.
+///
+/// Ce qui casse si le test disparaît : le motif recevait la valeur brute quand
+/// `dispersion` portait l'arrondie. L'artefact publié disait « IQR 0,6417 » à
+/// côté de `"iqr": 0.64` — deux précisions pour une même mesure, dans la même
+/// ligne. C'est la fausse précision que le contrat `0.4.0` a écartée en passant
+/// l'échelle des votes de quatre à deux décimales, et elle survivait dans la
+/// prose. Trouvée en regardant le rendu, par deux relectures indépendantes.
+#[test]
+fn motif_et_dispersion_a_la_meme_precision() {
+    let decimales = contrepoint::preuves::ECHELLES
+        .iter()
+        .find(|(_, _, _, _, famille)| *famille == "votes")
+        .and_then(|(_, _, _, d, _)| *d)
+        .expect("échelle `votes` déclarée");
+
+    // Une valeur dont l'écriture brute et l'écriture arrondie diffèrent : sans
+    // cela le test passerait sur n'importe quelle implémentation.
+    let brut = 0.641_7_f64;
+    let facteur = 10f64.powi(i32::try_from(decimales).expect("décimales raisonnables"));
+    let arrondi = (brut * facteur).round() / facteur;
+    assert_ne!(
+        brut, arrondi,
+        "le cas de test doit distinguer les deux écritures"
+    );
+
+    let motif = contrepoint::preuves::motif_de_non_publication(
+        contrepoint::agregation::DISPERSION_INTERNE,
+        20,
+        Some(arrondi),
+        None,
+    );
+    let ecrit_brut = format!("{brut}").replace('.', ",");
+    assert!(
+        !motif.contains(&ecrit_brut),
+        "PRE-14 : le motif porte la valeur brute « {ecrit_brut} » — {motif}"
+    );
+    let ecrit_arrondi = format!("{arrondi}").replace('.', ",");
+    assert!(
+        motif.contains(&ecrit_arrondi),
+        "PRE-14 : le motif doit porter la valeur publiée « {ecrit_arrondi} » — {motif}"
+    );
+}
