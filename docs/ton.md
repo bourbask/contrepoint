@@ -91,6 +91,8 @@ Un concept, un nom, partout. La colonne de droite est la seule forme admise.
 | Résultat publié | **position**, **positionnement daté** |
 | Axe des scrutins | **axe issu des votes** |
 | Échelle de cet axe | **unités ancrées**, ancre gauche = médiane LFI-NFP = −1, ancre droite = médiane RN = +1 |
+| Étendue de l'échelle publiée | **amplitude ancrée**, 2,0 par construction. C'est la seule amplitude publiable |
+| Étendue de l'axe avant ancrage | **amplitude brute**, propre à un ajustement — 2,6 sur le tableau d'exploration de l'ADR 0001 §1.3. Jamais « amplitude » nu : le mot sans qualificatif a déjà désigné les deux |
 | Enquête d'experts | **CHES**, échelle 0–10, variable `lrgen`, **vague** 2024 (jamais « édition ») |
 | Classification administrative | **nuance administrative**, issue du **nuancier du ministère de l'Intérieur** |
 | Dispersion d'un groupe | **dispersion intra-groupe** = {écart interquartile (IQR), écart-type de rééchantillonnage} |
@@ -241,9 +243,13 @@ Sur le diff d'une PR, avant de la déclarer finie (definition-of-done.md §11
 et §13) :
 
 ```sh
-# 1. Lexique interdit — hors le tableau de juridique.md et de ton.md
-git diff origin/develop... \
-  | grep -inE 'fiabilit|crédibilit|credibilit|véracit|veracit|désinformation|desinformation|fake ?news|infox|biais d|partial|militant|classement|palmarès|score|indice|consensus|synthese|synthèse|note globale'
+# 1. Lexique interdit — la liste vit dans scripts/lexique.sh et nulle part
+#    ailleurs (definition-of-done.md §11). Une copie inline de plus est une
+#    copie de plus qui divergera : la quatrième refusait « biais de sélection »,
+#    terme retenu du projet, et signalait « synthèse » dans methode.md §9,
+#    « syntheseVote », « fiche de synthèse n° 56 » et « indice de ligne ».
+./scripts/lexique.sh docs
+./scripts/lexique.sh code
 
 # 2. Personne grammaticale
 git diff origin/develop... | grep -nwiE 'nous|notre|nos|vous|votre|vos|on'
@@ -262,7 +268,8 @@ git diff origin/develop... | grep -inE '"(neutre|centre|n\.d\.|nd)"|non renseign
 git diff origin/develop... | grep -nE '\b(Dem|EcoS|Ecos)\b'
 ```
 
-Les contrôles 1, 4 et 6 sont automatisables en intégration continue ; les
+Le contrôle 1 **est** l'intégration continue : c'est le script qu'elle lance,
+pas une transcription. Les contrôles 4 et 6 sont automatisables à leur tour ; les
 contrôles 2 et 3 produisent des faux positifs sur les citations et se relisent.
 Un faux positif se justifie dans la description de la PR, il ne se supprime pas
 du grep.

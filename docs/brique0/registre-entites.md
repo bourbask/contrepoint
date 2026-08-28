@@ -80,8 +80,17 @@ Pièges relevés dans la source, tous vérifiés :
 - **`libelleAbrev` ≠ `libelleAbrege` sur `PO872880`** : `UDDPLR` d'un côté,
   `UDR` de l'autre. Aucune clé ne se fait sur une abréviation.
 - **`NI` n'est pas un groupe** : c'est l'agrégat des députés sans groupe. Il a
-  un `uid` et des dates comme les autres, et son écart-type intra est de 0,649
-  contre 0,065 pour le RN (ADR 0001, §1.3). Ne jamais l'agréger comme un parti.
+  un `uid` et des dates comme les autres, et sa dispersion est la plus grande du
+  jeu — **IQR 0,623 contre 0,052 pour le RN**, `positionnement.md` §6, corpus
+  retenu de 7 979 scrutins. Ne jamais l'agréger comme un parti.
+
+  Ce point portait « écart-type intra de 0,649 contre 0,065 pour le RN (ADR 0001
+  §1.3) ». Deux raisons de ne plus l'écrire ainsi, et la seconde suffirait :
+  l'ADR 0001 §1.3 est encadré comme tableau d'exploration remplacé par
+  `positionnement.md` §6, dont le recomptage du 2026-08-27 confirme les effectifs
+  et non les siens ; et l'**écart-type intra-groupe** n'est pas une grandeur que
+  ce projet publie — RG-42, `ton.md` §3 et l'ADR 0003 §3 point 4 retiennent l'IQR
+  et l'écart-type de rééchantillonnage, jamais lui.
 - **AMO50 est inutilisable** : figé au 2024-07-11, il ne contient pas
   `PO845401` (groupe RN) pourtant référencé par les scrutins de 2025.
 
@@ -537,11 +546,15 @@ toutes deux : **V13** exige l'inclusion, **V16** exige l'égalité stricte avec
 `viMoDe`. Retenir V13 obligeait à écrire une `dateDebut` fausse ; retenir V16
 obligeait à violer V13.
 
-**V13 cède, nommément, pour ce seul organe.** La raison est celle du §2.1 :
-`PO840056` **n'est pas un groupe**. C'est l'agrégat administratif des députés sans
-groupe, ouvert avec la mandature et non constitué au sein de la législature — son
-écart-type intra est de 0,649 contre 0,065 pour le RN, et le registre ne l'agrège
-jamais comme un parti. Une exception nommée à une règle de période est
+**V13 cède, nommément, pour ce seul organe.** La raison est **de définition**, et
+elle se suffit : `PO840056` **n'est pas un groupe**. C'est l'agrégat administratif
+des députés sans groupe, ouvert avec la mandature et non constitué au sein de la
+législature, et le registre ne l'agrège jamais comme un parti. Cette exception
+était auparavant adossée à un écart-type intra-groupe de 0,649 lu dans l'ADR 0001
+§1.3 : chiffre d'un tableau que l'ADR déclare lui-même remplacé, et grandeur que
+le projet ne publie pas (RG-42). Une règle de validation adossée à une mesure
+retirée ne peut plus être refusée sur pièces ; adossée à la définition, elle
+peut. Une exception nommée à une règle de période est
 vérifiable ; une date recopiée de travers ne l'est pas. V16 ne cède pas : c'est
 elle qui rend le registre falsifiable contre sa source, et une exception y
 ouvrirait la porte à la correction à la main que le contrôle existe pour attraper.

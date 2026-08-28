@@ -64,7 +64,12 @@ Cela disqualifie toute ACP ou SVD classique, qui exige une matrice complète.
 Le filtre de participation ne sauve rien : la médiane est à 133 votants sur
 577 sièges, et le corpus s'effondre dès que le seuil est relevé.
 
-| Seuil `nombreVotants` | Scrutins retenus | Part du corpus |
+Comptes et parts **sur les 8 434 scrutins bruts**, avant tout filtre de
+minorité. Le tableau de sensibilité de l'ADR 0003 §2 et de `ingestion-votes.md`
+§6 compte les mêmes seuils **sur les 7 979 retenus** et ne donne donc pas les
+mêmes nombres : 5 535 et non 5 789 à ≥ 100. Les deux sont justes, sur deux bases.
+
+| Seuil `nombreVotants` | Scrutins retenus | Part des 8 434 bruts |
 |---|---|---|
 | ≥ 100 | 5 789 | 68,6 % |
 | ≥ 150 | 3 581 | 42,5 % |
@@ -115,8 +120,10 @@ dans le calcul, l'axe émerge des votes seuls. Le résultat est un argument de
 validité de la méthode, pas un habillage.
 
 **L'écart-type intra-groupe est dérisoire** — 0,046 à 0,25 pour une amplitude
-inter-groupes de 2,6 — sauf pour NI (0,649) et LIOT (0,422), qui ne sont pas des
-groupes idéologiques. C'est la confirmation empirique de la limite annoncée dans
+inter-groupes **brute** de 2,6, celle des moyennes de ce tableau, en unités
+brutes de cet ajustement ; l'échelle publiée est ancrée et son amplitude vaut
+2,0 par construction (`../brique0/positionnement.md` §6) — sauf pour NI (0,649)
+et LIOT (0,422), qui ne sont pas des groupes idéologiques. C'est la confirmation empirique de la limite annoncée dans
 `methode.md` : l'axe sépare les blocs, pas les individus. Le chiffre existe
 maintenant pour l'écrire sur le site plutôt que de l'affirmer.
 
@@ -181,10 +188,21 @@ Le serveur envoie `accept-ranges: bytes`. La reprise (`curl -C -`) a complété 
 fichier du premier coup.
 
 **Obligation retenue.** Tout téléchargement vérifie la taille reçue contre
-`content-length`, reprend tant qu'elle diffère, puis enregistre le SHA-256 de
-l'archive dans le registre de preuves. Un jeu de données dont l'empreinte est
-inconnue ne rentre pas dans le pipeline. C'est aussi ce qui rend une position
-rejouable à l'identique des mois plus tard.
+`content-length`, reprend tant qu'elle diffère, puis enregistre **les deux
+empreintes** — celle de l'archive et celle du contenu — dans le registre de
+preuves. Un jeu de données dont les empreintes sont inconnues ne rentre pas dans
+le pipeline. C'est aussi ce qui rend une position rejouable à l'identique des
+mois plus tard.
+
+> Une version antérieure de ce paragraphe n'enregistrait que le SHA-256 de
+> l'**archive** et en faisait la porte d'entrée du pipeline. Mesuré le
+> 2026-08-27 : la source sert plusieurs constructions du même contenu, donc
+> l'empreinte d'archive varie sans que la donnée bouge, et un pipeline qui
+> décide dessus ré-émet le registre de preuves entier à chaque exécution
+> ([../brique0/verification-2026-08-27.md](../brique0/verification-2026-08-27.md)
+> §0, conséquence 1). L'empreinte d'archive reste consignée, hors de la clé de
+> déduplication ; **l'empreinte de contenu est celle qui décide**
+> ([../brique0/contrats.md](../brique0/contrats.md) §2.8, RG-77, RG-115).
 
 **Piège de fraîcheur, découvert au passage.** `AMO50_acteurs_mandats_organes_divises`
 porte `last-modified: 2024-07-11` : c'est un instantané pris à l'ouverture de la
@@ -509,10 +527,10 @@ faciles à tester qu'à corriger après coup.
 | # | Étape | Sortie visible | Couvre |
 |---|---|---|---|
 | 0 | `cargo init contrepoint-pipeline`, `Cargo.lock` versionné. Adaptateurs « un-ou-plusieurs » et « chaîne ou objet xsi », avec un test sur `VTANR5L17V5268` (cas `votant` objet nu) et sur un `acteur.uid` enveloppé | 2 tests qui échouent avant les adaptateurs et passent après | 1.4 |
-| 1 | Script CI de récupération : `curl -C -` en boucle jusqu'à `content-length`, SHA-256 consigné, échec bruyant si l'empreinte change sans que la date de source change | tableau des archives, taille, empreinte, `last-modified` | 1.5 |
+| 1 | Script CI de récupération : `curl -C -` en boucle jusqu'à `content-length`, **les deux empreintes** consignées, échec bruyant si l'**empreinte de contenu** change sans que la date de source change | tableau des archives, taille, les deux empreintes, `last-modified` | 1.5 |
 | 2 | Ingestion des scrutins → triplets `(acteur, scrutin, valeur)`, l'absence n'étant jamais écrite. Référentiel depuis AMO30, jointure sur période de validité | décompte des scrutins retenus et écartés, et pourquoi (roadmap v0.1) | 1.2, 1.5 |
 | 3 | ALS rang 1, initialisation déterministe sans générateur aléatoire, signe fixé par deux points d'ancrage déclarés dans un fichier de données | positions par groupe, **dispersion intra publiée**, et le gain sur le résidu énoncé | 1.3, 1.6 |
-| 4 | Registre de preuves JSONL en ajout seul : entité, valeur, méthode, source, date de source, date de calcul, empreinte d'archive, version de `rustc` et du pipeline | reconstruction complète depuis les archives redonnant le même fichier | 1.7 |
+| 4 | Registre de preuves JSONL en ajout seul : entité, valeur, méthode, source, date de source, date de calcul, **les deux empreintes** — d'archive et de contenu, seule la seconde entrant dans la clé de déduplication (`../brique0/contrats.md` §2.8 et §3) —, version de `rustc` et du pipeline | reconstruction complète depuis les archives redonnant le même fichier | 1.7 |
 | 5 | Test de non-régression : instantané `insta` de la sortie complète, plus une assertion de validité méthodologique (ordre des groupes, `|corr|` ≈ 1 avec la référence) à tolérance déclarée | suite hors ligne, sans réseau, sans jeton | 1.7 |
 | 6 | Front Vite + React/TS, SVG manuel, `d3-scale`. Une bande par parti, trois marqueurs distincts, curseur temporel, clic vers la preuve. Thèmes clair et sombre, navigation au clavier, `aria-label` par marqueur, jamais la couleur comme seul porteur d'information | le graphe (roadmap v0.6) | — |
 | 7 | GitHub Actions : hebdomadaire plus déclenchement manuel, caches `~/.cargo` et `target/`, publication sur Pages. En cas d'échec, le site conserve la dernière sortie valide et affiche « données arrêtées le … » | pipeline qui tourne seul (roadmap v0.7) | risque d'abandon |
@@ -537,9 +555,9 @@ discipline :
 
 | Point | Comment le trancher |
 |---|---|
-| JSON ou XML pour les scrutins (1.4) | Parser les deux, compter les cas particuliers de chaque côté. Décider avant l'étape 2, le changer après coûte l'ingestion entière. |
-| Seuil de participation (1.2) | Méthodologique. Publier la sensibilité de l'axe au seuil plutôt que choisir un chiffre : c'est une sortie du projet, pas un paramètre à cacher. |
+| JSON ou XML pour les scrutins (1.4) | Parser les deux, compter les cas particuliers de chaque côté. Décider avant l'étape 2, le changer après coûte l'ingestion entière. `A VERIFIER` : l'étape 0 est livrée en JSON avec ses trois adaptateurs, ce qui vaut décision de fait sans qu'aucun document ne l'acte. Vérification : compter les cas particuliers du côté XML, puis acter ou renoncer explicitement. |
+| ~~Seuil de participation (1.2)~~ **Acté le 2026-08-27** | [0003-arbitrages-de-coherence.md](0003-arbitrages-de-coherence.md) §2 : **aucun seuil de participation**. Un seul filtre, qui est une définition et non un seuil — `min(pour, contre) ≥ 1`. La sensibilité est publiée, sur sept corpus. |
 | Suffisance du rang 1 | Si l'axe s'avère instable dans le temps, les estimateurs de référence (IRT bayésien, W-NOMINATE) deviennent justifiés — comme prévu par `methode.md`, et pas avant. Ils changeraient le calcul, pas la pile. |
 | Fraîcheur des archives AN | AMO50 est figé au 2024-07-11, AMO30 est quotidien. Vérifier `last-modified` de chaque archive à chaque exécution et échouer si une source censée être vivante ne bouge plus. |
-| Points d'ancrage du signe | Deux entités et le sens attendu, dans un fichier de données versionné et non dans le code. Le choix est un arbitrage à documenter publiquement. |
+| ~~Points d'ancrage du signe~~ **Acté le 2026-08-27** | Contrat de sortie `0.3.0`, RG-30 et RG-31 : le registre d'entités porte `ancre_axe` sur ses groupes, avec pôle et période de validité ([../brique0/registre-entites.md](../brique0/registre-entites.md) §3.4, règles V24 et V25). Le pipeline s'arrête si un pôle manque à la date d'agrégation. |
 | Contrat de schéma entre Rust et TypeScript | Réévaluer si le registre d'entités devient une source de bugs (concession de la section 6). |

@@ -40,10 +40,11 @@ consignée dans
 
 `ingestion-votes.md` §8 retient le groupe porté par le bloc `ventilationVotes`
 du fichier de scrutin, AMO30 ne servant que de recours. `positionnement.md` §1
-écrit l'inverse : « le rattachement d'un député à son groupe ne peut donc **pas**
-être lu dans le fichier de scrutin ; il doit venir des mandats, avec période de
-validité ». Les deux ne peuvent pas être vrais, et le cycle 4 des tests
-(`ING-16` à `ING-19`) est bloqué tant que le point n'est pas acté.
+**écrivait** l'inverse : « le rattachement d'un député à son groupe ne peut donc
+**pas** être lu dans le fichier de scrutin ; il doit venir des mandats, avec
+période de validité » — phrase corrigée depuis, elle n'est plus dans le
+document. Les deux ne pouvaient pas être vrais, et le cycle 4 des tests
+(`ING-16` à `ING-19`) était bloqué tant que le point n'était pas acté.
 
 `positionnement.md` §1 tire sa conclusion d'un seul cas — les blocs
 `organeRef: "PO0"`, référence pendante qui ne se résout pas dans AMO30 : 146
@@ -105,8 +106,8 @@ sans une exception. Il identifie le siège, pas l'appartenance.
 
 ### Conséquences
 
-- `positionnement.md` §1 énonce encore la version écartée : la phrase « il doit
-  venir des mandats » est à corriger, dans le même lot que cet ADR.
+- ~~`positionnement.md` §1 énonce encore la version écartée~~ **Corrigé.** Le §1
+  acte le bloc de ventilation, daté par construction, AMO30 en recours.
 - Les périodes de validité **restent dans le modèle**. Elles sont sans effet sur
   la v0 — le premier scrutin de la XVIIe législature est daté du 2024-10-08 et
   aucun scrutin n'a eu lieu pendant la fenêtre de non-inscription de juillet
@@ -127,8 +128,13 @@ mesure surtout qui était présent ». L'objection est vérifiable, et
 `ingestion-votes.md` §6 l'a vérifiée. Elle ne survit pas à la mesure.
 
 La médiane de `syntheseVote.nombreVotants` est de **133 votants pour 577
-sièges** — 23 %. Tout seuil coupe le corpus : ≥ 100 en conserve 68,6 %, ≥ 150
-42,5 %, ≥ 200 22,7 %, ≥ 300 4,3 %.
+sièges** — 23 %. Tout seuil coupe le corpus. **Sur les 8 434 scrutins bruts**
+(ADR 0001 §1.2) : ≥ 100 en conserve 5 789, soit 68,6 % ; ≥ 150, 3 581, soit
+42,5 % ; ≥ 200, 1 912, soit 22,7 % ; ≥ 300, 359, soit 4,3 %. Le tableau de
+sensibilité ci-dessous compte **sur les 7 979 retenus** et donne donc d'autres
+nombres pour les mêmes seuils — 5 535 et non 5 789 à ≥ 100, soit 69,4 % de sa
+propre base. Une part ne se lit jamais sans sa base : les deux séries sont
+justes, elles ne portent pas sur le même corpus.
 
 **Aucune rupture ne désigne une valeur.** La distance de composition d'un scrutin
 — la moitié de la somme des écarts absolus entre la part de chaque groupe parmi
@@ -141,6 +147,9 @@ en mesure.
 **Le seuil n'améliore rien et, poussé, dégrade.** L'axe a été ajusté sur sept
 corpus, corrélation de Pearson des coordonnées avec le corpus de référence
 — minorité non vide, aucun seuil de participation :
+
+Comptes **sur les 7 979 scrutins retenus**, filtres cumulés après la minorité
+non vide.
 
 | Corpus | Scrutins | Corrélation | Ordre des groupes |
 |---|---|---|---|
@@ -207,7 +216,7 @@ les documents cités.
 | # | Point | Ce qui a tranché | Version actée |
 |---|---|---|---|
 | 2 | Nombre de scrutins à `organeRef: "PO0"` — 14 annoncés, 15 énumérés | Recomptage sur l'archive complète, [verification-2026-08-27.md](../brique0/verification-2026-08-27.md) §2 | **14 scrutins** : **12** le 2024-12-02, **1** le 2025-04-07, **1** le 2026-04-16. Les deux documents étaient justes sur le total, faux sur la ventilation |
-| 3 | Gain du terme de rang 1 — 2,1 % contre 59,1 % | Recomptage, [verification-2026-08-27.md](../brique0/verification-2026-08-27.md) §3 | **60,8 % du résidu** après constante par scrutin (51,5 % de la variance totale). L'ADR 0001 se trompait d'un facteur trente, et une phrase destinée au site en avait été tirée |
+| 3 | Gain du terme de rang 1 — 2,1 % contre 59,1 % | Recomptage, [verification-2026-08-27.md](../brique0/verification-2026-08-27.md) §3 | **60,8 % du résidu** après constante par scrutin (51,5 % de la variance totale), la constante seule en prenant 15,2 %. Corpus retenu, 7 979 scrutins. L'ADR 0001 se trompait d'un facteur trente, et une phrase destinée au site en avait été tirée. Les 59,1 % / 19,8 % de `positionnement.md` §1 sont une mesure antérieure sur une autre matrice d'entrée, non une convergence moindre du même ajustement : la part de la constante par scrutin est une forme close qu'aucune itération ne déplace (`positionnement.md` §11) |
 | 4 | Dispersion publiée — « variance intra-groupe » contre « IQR et étendue » | Relecture juridique | **Écart interquartile et écart-type de rééchantillonnage. Jamais la variance** — illisible sur un axe sans unité — **et jamais l'étendue** : un minimum et un maximum **sont** les coordonnées de deux membres identifiables du groupe. Sur un groupe de neuf membres, avec un code et un appariement publics, elles sont réidentifiables en une exécution. L'IQR porte la même information sans exposer personne |
 | 5 | Fixture du cas `votant` objet nu | Existence du fichier | **`VTANR5L17V5268`**, la fixture qui existe. `VTANR5L17V5646` n'a jamais été livrée |
 | 7 | Version de la Licence Ouverte | Lecture du PDF de licence | **v1.0** pour l'Assemblée nationale, **`lov2`** pour le nuancier publié sur data.gouv.fr. Deux sources, deux versions : ce n'était pas une contradiction |
@@ -225,8 +234,14 @@ les documents cités.
   désormais à cet ADR. Le tableau documente que les contradictions ont existé, ce
   qui est la seule trace de la manière dont elles ont failli être épinglées dans
   un test.
-- Deux occurrences résiduelles de versions écartées subsistent et sont à corriger
-  dans le même lot, hors du périmètre de fichiers de cet ADR :
-  `positionnement.md` §1 (« le rattachement doit venir des mandats ») et
-  `ingestion-votes.md` §8 (« 14 scrutins, dont 13 du seul 2024-12-02 », resté à
-  l'ancienne ventilation malgré le recomptage du point 2).
+- ~~Deux occurrences résiduelles de versions écartées subsistent et sont à
+  corriger dans le même lot~~ **Corrigées le 2026-08-28.** `positionnement.md`
+  §1 acte le bloc de ventilation comme source du rattachement, AMO30 en recours ;
+  `ingestion-votes.md` §8 porte la ventilation recomptée. Les deux passages que
+  ce paragraphe désignait n'existent plus : ne pas les chercher.
+- La propagation du point 3 du §3 — le gain du rang 1 — **n'était pas faite**
+  dans `positionnement.md`, qui portait encore 59,1 % en six endroits, ni dans
+  `plan-de-tests.md`, qui pinnait 0,591 comme valeur de référence de son niveau 2
+  tout en actant 60,8 % à son §16. Corrigé le 2026-08-28. Un test écrit d'après
+  le plan aurait épinglé la valeur écartée — exactement ce que le §16 dit vouloir
+  empêcher.
