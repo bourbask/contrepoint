@@ -326,6 +326,7 @@ l'exige definition-of-done.md.
 | PRE-11 | `valeur_publiee_trace_vers_une_ligne` | export du front | Chaque valeur affichable pointe une ligne existante du registre | definition-of-done.md §15. Une valeur sans preuve est exactement l'estimation affichée à la place d'une mesure, interdite par la règle permanente de ROADMAP.md |
 | PRE-12 | `date_darret_derivee_du_registre` | registre dont la dernière date de calcul est connue | Le bandeau « données arrêtées le … » vaut cette date ; aucune saisie manuelle, aucune horloge | Mitigation du risque d'abandon (ADR 0000 §8) : le bandeau ne vaut que s'il est dérivé. Saisi à la main, il reste juste tant que quelqu'un y pense |
 | PRE-13 | `codage_consigne_dans_la_ligne` | ligne de la famille votes | Le codage `+1/0/−1` et le choix `abstention = 0` sont consignés | Le choix `abstention = 0` est une décision, pas une évidence (positionnement.md §4). Non consignée, elle devient indiscernable d'un défaut |
+| PRE-14 [C] | `motif_et_dispersion_a_la_meme_precision` | IQR arrondi à l'échelle, 20 membres | Le motif porte la valeur **publiée**, jamais la brute | Le motif recevait la valeur brute quand `dispersion` portait l'arrondie : l'artefact disait « IQR 0,6417 » à côté de `"iqr": 0.64`, deux précisions pour une même mesure dans la même ligne. C'est la fausse précision que le contrat `0.4.0` a écartée, et elle survivait dans la prose. Trouvée **en regardant le rendu**, par deux relectures indépendantes — aucune porte ne lisait le texte des motifs |
 
 ---
 
