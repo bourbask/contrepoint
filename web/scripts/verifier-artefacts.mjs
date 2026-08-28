@@ -75,14 +75,26 @@ export function verifier(racineSchemas, racineArtefacts, remplacements = {}) {
 // Entree de `npm run prebuild`.
 if (import.meta.url === `file://${process.argv[1]}`) {
   const schemas = new URL('../../schemas/', import.meta.url)
-  // Argument optionnel : la racine a verifier. Sans lui, la sortie du pipeline.
+  // `--absence-toleree` : developpement local, ou la sortie du pipeline n'est
+  // pas sur le disque. Sans ce drapeau l'absence est un echec, parce que c'est
+  // exactement le cas ou la publication est cassee : une porte muette la laisse
+  // passer et le lecteur recoit un site sans donnees.
+  const arguments_ = process.argv.slice(2)
+  const toleree = arguments_.includes('--absence-toleree')
+  const racine = arguments_.find((a) => !a.startsWith('--'))
   const api =
-    process.argv[2] === undefined
+    racine === undefined
       ? new URL('../../public/api/', import.meta.url)
-      : pathToFileURL(`${process.argv[2].replace(/\/*$/, '')}/`)
+      : pathToFileURL(`${racine.replace(/\/*$/, '')}/`)
   if (!existsSync(fileURLToPath(api))) {
-    console.log('public/api/ est absent : aucun artefact à vérifier.')
-    process.exit(0)
+    const chemin = fileURLToPath(api)
+    if (toleree) {
+      console.log(`${chemin} est absent, --absence-toleree : aucun artefact à vérifier.`)
+      process.exit(0)
+    }
+    console.error(`${chemin} est absent : aucun artefact publiable, construction interrompue.`)
+    console.error("  En développement local, sans sortie de pipeline : npm run build:local")
+    process.exit(1)
   }
   const fautes = verifier(schemas, api)
   if (fautes.length > 0) {

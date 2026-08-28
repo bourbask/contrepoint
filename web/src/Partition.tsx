@@ -1,11 +1,14 @@
 // Le graphe. SVG ecrit a la main, ADR 0001 §3 : aucune bibliotheque de
-// graphiques ne sait afficher trois marqueurs qu'on refuse de moyenner, et
-// l'ordre du DOM doit rester sous controle pour la lecture au clavier.
+// graphiques ne sait afficher trois marqueurs que le projet refuse de moyenner,
+// et l'ordre du DOM doit rester sous controle pour la lecture au clavier.
 //
 // La forme vient du contrepoint : un SYSTEME par entite, une VOIX par famille,
 // chaque voix sur sa portee et sa propre graduation. Une voix sans mesure porte
 // une PAUSE — le signe qui, en musique, note un silence voulu plutot qu'une
-// mesure laissee vide.
+// mesure laissee vide. Cette pause se pose dans la GOUTTIERE, a gauche de toute
+// graduation : posee sur l'axe, elle enoncerait une position que la donnee
+// refuse de publier, et la mention en italique ne la rattraperait pas — l'oeil
+// lit la position avant la legende.
 
 import type { JSX } from 'react'
 import type { Instantane, Manifeste } from './contrat.ts'
@@ -51,19 +54,18 @@ function Pause(): JSX.Element {
 
 function Marqueur({
   voix,
-  debut,
-  fin,
   idMotif,
   onPreuve,
 }: {
   voix: Voix
-  debut: number
-  fin: number
   idMotif: string | undefined
   onPreuve: ((id: string) => void) | undefined
 }): JSX.Element {
   const yLigne = voix.y + 30
-  const versGauche = voix.x > (debut + fin) / 2
+  // Le cote d'ecriture se decide sur la plage de CETTE voix, jamais sur une
+  // plage commune : il n'y en a pas.
+  const versGauche =
+    voix.portee !== null && voix.x > (voix.portee.debut + voix.portee.fin) / 2
   const activer = (): void => onPreuve?.(voix.marqueur.preuve)
   return (
     <g
@@ -104,7 +106,7 @@ function Marqueur({
 }
 
 export function Partition({ manifeste, instantane, disposition, onPreuve }: Props): JSX.Element {
-  const { debut, fin } = disposition.portee
+  const { marge, bord } = disposition
   const graduees = new Set(disposition.echelles.flatMap((e) => e.familles))
 
   // ---- Lecture : la graduation de chaque echelle, tracee une seule fois ----
@@ -118,16 +120,16 @@ export function Partition({ manifeste, instantane, disposition, onPreuve }: Prop
           const rang = manifeste.familles.indexOf(f)
           return (
             <g className={`marqueur--${rang}`} key={f.id}>
-              <g transform={`translate(${debut + 6},${yl - 4})`}>
-                <TeteDeNote forme={FORMES[rang % FORMES.length] as Forme} />
+              <g transform={`translate(${marge + 6},${yl - 4})`}>
+                <TeteDeNote forme={FORMES[rang] as Forme} />
               </g>
-              <text className="famille" x={debut + 20} y={yl}>
+              <text className="famille" x={marge + 20} y={yl}>
                 {f.libelle}
               </text>
             </g>
           )
         })}
-        <line className="portee" x1={debut} y1={yl + 18} x2={fin} y2={yl + 18} />
+        <line className="portee" x1={e.debut} y1={yl + 18} x2={e.fin} y2={yl + 18} />
         {e.bornes.map((b) => (
           <g key={b.libelle}>
             <line className="barre" x1={b.x} y1={yl + 12} x2={b.x} y2={yl + 24} />
@@ -135,7 +137,7 @@ export function Partition({ manifeste, instantane, disposition, onPreuve }: Prop
               className="graduation"
               x={b.x}
               y={yl + 38}
-              textAnchor={b.x > (debut + fin) / 2 ? 'end' : 'start'}
+              textAnchor={b.x > (e.debut + e.fin) / 2 ? 'end' : 'start'}
             >
               {b.libelle}
             </text>
@@ -149,13 +151,13 @@ export function Partition({ manifeste, instantane, disposition, onPreuve }: Prop
     const rang = manifeste.familles.indexOf(f)
     lignes.push(
       <g className={`lecture marqueur--${rang}`} key={f.id}>
-        <g transform={`translate(${debut + 6},${yl - 4})`}>
-          <TeteDeNote forme={FORMES[rang % FORMES.length] as Forme} />
+        <g transform={`translate(${marge + 6},${yl - 4})`}>
+          <TeteDeNote forme={FORMES[rang] as Forme} />
         </g>
-        <text className="famille" x={debut + 20} y={yl}>
+        <text className="famille" x={marge + 20} y={yl}>
           {f.libelle}
         </text>
-        <text className="note" x={debut + 20} y={yl + 17}>
+        <text className="note" x={marge + 20} y={yl + 17}>
           Code de nuance, sans échelle graduée.
         </text>
       </g>,
@@ -172,7 +174,7 @@ export function Partition({ manifeste, instantane, disposition, onPreuve }: Prop
         role="group"
         aria-label={`Lecture des ${manifeste.familles.length} familles de mesure, au ${instantane.date}.`}
       >
-        <text className="entete" x={debut} y={14}>
+        <text className="entete" x={marge} y={14}>
           Lecture
         </text>
         {lignes}
@@ -193,11 +195,11 @@ export function Partition({ manifeste, instantane, disposition, onPreuve }: Prop
               d={accolade(8, s.y + 22, s.y + s.hauteur - 18)}
               fill="none"
             />
-            <text className="titre" x={debut} y={s.y + 18}>
+            <text className="titre" x={marge} y={s.y + 18}>
               {s.libelle}
             </text>
             {!disposition.etroit && (
-              <text className="entite" x={fin} y={s.y + 18} textAnchor="end">
+              <text className="entite" x={bord} y={s.y + 18} textAnchor="end">
                 {s.id}
               </text>
             )}
@@ -205,40 +207,34 @@ export function Partition({ manifeste, instantane, disposition, onPreuve }: Prop
               const idMotif = v.marqueur.motif === null ? undefined : `motif-${s.id}-${v.famille}`
               return (
                 <g className="voix" key={v.famille}>
-                  <text className="famille" x={debut} y={v.y + 13}>
+                  <text className="famille" x={marge} y={v.y + 13}>
                     {v.marqueur.libelle}
                   </text>
                   {v.dispersion !== null && v.yDispersion !== null && (
                     <text
                       className="dispersion"
-                      x={disposition.etroit ? debut : fin}
+                      x={disposition.etroit ? marge : bord}
                       y={v.yDispersion}
                       textAnchor={disposition.etroit ? 'start' : 'end'}
                     >
                       {v.dispersion}
                     </text>
                   )}
-                  {v.etat !== 'sans_graduation' && (
+                  {v.portee !== null && (
                     <line
-                      className={v.etat === 'non_mesuree' ? 'portee portee--tacet' : 'portee'}
-                      x1={debut}
+                      className="portee"
+                      x1={v.portee.debut}
                       y1={v.y + 30}
-                      x2={fin}
+                      x2={v.portee.fin}
                       y2={v.y + 30}
                     />
                   )}
-                  <Marqueur
-                    voix={v}
-                    debut={debut}
-                    fin={fin}
-                    idMotif={idMotif}
-                    onPreuve={onPreuve}
-                  />
+                  <Marqueur voix={v} idMotif={idMotif} onPreuve={onPreuve} />
                   {v.marqueur.motif !== null && (
                     <text
                       className="motif"
                       id={idMotif}
-                      x={debut}
+                      x={marge}
                       y={v.y + v.hauteur - 6}
                     >
                       {v.marqueur.motif}

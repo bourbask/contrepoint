@@ -205,6 +205,20 @@ instantane = {
                      "motif": "Entité absente des quatre sources d'identifiants et de la grille de nuances, au 2026-08-27."}],
 }
 
+def bornes_declarees(echelle_id):
+    """Bornes de graduation d'une echelle, lues sur les lignes de preuve emises.
+
+    Une seule source : le champ `echelle` de la ligne. Une divergence entre deux
+    lignes de la meme echelle est une faute du producteur, pas une moyenne a
+    faire — elle arrete la construction.
+    """
+    vues = {compact({c: json.loads(t)["echelle"][c] for c in ("min", "max", "decimales")})
+            for t in lignes.values() if json.loads(t)["echelle"]["id"] == echelle_id}
+    if len(vues) != 1:
+        raise SystemExit(f"{echelle_id} : {len(vues)} jeux de bornes declares, {vues}")
+    return json.loads(vues.pop())
+
+
 texte_inst = rendre(instantane) + "\n"
 octets = len(texte_inst.encode("utf-8"))
 empreinte = hashlib.sha256(texte_inst.encode("utf-8")).hexdigest()
@@ -215,10 +229,15 @@ manifeste = {
     "date_arretee": "2026-08-27T00:00:00Z",
     "licence": "Licence Ouverte / Open Licence (Etalab)",
     "mention_paternite": "Assemblée nationale — Licence Ouverte v1.0 — données du 2026-08-27",
-    "familles": [
+    # min, max et decimales sont RECOPIES du champ `echelle` des lignes de preuve
+    # de la famille, jamais derives des valeurs publiees : une derivation
+    # enverrait la plus petite valeur publiee au pole de l'echelle (contrats.md
+    # §4.1). Le pipeline les lira au meme endroit.
+    "familles": [dict(f, **bornes_declarees(f["echelle"]))
+                 for f in [
         {"id": "votes", "libelle": "Votes nominatifs", "echelle": "votes_an17_ancre_v1"},
         {"id": "experts", "libelle": "Enquête d'experts", "echelle": "ches_lrgen_0_10"},
-        {"id": "administratif", "libelle": "Nuance administrative", "echelle": "nuance_leg2024"}],
+        {"id": "administratif", "libelle": "Nuance administrative", "echelle": "nuance_leg2024"}]],
     "instantanes": [{"id": "an17-2026-07-21", "chambre": "AN", "legislature": "17",
                      "date": "2026-07-21", "url": "instantanes/an17-2026-07-21.json",
                      "empreinte_sha256": empreinte, "octets": octets, "bandes": len(bandes)}],

@@ -147,7 +147,6 @@ svg text { fill: var(--encre); }
 }
 
 .portee { stroke: var(--regle); stroke-width: 1; }
-.portee--tacet { stroke-dasharray: 2 4; }
 .barre { stroke: var(--regle); stroke-width: 1; }
 .accolade { stroke: var(--regle); stroke-width: 1.2; }
 

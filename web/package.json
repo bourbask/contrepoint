@@ -8,6 +8,7 @@
     "dev": "vite",
     "prebuild": "node scripts/verifier-artefacts.mjs",
     "build": "vite build",
+    "build:local": "node scripts/verifier-artefacts.mjs --absence-toleree && vite build",
     "preview": "vite preview",
     "test": "vitest run"
   },

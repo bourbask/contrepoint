@@ -5,6 +5,21 @@
 // SYSTEME reunit les voix d'un meme sujet sans les fondre, une VOIX porte sa
 // PORTEE et sa propre graduation. Trois graduations distinctes sur un meme
 // systeme sont ce qui rend l'addition entre familles impossible a dessiner.
+//
+// Deux proprietes de geometrie portent cette impossibilite, et les tests les
+// tiennent :
+//
+//   1. Chaque echelle occupe une PLAGE D'ABSCISSES QUI LUI EST PROPRE. Sur une
+//      plage commune, deux tetes ont un milieu visible — l'addition redevient
+//      dessinable — et un decalage horizontal se lit comme un ecart mesure
+//      entre familles. Les origines et les bornes hautes sont donc decalees.
+//   2. Une tete qui ne porte pas de valeur tombe dans une GOUTTIERE, hors de
+//      toute plage graduee. Une pause posee a l'origine de l'axe enoncerait une
+//      position sur l'entite nommee, ce que la donnee refuse explicitement de
+//      faire en ne publiant pas la mesure.
+//
+// Les bornes de graduation sont DECLAREES par le manifeste (contrats.md §4.1),
+// jamais derivees des valeurs affichees.
 
 import { scaleLinear } from 'd3-scale'
 import type { Instantane, Manifeste, Marqueur } from './contrat.ts'
@@ -23,7 +38,8 @@ export type Voix = {
   forme: Forme
   marqueur: Marqueur
   etat: EtatVoix
-  /** Abscisse de la tete de note, dans les unites de `largeur`. */
+  /** Abscisse de la tete de note, dans les unites de `largeur`. Hors de toute
+   *  plage graduee des que l'etat n'est pas « mesuree ». */
   x: number
   /** Valeur telle qu'elle s'ecrit, ou le code de nuance. Jamais vide en silence. */
   valeur: string | null
@@ -31,6 +47,10 @@ export type Voix = {
   etiquette: string
   y: number
   hauteur: number
+  /** Portee tracee sous cette voix : celle de son echelle, et rien d'autre.
+   *  `null` quand la voix ne porte pas de valeur — aucune portee graduee ne se
+   *  dessine sous une pause ni sous un code de nuance. */
+  portee: { debut: number; fin: number } | null
   /** Ordonnee de la dispersion. Sur la ligne du libelle si la largeur le permet,
    *  sur une ligne propre sinon — deux textes ne se chevauchent jamais. */
   yDispersion: number | null
@@ -44,6 +64,10 @@ export type Echelle = {
   min: number
   max: number
   decimales: number
+  /** Plage d'abscisses propre a cette echelle. Deux echelles ne la partagent
+   *  jamais : ni la meme origine, ni le meme pole haut. */
+  debut: number
+  fin: number
   bornes: { x: number; libelle: string }[]
 }
 
@@ -54,11 +78,24 @@ export type Disposition = {
   hauteur: number
   /** Sous ce seuil, deux textes ne tiennent pas sur une meme ligne. */
   etroit: boolean
-  /** Abscisses de debut et de fin de portee, communes a toutes les voix. */
+  /** Abscisse de la colonne de texte : titres, libelles de famille, motifs. */
+  marge: number
+  /** Bord droit de la zone de dessin. */
+  bord: number
+  /** Enveloppe des plages graduees. Aucune voix n'y est placee sans valeur, et
+   *  aucune echelle ne l'occupe entierement : c'est une enveloppe, pas un axe. */
   portee: { debut: number; fin: number }
+  /** Abscisse des tetes sans valeur, hors de `portee`. */
+  gouttiere: number
 }
 
 const MARGE = 26
+/** Largeur reservee, a gauche des graduations, aux tetes qui ne portent pas de
+ *  valeur. Aucune plage graduee n'y entre. */
+const GOUTTIERE = 40
+/** Decalage entre deux graduations. Sans lui, deux echelles se superposeraient
+ *  sur le meme segment de pixels et leur milieu deviendrait lisible. */
+const PAS = 28
 const SEUIL_ETROIT = 460
 const H_TITRE = 30
 const H_VOIX = 40
@@ -78,53 +115,72 @@ export function formaterValeur(v: number, decimales: number, signe = false): str
 /** Un pixel n'a pas quinze decimales : arrondi stable d'un rendu a l'autre. */
 const px = (v: number): number => Math.round(v * 100) / 100
 
-/** Nombre de decimales ecrites, lu sur la valeur et jamais suppose. */
-function decimalesDe(v: number): number {
-  const [, apres] = String(v).split('.')
-  return apres?.length ?? 0
-}
-
 /**
- * Graduation d'une echelle, deduite des valeurs que l'instantane porte sur
- * elle. Le contrat ne publie ni `min`, ni `max`, ni `decimales` au niveau du
- * manifeste ou du marqueur — ils vivent dans la ligne de preuve, qui n'est
- * chargee qu'au clic. Les bornes affichees sont donc des valeurs observees,
- * jamais des bornes supposees, et elles portent leur libelle.
+ * Graduations de l'instantane, une par echelle presente et graduee.
+ *
+ * Les bornes viennent de `manifeste.familles[]`, ou le pipeline les recopie
+ * depuis `echelle.min` / `echelle.max` des lignes de preuve. Elles ne sont pas
+ * deduites des valeurs affichees : deduites, la plus petite valeur publiee
+ * tomberait au pole de l'echelle — LFI, a 0,82 sur une echelle 0 a 10, se
+ * retrouvait au pole haut d'une graduation ou sa valeur est a 8,2 % de la
+ * course.
+ *
+ * Chaque echelle recoit sa PROPRE plage d'abscisses : `PAS` pixels de decalage
+ * a chaque rang, pris a gauche sur l'origine et a droite sur le pole haut. Aucun
+ * de ces trois points, ni le milieu, n'est partage entre deux echelles.
  */
-function echelles(instantane: Instantane, largeur: number, debut: number, fin: number): Echelle[] {
-  const vues = new Map<string, { familles: Set<string>; valeurs: number[] }>()
+function echelles(
+  manifeste: Manifeste,
+  instantane: Instantane,
+  debut: number,
+  fin: number,
+): Echelle[] {
+  const bornes = new Map(manifeste.familles.map((f) => [f.echelle, f]))
+  const rangs = new Map(manifeste.familles.map((f, i) => [f.id, i]))
+  const vues = new Map<string, Set<string>>()
   for (const b of instantane.bandes) {
     for (const m of b.marqueurs) {
-      const e = vues.get(m.echelle) ?? { familles: new Set<string>(), valeurs: [] }
-      e.familles.add(m.famille)
-      if (m.valeur !== null) e.valeurs.push(m.valeur)
+      const e = vues.get(m.echelle) ?? new Set<string>()
+      e.add(m.famille)
       vues.set(m.echelle, e)
     }
   }
-  const sortie: Echelle[] = []
-  for (const [id, e] of [...vues].sort((a, b) => (a[0] < b[0] ? -1 : 1))) {
-    if (e.valeurs.length === 0) continue // echelle sans graduation : rien a tracer
-    const min = Math.min(...e.valeurs)
-    const max = Math.max(...e.valeurs)
-    const decimales = Math.max(...e.valeurs.map(decimalesDe))
-    const echelle = scaleLinear().domain([min, max]).range([debut, fin])
-    sortie.push({
+  // Ordre d'affichage : celui des familles du manifeste, jamais celui des ids.
+  const graduees = [...vues]
+    .filter(([id]) => {
+      const f = bornes.get(id)
+      return f !== undefined && f.min !== null && f.max !== null && f.decimales !== null
+    })
+    .sort(
+      (a, b) =>
+        Math.min(...[...a[1]].map((f) => rangs.get(f) ?? 99)) -
+        Math.min(...[...b[1]].map((f) => rangs.get(f) ?? 99)),
+    )
+  const dernier = graduees.length - 1
+  return graduees.map(([id, familles], i) => {
+    const f = bornes.get(id) as { min: number; max: number; decimales: number }
+    const { min, max, decimales } = f
+    if (!(max > min)) {
+      throw new ContratRefuse(
+        `Échelle « ${id} » déclarée de ${min} à ${max} : une graduation exige deux bornes distinctes.`,
+      )
+    }
+    const d = px(debut + i * PAS)
+    const g = px(fin - (dernier - i) * PAS)
+    return {
       id,
-      familles: [...e.familles].sort(),
+      familles: [...familles].sort(),
       min,
       max,
       decimales,
-      bornes:
-        min === max
-          ? [{ x: px((debut + fin) / 2), libelle: formaterValeur(min, decimales, min < 0) }]
-          : [
-              { x: px(echelle(min)), libelle: formaterValeur(min, decimales, min < 0) },
-              { x: px(echelle(max)), libelle: formaterValeur(max, decimales, min < 0) },
-            ],
-    })
-  }
-  void largeur
-  return sortie
+      debut: d,
+      fin: g,
+      bornes: [
+        { x: d, libelle: formaterValeur(min, decimales, min < 0) },
+        { x: g, libelle: formaterValeur(max, decimales, min < 0) },
+      ],
+    }
+  })
 }
 
 /**
@@ -141,16 +197,30 @@ export function disposer(
       `${manifeste.familles.length} familles déclarées pour ${FORMES.length} formes de marqueur disponibles.`,
     )
   }
-  const debut = MARGE
-  const fin = Math.max(debut + 40, largeur - MARGE)
-  const etroit = largeur < SEUIL_ETROIT
   const rangs = new Map(manifeste.familles.map((f, i) => [f.id, i]))
-  const grilles = echelles(instantane, largeur, debut, fin)
-  // Ordre d'affichage : celui des familles du manifeste, jamais celui des ids.
-  const premierRang = (e: Echelle): number =>
-    Math.min(...e.familles.map((f) => rangs.get(f) ?? 99))
-  grilles.sort((a, b) => premierRang(a) - premierRang(b))
+  // Une famille hors manifeste n'a ni forme, ni couleur, ni libelle : lui en
+  // preter par un repli modulaire la ferait partager les siens avec une autre
+  // famille, ce qui est exactement ce que EXP-08 interdit. Le contrat est refuse.
+  for (const bande of instantane.bandes) {
+    for (const m of bande.marqueurs) {
+      if (!rangs.has(m.famille)) {
+        throw new ContratRefuse(
+          `Famille « ${m.famille} » absente du manifeste : aucune forme de marqueur ne lui correspond.`,
+        )
+      }
+    }
+  }
+
+  const etroit = largeur < SEUIL_ETROIT
+  const marge = MARGE
+  const bord = Math.max(marge + 40, largeur - MARGE)
+  const grilles = echelles(manifeste, instantane, marge + GOUTTIERE, bord)
   const parEchelle = new Map(grilles.map((e) => [e.id, e]))
+  // La gouttiere est a gauche de toute graduation : une tete sans valeur ne peut
+  // donc pas etre lue sur une echelle, quelle qu'elle soit.
+  const gouttiere = marge + 10
+  const debut = marge + GOUTTIERE
+  const fin = bord
 
   let y = 0
   const systemes: Systeme[] = []
@@ -159,24 +229,33 @@ export function disposer(
     y += H_TITRE
     const voix: Voix[] = []
     const ordonnees = [...bande.marqueurs].sort(
-      (a, b) => (rangs.get(a.famille) ?? 99) - (rangs.get(b.famille) ?? 99),
+      (a, b) => (rangs.get(a.famille) as number) - (rangs.get(b.famille) as number),
     )
     for (const m of ordonnees) {
-      const rang = rangs.get(m.famille) ?? manifeste.familles.length
+      const rang = rangs.get(m.famille) as number
       const grille = parEchelle.get(m.echelle)
       const libelleFamille = manifeste.familles[rang]?.libelle ?? m.famille
       const etat: EtatVoix =
         m.valeur !== null ? 'mesuree' : m.valeur_code !== null ? 'sans_graduation' : 'non_mesuree'
+      // Une valeur sans graduation declaree n'est pas une absence : la rendre
+      // « non mesuré » ferait passer un defaut d'outil pour un resultat (§5.2).
+      if (etat === 'mesuree' && grille === undefined) {
+        throw new ContratRefuse(
+          `Échelle « ${m.echelle} » sans bornes déclarées au manifeste : la valeur de ${m.famille} n'est pas plaçable.`,
+        )
+      }
 
-      let x = debut
+      let x = gouttiere
       let valeur: string | null = null
+      let portee: { debut: number; fin: number } | null = null
       if (etat === 'mesuree' && grille) {
         x = px(
-          grille.min === grille.max
-            ? (debut + fin) / 2
-            : scaleLinear().domain([grille.min, grille.max]).range([debut, fin])(m.valeur as number),
+          scaleLinear()
+            .domain([grille.min, grille.max])
+            .range([grille.debut, grille.fin])(m.valeur as number),
         )
         valeur = formaterValeur(m.valeur as number, grille.decimales, grille.min < 0)
+        portee = { debut: grille.debut, fin: grille.fin }
       } else if (etat === 'sans_graduation') {
         valeur = m.valeur_code
       }
@@ -188,7 +267,7 @@ export function disposer(
         famille: m.famille,
         libelleFamille,
         rang,
-        forme: FORMES[rang % FORMES.length] as Forme,
+        forme: FORMES[rang] as Forme,
         marqueur: m,
         etat,
         x,
@@ -200,6 +279,7 @@ export function disposer(
         etiquette: etiqueter(bande.libelle, libelleFamille, etat, valeur, m.echelle, instantane.date),
         y,
         hauteur,
+        portee,
         yDispersion: m.dispersion === null ? null : surLigne ? y + 46 : y + 13,
       })
       y += hauteur
@@ -214,7 +294,17 @@ export function disposer(
     })
   }
 
-  return { systemes, echelles: grilles, largeur, hauteur: y, etroit, portee: { debut, fin } }
+  return {
+    systemes,
+    echelles: grilles,
+    largeur,
+    hauteur: y,
+    etroit,
+    marge,
+    bord,
+    portee: { debut, fin },
+    gouttiere,
+  }
 }
 
 /** Une phrase, 140 caracteres au plus (ton.md T5). L'absence y est dite. */

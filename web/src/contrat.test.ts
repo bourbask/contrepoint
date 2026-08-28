@@ -2,14 +2,16 @@
 // Hors ligne, sans reseau : les artefacts d'exemple de `fixtures/` sont lus
 // depuis le disque et le rendu est produit par renderToStaticMarkup.
 import { describe, expect, test } from 'vitest'
+import { spawnSync } from 'node:child_process'
 import { createHash } from 'node:crypto'
 import { readFileSync, readdirSync } from 'node:fs'
+import { fileURLToPath } from 'node:url'
 import { createElement } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
 
 import { ContratRefuse, cheminEclat, verifierSchemas } from './contrat.ts'
 import type { Instantane, Manifeste, Preuve } from './contrat.ts'
-import { disposer } from './graphe.ts'
+import { FORMES, disposer } from './graphe.ts'
 import { Partition } from './Partition.tsx'
 import { verifier } from '../scripts/verifier-artefacts.mjs'
 
@@ -60,6 +62,71 @@ describe('EXP-01 trois_marqueurs_trois_echelles_nommees', () => {
     const domaines = disposition.echelles.map((e) => `${e.min}:${e.max}`)
     expect(new Set(domaines).size).toBe(domaines.length)
     expect(disposition.echelles.length).toBeGreaterThan(1)
+  })
+
+  test('aucune plage de pixels commune : ni origine, ni pole haut, ni milieu', () => {
+    // Des domaines distincts ne suffisent pas. Normalisees sur les MEMES pixels,
+    // deux graduations restent superposees, leur milieu est visible, et
+    // l'addition entre familles redevient dessinable.
+    const plages = disposition.echelles.map((e) => e)
+    expect(plages.length).toBeGreaterThan(1)
+    for (const cle of ['debut', 'fin'] as const) {
+      const vues = plages.map((e) => e[cle])
+      expect(new Set(vues).size).toBe(vues.length)
+    }
+    const milieux = plages.map((e) => (e.debut + e.fin) / 2)
+    expect(new Set(milieux).size).toBe(milieux.length)
+    // Et les bornes ecrites suivent la plage de leur echelle, pas une autre.
+    for (const e of plages) {
+      expect(e.bornes.map((b) => b.x)).toEqual([e.debut, e.fin])
+    }
+  })
+
+  test('les bornes affichees sont celles que le manifeste declare', () => {
+    // Derivees des valeurs observees, elles enverraient la plus petite valeur
+    // publiee au pole : LFI a 0,82 se retrouvait au pole haut d'une echelle
+    // qui va de 0 a 10, ou 0,82 est a 8,2 % de la course.
+    for (const e of disposition.echelles) {
+      const f = manifeste.familles.find((f) => f.echelle === e.id)
+      expect(f).toBeDefined()
+      expect([e.min, e.max, e.decimales]).toEqual([f?.min, f?.max, f?.decimales])
+    }
+    const experts = disposition.echelles.find((e) => e.id === 'ches_lrgen_0_10')
+    expect([experts?.min, experts?.max]).toEqual([0, 10])
+    // Aucune tete ne touche un pole sans y etre par sa valeur declaree.
+    const lfi = disposition.systemes.find((s) => s.id === 'parti.lfi')
+    const lfiExperts = lfi?.voix.find((v) => v.famille === 'experts')
+    expect(lfiExperts?.x).toBeGreaterThan(experts?.debut ?? 0)
+  })
+
+  test('deux voix d une meme entite ne coincident jamais par construction', () => {
+    // LFI porte votes −1,0000 et experts 0,82. Sur une plage commune les deux
+    // tetes tombaient au meme pixel, ce qui se lit « les deux methodes
+    // s accordent exactement » — un enonce qu aucune donnee ne porte.
+    const lfi = disposition.systemes.find((s) => s.id === 'parti.lfi')
+    expect(lfi?.voix.length).toBe(3)
+    const abscisses = (lfi?.voix ?? []).map((v) => v.x)
+    expect(new Set(abscisses).size).toBe(abscisses.length)
+  })
+
+  test('une voix sans valeur est hors de toute portee graduee', () => {
+    // Defaut mesure : les pauses de LIOT et de NI, et les codes de nuance,
+    // tombaient a l abscisse de la graduation −1,0000. Un enonce de position sur
+    // une entite nommee, precisement la ou la donnee refuse de le publier.
+    const sansValeur = voix.filter((v) => v.etat !== 'mesuree')
+    expect(sansValeur.length).toBeGreaterThan(0)
+    expect(sansValeur.some((v) => v.etat === 'non_mesuree')).toBe(true)
+    expect(sansValeur.some((v) => v.etat === 'sans_graduation')).toBe(true)
+    for (const v of sansValeur) {
+      expect(v.portee).toBeNull()
+      expect(v.x).toBe(disposition.gouttiere)
+      for (const e of disposition.echelles) {
+        expect(v.x < e.debut || v.x > e.fin).toBe(true)
+      }
+      expect(v.x < disposition.portee.debut || v.x > disposition.portee.fin).toBe(true)
+    }
+    // Aucune portee graduee ne se dessine sous une tete sans valeur.
+    for (const v of voix) expect(v.portee === null).toBe(v.etat !== 'mesuree')
   })
 
   test('aucun ecart chiffre entre familles nulle part dans le modele de dessin', () => {
@@ -176,6 +243,40 @@ describe('EXP-06 schema_publie_et_verifie_a_la_construction', () => {
     expect(fautes.join(' ')).toContain('index.json')
   })
 
+  test('un marqueur « non mesuré » sans motif est refuse par le schema de l instantane', () => {
+    // L instantane est le SEUL fichier que le front lit. L invariant I6 vivait
+    // dans preuve-1.schema.json seulement : un marqueur sans motif passait les
+    // controles et s affichait « non mesuré » nu.
+    const nu = structuredClone(instantane) as Instantane
+    const m = nu.bandes[0]!.marqueurs[0]!
+    m.valeur = null
+    m.valeur_code = null
+    m.motif_code = null
+    m.motif = null
+    m.dispersion = null
+    const fautes = verifier(schemas, ici('./fixtures/'), {
+      'instantanes/an17-2026-07-21.json': nu,
+    })
+    expect(fautes.length).toBeGreaterThan(0)
+    expect(fautes.join(' ')).toContain('instantanes/an17-2026-07-21.json')
+
+    // Et le symetrique : valeur et code jamais tous deux presents.
+    const deux = structuredClone(instantane) as Instantane
+    deux.bandes[0]!.marqueurs[0]!.valeur_code = 'FI'
+    expect(
+      verifier(schemas, ici('./fixtures/'), { 'instantanes/an17-2026-07-21.json': deux }).length,
+    ).toBeGreaterThan(0)
+  })
+
+  test('la porte d artefacts sort en 1 quand la racine publiee est absente', () => {
+    // Muette, la porte laissait passer exactement le cas ou la publication est
+    // cassee. Le drapeau est explicite, il n est pas le defaut.
+    const script = fileURLToPath(new URL('../scripts/verifier-artefacts.mjs', import.meta.url))
+    const absent = fileURLToPath(new URL('./fixtures/aucune-racine-publiee', import.meta.url))
+    expect(spawnSync(process.execPath, [script, absent]).status).toBe(1)
+    expect(spawnSync(process.execPath, [script, absent, '--absence-toleree']).status).toBe(0)
+  })
+
   test('un majeur de schema inconnu est refuse, jamais rendu en « non mesuré »', () => {
     expect(() => verifierSchemas(manifeste.schemas)).not.toThrow()
     expect(() => verifierSchemas([...manifeste.schemas, 'contrepoint/instantane/2']))
@@ -206,6 +307,16 @@ describe('EXP-08 aucune_couleur_seule_porteuse_dinformation', () => {
     const parFamille = new Map(voix.map((v) => [v.famille, v.forme]))
     expect(new Set(parFamille.values()).size).toBe(parFamille.size)
     expect(parFamille.size).toBe(manifeste.familles.length)
+  })
+
+  test('une famille hors manifeste est refusee, jamais repliee sur la forme d une autre', () => {
+    // Le repli modulaire donnait a une famille inconnue la forme ET la couleur
+    // de la premiere famille declaree : deux familles indistinguables.
+    const intrus = structuredClone(instantane) as Instantane
+    intrus.bandes[0]!.marqueurs[0]!.famille = 'famille_inconnue'
+    expect(() => disposer(manifeste, intrus, 640)).toThrow(ContratRefuse)
+    // Et la liste des formes couvre les familles declarees, sans modulo.
+    expect(manifeste.familles.length).toBeLessThanOrEqual(FORMES.length)
   })
 
   test('chaque marqueur est atteignable au clavier et porte un libelle accessible', () => {

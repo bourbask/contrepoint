@@ -39,7 +39,19 @@ export type Instantane = {
   sans_mesure: SansMesure[]
 }
 
-export type Famille = { id: string; libelle: string; echelle: string }
+/** Legende d'une famille. `min`, `max` et `decimales` sont les bornes DECLAREES
+ *  de sa graduation, recopiees par le pipeline depuis les lignes de preuve, et
+ *  `null` pour une famille sans echelle graduee. Le front ne derive jamais une
+ *  borne des valeurs qu'il affiche : deriver ferait tomber la plus petite
+ *  valeur publiee au pole de l'echelle. contrats.md §4.1. */
+export type Famille = {
+  id: string
+  libelle: string
+  echelle: string
+  min: number | null
+  max: number | null
+  decimales: number | null
+}
 
 export type EntreeInstantane = {
   id: string
