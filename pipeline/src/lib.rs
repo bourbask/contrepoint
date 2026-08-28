@@ -8,6 +8,7 @@
 pub mod agregation;
 pub mod estimateur;
 pub mod export;
+pub mod familles;
 pub mod ingestion;
 pub mod matrice;
 pub mod preuves;

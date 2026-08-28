@@ -14,8 +14,8 @@ référence, fixture du test REG-01 :
 [`data/registre/partis.json`](../../data/registre/partis.json). La fixture de test qui lui correspond vit avec les autres, dans [`echantillons/registre-l17.json`](echantillons/registre-l17.json).
 
 **Les deux fichiers sont identiques octet pour octet au 2026-08-27**, et
-`186fc8195d357d08c65ba0bceb45da90a0132df3bd859e039e7303eee96a9680` est leur
-empreinte commune, pour 42 970 octets. L'extrait couvre la XVIIe législature en
+`b7bdb819be8b6773a8af5d2a939a78120e710e6f3cf6e86e87db0443168aaf2b` est leur
+empreinte commune, pour 42 950 octets. L'extrait couvre la XVIIe législature en
 entier — 14 groupes, 12 entités, 9 sources — il n'y avait donc rien à ajouter
 Le fichier réel est `data/registre/partis.json`. Il n'existe qu'un seul registre sous `data/` : la fixture de test est un fichier distinct, sous `echantillons/`, et rien ne se recopie à la main.
 
@@ -217,12 +217,12 @@ COM DIV DSV DVC DVD DVG ECO ENS EXD EXG FI
 HOR LR RDG REC REG RN SOC UDI UG UXD VEC
 ```
 
-Le fichier `resultats-definitifs-par-circonscription.csv` du 2nd tour porte en
-outre, par candidat, `Nuance candidat n`, `Nom candidat n` et `Elu n`. **Ces
-trois colonnes ne sont pas ingérées** : l'appariement d'une nuance administrative
-à une personne physique est hors périmètre (RG-111). Seul l'ensemble des codes
-distincts constatés est utilisé — la famille `administratif` mesure des partis et
-des coalitions, jamais des personnes.
+Le fichier retenu est `resultats-definitifs-par-region.csv` du 2nd tour, qui
+**ne porte aucune colonne nominative** et constate exactement les **mêmes 17
+codes** que la version par circonscription — vérifié le 2026-08-28, ensembles
+identiques. Le fichier par circonscription est écarté pour cette seule raison :
+il porte `Nuance candidat n` et `Nom candidat n` sur la même ligne, et RG-111
+interdit ce rattachement dans tout fichier du projet, cache compris.
 
 Trois faits à conserver avec la donnée :
 

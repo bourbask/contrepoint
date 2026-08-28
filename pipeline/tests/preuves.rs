@@ -141,7 +141,7 @@ fn cle_de_deduplication_conforme_au_paragraphe_3() {
         ),
         concat!(
             "0f49c00a8227d6cb8e658d374bacfec35238fe4e2dd6305f7df6ac4f515c5de6,",
-            "186fc8195d357d08c65ba0bceb45da90a0132df3bd859e039e7303eee96a9680,",
+            "b7bdb819be8b6773a8af5d2a939a78120e710e6f3cf6e86e87db0443168aaf2b,",
             "c8457f346220b5b7fb673bd1f273ef8c3296b7ff2769524bf5024c9d95c7e65c"
         ),
     ]

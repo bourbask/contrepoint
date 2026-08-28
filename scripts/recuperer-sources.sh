@@ -23,11 +23,33 @@ cd "$(dirname "$0")/.."
 : "${CONTREPOINT_CACHE:=data/cache}"
 : "${CONTREPOINT_TENTATIVES:=8}"
 
-# Sources de la XVIIe législature — URL relevées dans docs/sources.md et
-# brique0/ingestion-votes.md §1. Aucune n'est construite par concaténation.
+# Les quatre sources du pipeline — URL relevées dans docs/sources.md §1.1 et
+# dans `sources[]` du registre d'entités. Aucune n'est construite par
+# concaténation, et chacune porte le nom que son producteur publie (RG-76) et
+# la licence sous laquelle elle le publie.
+#
+#   nom|url|forme|producteur|licence
+#
+# `forme` vaut `zip` — un conteneur, dont l'empreinte de contenu se calcule sur
+# les fichiers extraits (contrats.md §2.8) — ou `fichier` : la ressource est un
+# fichier unique, son contenu EST le fichier, et les deux empreintes coïncident
+# par définition (I22).
+#
+# La licence décide de la redistribution, et elle seule (RG-118, ADR 0000 §8) :
+# `scripts/archives.sh` ne dépose que les archives dont l'URL est celle de
+# l'Assemblée nationale, par liste blanche. CHES, qui ne publie aucune licence,
+# et le nuancier, qui n'est pas dans cette liste, ne sont jamais déposés — le
+# dépôt distribue ce script, l'URL, la date et les empreintes, jamais la copie.
 SOURCES=(
-  "scrutins|https://data.assemblee-nationale.fr/static/openData/repository/17/loi/scrutins/Scrutins.json.zip"
-  "amo30|https://data.assemblee-nationale.fr/static/openData/repository/17/amo/tous_acteurs_mandats_organes_xi_legislature/AMO30_tous_acteurs_tous_mandats_tous_organes_historique.json.zip"
+  "scrutins|https://data.assemblee-nationale.fr/static/openData/repository/17/loi/scrutins/Scrutins.json.zip|zip|Assemblée nationale|Licence Ouverte v1.0"
+  "amo30|https://data.assemblee-nationale.fr/static/openData/repository/17/amo/tous_acteurs_mandats_organes_xi_legislature/AMO30_tous_acteurs_tous_mandats_tous_organes_historique.json.zip|zip|Assemblée nationale|Licence Ouverte v1.0"
+  # CHES ne publie aucune licence. La condition obtenue par échange écrit le
+  # 2026-08-27 est une exigence de citation, pas une cession de droits
+  # (ADR 0000 §8, RG-118). Le libellé reste court : il entre dans
+  # `mention_paternite`, plafonnée à 200 caractères par I20, et le détail
+  # vit dans docs/sources.md §4.
+  "ches_2024|https://github.com/chesdata/chesdata.github.io/releases/download/ches-europe/CHES_2024_final_v2.csv|fichier|Chapel Hill Expert Survey|aucune licence publiée, citation exigée"
+  "nuance_leg2024|https://static.data.gouv.fr/resources/elections-legislatives-des-30-juin-et-7-juillet-2024-resultats-definitifs-du-2nd-tour/20240710-170536/resultats-definitifs-par-region.csv|fichier|Ministère de l'intérieur|Licence Ouverte v2.0"
 )
 
 # ---- Fonctions pures --------------------------------------------------------
@@ -64,6 +86,13 @@ verifier_stabilite() { # index nom date_source empreinte_contenu
     echo "::error::$2 : empreinte de contenu $c -> $4 sans changement de la date de source ($3). Donnée modifiée sans annonce." >&2
     return 1
   done < "$1"
+}
+
+# La mention de paternité est dérivée de la source, jamais écrite en dur : deux
+# des quatre sources ne sont pas de l'Assemblée nationale, et une mention
+# recopiée d'une source sur une autre est une fausse attribution (RG-76).
+paternite() { # producteur licence date_source
+  printf '%s — %s — données du %s' "$1" "$2" "$3"
 }
 
 # Trié, donc identique quel que soit l'ordre d'appel.
@@ -116,7 +145,10 @@ telecharger() { # url destination -> "octets_annonces last_modified etag"
   for ((i = 1; i <= CONTREPOINT_TENTATIVES; i++)); do
     telechargement_complet "$dest" "$annonce" && break
     echo "  tentative $i : $(stat -c%s "$dest" 2>/dev/null || echo 0) / $annonce octets" >&2
-    curl -sS -C - -o "$dest" "$url" || true
+    # `-L` : la ressource CHES est servie par une redirection 302 de GitHub
+    # Releases. Sans lui, la reprise télécharge le corps vide de la redirection
+    # et la boucle épuise ses huit tentatives sur zéro octet.
+    curl -sSL -C - -o "$dest" "$url" || true
   done
   if ! telechargement_complet "$dest" "$annonce"; then
     echo "::error::$url tronqué après $CONTREPOINT_TENTATIVES tentatives : $(stat -c%s "$dest" 2>/dev/null || echo 0) / $annonce octets." >&2
@@ -128,14 +160,20 @@ telecharger() { # url destination -> "octets_annonces last_modified etag"
 principal() {
   mkdir -p "$CONTREPOINT_CACHE"
   local index="$CONTREPOINT_CACHE/index.txt"
-  local tmp dates=() nom url meta annonce lm et iso archive sha md5 dossier extrait contenu
+  local fichiers tmp dates=() nom url forme producteur licence meta annonce lm et iso
+  local archive sha md5 dossier extrait contenu recupere_le
 
   tmp=$(mktemp -d)
   trap 'rm -rf "$tmp"' RETURN
 
+  # La date de récupération est celle de la machine qui télécharge, et c'est le
+  # seul endroit du projet où une horloge est lue : le pipeline, lui, n'en lit
+  # aucune (contrats.md §8.1). Elle est consignée une fois par entrée de cache,
+  # immuable comme le reste du descripteur.
+  recupere_le=$(date -u +%Y-%m-%d)
+
   for entree in "${SOURCES[@]}"; do
-    nom="${entree%%|*}"
-    url="${entree#*|}"
+    IFS='|' read -r nom url forme producteur licence <<< "$entree"
     archive="$tmp/$(basename "$url")"
     echo "== $nom"
 
@@ -150,13 +188,22 @@ principal() {
     md5=$(md5sum "$archive" | cut -d' ' -f1)
 
     dossier=$(deposer_cache "$sha" "$archive")
-    extrait="$dossier/extrait"
-    # find -type f les exclut de l'empreinte, mais toute étape ultérieure lisant
-    # extrait/ hériterait du piège : une entrée pointant vers /etc/passwd est
-    # bien matérialisée par unzip.
-    [ -d "$extrait" ] || { unzip -oq "$dossier/$(basename "$url")" -d "$extrait" &&
-      find "$extrait" -type l -delete; }
-    contenu=$(empreinte_contenu "$extrait")
+    if [ "$forme" = "zip" ]; then
+      extrait="$dossier/extrait"
+      # find -type f les exclut de l'empreinte, mais toute étape ultérieure lisant
+      # extrait/ hériterait du piège : une entrée pointant vers /etc/passwd est
+      # bien matérialisée par unzip.
+      [ -d "$extrait" ] || { unzip -oq "$dossier/$(basename "$url")" -d "$extrait" &&
+        find "$extrait" -type l -delete; }
+      contenu=$(empreinte_contenu "$extrait")
+      fichiers=$(find "$extrait" -type f | wc -l)
+    else
+      # Fichier unique : rien à décompresser, et le contenu EST le fichier. Les
+      # deux empreintes coïncident par définition, et une inégalité serait un
+      # refus du contrat (contrats.md §2.8, I22).
+      contenu="$sha"
+      fichiers=1
+    fi
 
     verifier_stabilite "$index" "$nom" "$iso" "$contenu"
 
@@ -171,9 +218,13 @@ principal() {
       "md5_producteur_documentaire=$md5" \
       "empreinte_sha256=$sha" \
       "empreinte_contenu_sha256=$contenu" \
-      "licence=Licence Ouverte v1.0" \
-      "paternite=Assemblée nationale — Licence Ouverte v1.0 — données du $iso" \
-      "fichiers_extraits=$(find "$extrait" -type f | wc -l)"
+      "forme=$forme" \
+      "fichier=$(basename "$url")" \
+      "producteur=$producteur" \
+      "licence=$licence" \
+      "recupere_le=$recupere_le" \
+      "paternite=$(paternite "$producteur" "$licence" "$iso")" \
+      "fichiers_extraits=$fichiers"
 
     printf '%s\t%s\t%s\t%s\n' "$nom" "$iso" "$contenu" "$sha" >> "$index"
     LC_ALL=C sort -u "$index" -o "$index"

@@ -49,3 +49,25 @@ tester la jointure et ne portent aucune valeur de position. Ce sont des **donné
 présence est signalée dans [LICENSE-DONNEES](../../../LICENSE-DONNEES) et dans
 [docs/juridique.md](../../juridique.md). Aucune coordonnée individuelle n'existe
 dans ce répertoire.
+
+## Les deux familles qui n'ont pas d'échantillon ici, et pourquoi
+
+`experts` et `administratif` n'ont **aucun fichier** dans ce répertoire. Ce
+n'est pas un oubli, c'est le seul état conforme :
+
+- **CHES** ne publie aucune licence. La condition obtenue par échange écrit le
+  2026-08-27 est une **exigence de citation**, pas une cession de droits, et
+  l'ADR 0000 §4 en tire la conséquence : aucune fixture CHES commitée. Le dépôt
+  distribue le script, l'URL, la date et les empreintes — jamais la copie, même
+  réduite.
+- Le fichier de **résultats définitifs par circonscription** est en Licence
+  Ouverte v2.0 et serait redistribuable, mais il porte `Nuance candidat n`,
+  `Nom candidat n`, `Prénom candidat n`, `Sexe candidat n` et `Elu n`. RG-111
+  interdit d'ingérer une colonne nominative « y compris dans un fichier
+  intermédiaire ou de cache » : un extrait commité de ce fichier serait
+  exactement l'appariement d'une nuance administrative à des personnes nommées
+  que le projet refuse de constituer.
+
+Les deux dialectes de CSV sont donc fabriqués dans `pipeline/tests/familles.rs`,
+avec les colonnes réelles et des valeurs inventées. Le corpus réel est exercé au
+niveau 3, par une exécution du binaire sur le cache.

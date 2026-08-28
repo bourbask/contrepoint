@@ -118,6 +118,12 @@ r=$(contenu '(python3|jq|grep -[a-zA-Z]*r)[^#]*\|\|[[:space:]]*true')
 r=$(printf '%s\n' "${FICHIERS[@]}" | grep -E '(^|/)\.env($|\.)|(^|/)\.netrc$|(^|/)id_(rsa|ed25519)$|\.pem$|\.p12$|(^|/)\.direnv/' || true)
 [ -n "$r" ] && { signaler "fichier à ne pas suivre :"; echo "$r" | sed 's/^/      /'; }
 
+# ---- 2bis. Copies de travail entrées par mégarde ----------------------------
+# Défaut du 2026-08-28 : `positions.jsonl.oursbak`, une copie prise pendant une
+# résolution de conflit, est entrée dans un commit de fusion. Rien ne la voyait.
+r=$(printf '%s\n' "${FICHIERS[@]}" | grep -EI '\.(bak|orig|rej|save|old|tmp|swp|swo)$|\.(ours|theirs|base|local|remote)bak$|~$|\.(BACKUP|BASE|LOCAL|REMOTE)\.[0-9]+' || true)
+[ -n "$r" ] && { signaler "copie de travail ou reliquat de fusion suivi par git :"; echo "$r" | sed 's/^/      /'; }
+
 # ---- 3. Empreinte de la machine et de l'auteur ------------------------------
 # Un chemin absolu révèle le nom d'utilisateur et l'arborescence personnelle.
 r=$(contenu '/(home|Users)/[a-zA-Z0-9._-]+/' | grep -vE '\$HOME|~/|<utilisateur>|/home/runner/')
@@ -158,6 +164,17 @@ fi
 # `echelle.max` sont légitimes et hors de ce motif — vérifié, pas supposé.
 r=$(contenu '"dispersion"[[:space:]]*:[[:space:]]*\{[^}]*"(etendue|minimum|maximum|min|max|rang|q1|q3|position)"')
 [ -n "$r" ] && { signaler "clé de dispersion hors des trois autorisées — statistique d'ordre exposée (I19) :"; echo "$r" | sed 's/^/      /'; }
+
+# La mention de paternité ne revendique une licence que pour les producteurs qui
+# en publient une. CHES n'en publie aucune, et le fichier du ministère est en
+# v2.0 : leur attribuer la Licence Ouverte v1.0 de l'Assemblée est une fausse
+# attribution, pas une approximation (RG-76, REC-07). Le manifeste publié l'a
+# fait jusqu'au 2026-08-28.
+# Le point-virgule sépare les producteurs : sans `[^;"]`, « Chapel Hill » était
+# apparié à la Licence Ouverte du **ministère**, deux fragments plus loin. Faux
+# positif constaté le 2026-08-28 sur la mention pourtant correcte.
+r=$(contenu '"mention_paternite"[[:space:]]*:[[:space:]]*"[^"]*Chapel Hill[^;"]*Licence Ouverte')
+[ -n "$r" ] && { signaler "licence revendiquée sur une source qui n'en publie aucune (RG-76, REC-07) :"; echo "$r" | sed 's/^/      /'; }
 
 # `citation` porte du texte de tiers, sous une exception étroite plafonnée.
 r=$(contenu '"citation"[[:space:]]*:[[:space:]]*"([^"\\]|\\.){401,}"')

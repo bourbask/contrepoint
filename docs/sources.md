@@ -28,8 +28,8 @@ source n'alimente aucune entrée : elle est lue, pas citée.
 | `an_organe` | Assemblée nationale | `https://data.assemblee-nationale.fr/static/openData/repository/17/amo/tous_acteurs_mandats_organes_xi_legislature/AMO30_tous_acteurs_tous_mandats_tous_organes_historique.json.zip` | ZIP de 13 991 fichiers JSON ; 3 119 acteurs, 10 813 organes, 59 déports ; 13 600 736 o | Licence Ouverte / Open Licence **v1.0** | quotidienne, reconstruction nocturne | **200**, `last-modified` 2026-08-27 00:34:47 GMT | v0 (v0.1, v0.4) |
 | `ches_2024` | Chapel Hill Expert Survey | `https://github.com/chesdata/chesdata.github.io/releases/download/ches-europe/CHES_2024_final_v2.csv` | CSV, 279 lignes de données, 99 668 o | **Aucune licence publiée.** Réutilisation soumise à citation, condition obtenue par échange écrit le 2026-08-27 | par vague : 1999, 2002, 2006, 2007, 2010, 2014, 2019, 2024 | **200**, `last-modified` 2026-08-04 17:28:50 GMT, SHA-256 `1c1ec053…` conforme | v0 (v0.3) |
 | `ches_trend` | Chapel Hill Expert Survey | `https://github.com/chesdata/chesdata.github.io/releases/download/ches-trend/1999-2024_CHES_dataset_meansV2.csv` | CSV, 1 441 lignes de données, 634 466 o | idem `ches_2024` | une révision par vague | **200**, `last-modified` 2026-08-04 17:23:11 GMT, SHA-256 `254384ab…` conforme | v0 (v0.3) |
-| `nuance_leg2024` | Ministère de l'intérieur | `https://static.data.gouv.fr/resources/elections-legislatives-des-30-juin-et-7-juillet-2024-resultats-definitifs-du-1er-tour/20240710-171318/resultats-definitifs-par-regions.csv` | CSV, 18 lignes, 9 206 o ; 22 codes de nuance distincts | **Licence Ouverte v2.0** (`license = lov2` sur data.gouv.fr) | figée : un dépôt par scrutin | **200**, `last-modified` 2024-07-10 17:13:18 GMT, SHA-256 `b0c25687…` conforme | v0 (v0.3) |
-| `registre_partis` | Contrepoint | `data/registre/partis.json` (fichier du dépôt) | JSON, 42 970 o, SHA-256 `186fc819…` | Licence Ouverte v2.0 ([../LICENSE-DONNEES](../LICENSE-DONNEES)) | à chaque correction du registre | non applicable — fichier local | v0 (v0.4) |
+| `nuance_leg2024` | Ministère de l'intérieur | `https://static.data.gouv.fr/resources/elections-legislatives-des-30-juin-et-7-juillet-2024-resultats-definitifs-du-2nd-tour/20240710-170536/resultats-definitifs-par-region.csv` | CSV, 18 lignes de données, 6 767 o ; **17 codes de nuance distincts constatés au 2nd tour** ; **aucune colonne nominative** | **Licence Ouverte v2.0** (`license = lov2` sur data.gouv.fr) | figée : un dépôt par scrutin | **200**, `last-modified` 2024-07-10 17:05:37 GMT, SHA-256 `f8552401cffade4397fa501f161c961d377d629235d9f9a813ecb11ad5ba0c50`, mesuré le 2026-08-28 | v0 (v0.3) |
+| `registre_partis` | Contrepoint | `data/registre/partis.json` (fichier du dépôt) | JSON, 42 950 o, SHA-256 `b7bdb819…` | Licence Ouverte v2.0 ([../LICENSE-DONNEES](../LICENSE-DONNEES)) | à chaque correction du registre | non applicable — fichier local | v0 (v0.4) |
 
 ### 1.2 Lues, jamais citées — documentaire
 
@@ -39,6 +39,7 @@ source n'alimente aucune entrée : elle est lue, pas citée.
 | Texte de la licence amont | `https://data.assemblee-nationale.fr/content/download/28755/file/Licence_Ouverte.pdf` | PDF | **200** | « Cette licence est une version 1.0 de la Licence Ouverte ». La page HTML n'affiche pas le numéro ; le PDF, si |
 | Codebook CHES 2024 | `https://github.com/chesdata/chesdata.github.io/releases/download/ches-europe/CHES.2024.Codebook.pdf` | PDF, 356 182 o | **200** | définition des variables, `country = 6` pour la France |
 | Index des jeux CHES | `https://www.chesdata.eu/ches-europe/` | page HTML | **200** | les URL de dépôt et la ligne de citation exigée par jeu |
+| Codes de nuance du 1er tour | `https://static.data.gouv.fr/resources/elections-legislatives-des-30-juin-et-7-juillet-2024-resultats-definitifs-du-1er-tour/20240710-171318/resultats-definitifs-par-regions.csv` | CSV, 18 lignes, 9 206 o, SHA-256 `b0c25687…` | **200** | les **22** codes distincts du 1er tour, d'où l'appariement parti → code du registre a été établi. Ce n'est pas la source ingérée : le pipeline lit le fichier par circonscription du 2nd tour, celui que le registre déclare et dont contrats.md §2.6 dérive l'`id` publié. Cinq codes du 1er tour n'y sont pas constatés — `COM`, `EXG`, `RDG`, `REC`, `VEC` |
 | Variante XML des scrutins | `https://data.assemblee-nationale.fr/static/openData/repository/17/loi/scrutins/Scrutins.xml.zip` | ZIP XML, 30 795 168 o | **200** | même contenu que le JSON, arité portée par le schéma. Non récupérée : le pipeline lit le JSON |
 
 ### 1.3 Hors v0 — ça attend, ce n'est pas écarté
@@ -81,10 +82,43 @@ done
 
 ## 2. Ce que le pipeline récupère réellement
 
-`scripts/recuperer-sources.sh` porte deux entrées, et deux seulement :
-`an_scrutins_17` et `an_organe`. Toute autre source de ce registre est lue hors
-de ce script. Une URL de ce tableau n'est **jamais construite par
+`scripts/recuperer-sources.sh` porte **quatre** entrées : `an_scrutins_17`,
+`an_organe`, `ches_2024` et `nuance_leg2024`. Toute autre source de ce registre
+est lue hors de ce script. Une URL de ce tableau n'est **jamais construite par
 concaténation**.
+
+Chaque entrée déclare sa **forme** — `zip`, un conteneur dont l'empreinte de
+contenu se calcule sur les fichiers extraits, ou `fichier`, une ressource unique
+dont les deux empreintes coïncident par définition (contrats.md §2.8, I22) —,
+son **producteur** et sa **licence**. La mention de paternité du descripteur en
+est dérivée, jamais recopiée d'une source sur une autre : attribuer un fichier
+du Chapel Hill Expert Survey à l'Assemblée nationale sous Licence Ouverte serait
+une fausse attribution, pas une approximation (RG-76).
+
+La licence décide seule de la redistribution, et le mécanisme est
+`scripts/archives.sh` : sa liste blanche est un **préfixe d'URL**, donc un refus
+par défaut. Vérifié le 2026-08-28 par `REC-08` — CHES, le nuancier et une URL
+qui imite celle de l'Assemblée sans en être une sont refusés, avant tout appel
+réseau.
+
+Mesures des deux nouvelles sources, exécution du 2026-08-28 :
+
+| Source | Octets annoncés et reçus | Empreinte d'archive | Empreinte de contenu | `last-modified` |
+|---|---|---|---|---|
+| CHES 2024 | 99 668 | `1c1ec053…` | `1c1ec053…`, identique — fichier unique | 2026-08-04 17:28:50 GMT |
+| Nuances 2024, 2nd tour, par région | 6 767 | `f8552401…` | `f8552401…`, identique — fichier unique | 2024-07-10 17:05:37 GMT |
+
+`A VERIFIER`, relevé le 2026-08-28 et non corrigé, hors du périmètre de ce
+ticket : la réponse **HEAD** de l'archive AMO30 annonce `content-length`
+13 600 752 et `last-modified` du 2026-08-28, là où le **GET** immédiatement
+consécutif sert 13 600 736 octets et le `last-modified` du 2026-08-27. La porte
+de complétude compare la taille reçue à la taille annoncée par une **autre**
+construction que celle qui répond, et refuse une archive complète. Le piège du
+§3.1 se manifeste donc aussi sur la taille, que ce document décrivait comme
+« identique à l'octet ». Vérification : rejouer
+`curl -sSI <url>` puis `curl -sS -o /tmp/a <url>` et comparer les deux
+`content-length`. Correction possible, non appliquée : porter la taille du GET
+plutôt que celle du HEAD, ou retenter la paire HEAD+GET.
 
 Mesures de la première exécution réelle du script
 ([brique0/verification-2026-08-27.md](brique0/verification-2026-08-27.md) §0) :
@@ -232,7 +266,7 @@ Trois faits qui commandent le modèle de données
   portés par `coalition.nfp` et `coalition.ensemble`, jamais par un parti.
 - **Aucune colonne nominative n'est ingérée** (RG-111). `Nuance candidat n`,
   `Nom candidat n` et `Elu n` du fichier par circonscription restent hors
-  périmètre : seul l'ensemble des 22 codes distincts est utilisé.
+  périmètre : seul l'ensemble des 17 codes distincts constatés au 2nd tour est utilisé.
 
 C'est précisément ce genre de rattachement révisé sans changement de
 comportement de vote que l'outil rend visible.

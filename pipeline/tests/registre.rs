@@ -684,3 +684,53 @@ fn forme_de_fichier_refusee_avec_son_motif() {
     groupe(&mut r, "groupe.an17.rn")["debut"] = json!("2024-7-1");
     refuse_par(&r, "V3");
 }
+
+/// REG-23 [C] — l'échantillon de `docs/brique0/echantillons/registre-l17.json`
+/// déclare les **mêmes** sources que `data/registre/partis.json` : même URL,
+/// même empreinte, même remarque.
+///
+/// Ce qui casse si le test disparaît : l'échantillon est ce qu'un tiers lit
+/// pour reproduire le travail. La bascule du nuancier vers le fichier régional
+/// du 2nd tour — la correction RG-111, qui écarte un fichier portant des noms
+/// de candidats — a été appliquée au registre et **pas** à l'échantillon, qui a
+/// gardé pendant une fusion l'empreinte de la source nominative et un décompte
+/// de 22 codes au lieu de 17. Aucun test ne comparait les deux : le défaut
+/// était muet, et l'échantillon renvoyait vers le fichier écarté.
+#[test]
+fn echantillon_et_registre_declarent_les_memes_sources() {
+    let racine = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("..");
+    let lire = |chemin: std::path::PathBuf| -> Value {
+        serde_json::from_str(
+            &std::fs::read_to_string(&chemin)
+                .unwrap_or_else(|e| panic!("{} : {e}", chemin.display())),
+        )
+        .unwrap_or_else(|e| panic!("{} : {e}", chemin.display()))
+    };
+    let echantillon = lire(racine.join("docs/brique0/echantillons/registre-l17.json"));
+    let reel = lire(racine.join("data/registre/partis.json"));
+
+    let par_id = |r: &Value| -> std::collections::BTreeMap<String, Value> {
+        r["sources"]
+            .as_array()
+            .expect("`sources` est un tableau")
+            .iter()
+            .map(|s| (s["id"].as_str().unwrap_or_default().to_owned(), s.clone()))
+            .collect()
+    };
+    let (e, v) = (par_id(&echantillon), par_id(&reel));
+    assert!(!e.is_empty(), "REG-23 : échantillon sans source");
+
+    for (id, source) in &e {
+        let Some(vraie) = v.get(id) else {
+            panic!("REG-23 : la source « {id} » de l'échantillon n'existe pas dans le registre");
+        };
+        // `url`, `empreinte_sha256` et `remarque` sont ce qu'un reproducteur
+        // suit. Une divergence l'envoie sur un autre fichier que le nôtre.
+        for cle in ["url", "empreinte_sha256", "remarque", "licence"] {
+            assert_eq!(
+                source[cle], vraie[cle],
+                "REG-23 : « {id} » diverge sur `{cle}` entre l'échantillon et le registre"
+            );
+        }
+    }
+}

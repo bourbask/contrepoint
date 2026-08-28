@@ -198,6 +198,10 @@ jobs:
       # plan-de-tests.md §15, portes non chiffrées.
       - name: tests sautés sans date de reprise
         run: ./scripts/portes-de-ci.sh tests-ignores
+      # La taille du registre citée dans la prose a été fausse trois fois : elle
+      # bouge à chaque correction du registre, et personne ne la suit.
+      - name: taille du registre citée dans la documentation
+        run: ./scripts/portes-de-ci.sh registre
 
   # Squelettes. Ces portes sont déclarées bloquantes et ne peuvent PAS être
   # vérifiées aujourd'hui : elles portent sur du code et des artefacts qui

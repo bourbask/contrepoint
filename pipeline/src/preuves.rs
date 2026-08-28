@@ -342,6 +342,36 @@ pub fn construire(mut ligne: Value) -> Result<String, String> {
     rendre(&ligne)
 }
 
+/// Les sources qui exigent d'être citées (I23, docs/sources.md §4), avec la
+/// citation qu'elles publient, **mot pour mot**. Une entrée d'une de ces
+/// sources porte cette chaîne caractère pour caractère ; toute autre porte
+/// `null`.
+///
+/// Elle est par jeu de données parce que c'est ainsi que les sources la
+/// formulent : chaque vague CHES publie sa propre ligne, et une mention globale
+/// du projet attribuerait à un jeu la citation d'un autre (§2.1).
+///
+/// `citation` est une **exigence de la source, pas une cession de droits** :
+/// CHES ne publie aucune licence, et la condition obtenue par échange écrit le
+/// 2026-08-27 n'autorise aucune republication du fichier (ADR 0000 §8).
+pub const CITATIONS: [(&str, &str); 2] = [
+    ("ches_2024", CITATION_CHES_2024),
+    ("ches_trend", CITATION_CHES_2024),
+];
+
+/// Relevée le 2026-08-27 sur `chesdata.eu/ches-europe/`, « When using the 2024
+/// survey, please cite ». 322 caractères, sous le plafond de 400 de I20.
+const CITATION_CHES_2024: &str = "Rovny, Jan, Jonathan Polk, Ryan Bakker, Liesbet Hooghe, Seth Jolly, Gary Marks, Marco Steenbergen, and Milada Anna Vachudova. 2025. \"The 2024 Chapel Hill Expert Survey on political party positioning in Europe: Twenty-five years of party positional data.\" Electoral Studies 97 (October). doi:10.1016/j.electstud.2025.102981";
+
+/// La citation exigée par une source, ou `None` si elle n'en exige aucune.
+#[must_use]
+pub fn citation_exigee(source: &str) -> Option<&'static str> {
+    CITATIONS
+        .iter()
+        .find(|(s, _)| *s == source)
+        .map(|(_, citation)| *citation)
+}
+
 /// Le motif d'une non-publication, en une phrase de 140 caractères au plus.
 ///
 /// « Absence de donnée dite, jamais comblée » (ADR 0000 §5) : une case non
@@ -971,7 +1001,15 @@ fn i20_i21_i22_i23_entrees(ligne: &Value, refus: &mut Vec<String>) {
 
         // I23 — une source à citation la porte, toute autre porte `null`.
         let citation = entree["citation"].as_str();
-        if SOURCES_A_CITATION.contains(&source) {
+        // La comparaison porte sur le **texte**, pas sur la présence : une
+        // citation abrégée ou reformulée n'est pas la citation que la source
+        // exige, et la présence seule laissait passer « Rovny et al. 2025. ».
+        if let Some(exigee) = citation_exigee(source) {
+            if citation.is_some_and(|c| !c.is_empty() && c != exigee) {
+                refus.push(format!(
+                    "I23 : la citation de {source} n'est pas celle que la source publie, caractère pour caractère"
+                ));
+            }
             if citation.is_none_or(str::is_empty) {
                 refus.push(format!(
                     "I23 : {source} exige une citation et l'entrée n'en porte pas"

@@ -20,6 +20,7 @@ use contrepoint::export::{
 };
 use contrepoint::preuves::construire;
 use serde_json::{Value, json};
+use std::collections::BTreeMap;
 
 fn chemin(relatif: &str) -> std::path::PathBuf {
     std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join(relatif)
@@ -40,8 +41,8 @@ fn entree_registre() -> Value {
         "producteur": "Contrepoint",
         "derniere_mise_a_jour": "2026-08-27",
         "citation": null,
-        "empreinte_sha256": "186fc8195d357d08c65ba0bceb45da90a0132df3bd859e039e7303eee96a9680",
-        "empreinte_contenu_sha256": "186fc8195d357d08c65ba0bceb45da90a0132df3bd859e039e7303eee96a9680",
+        "empreinte_sha256": "b7bdb819be8b6773a8af5d2a939a78120e710e6f3cf6e86e87db0443168aaf2b",
+        "empreinte_contenu_sha256": "b7bdb819be8b6773a8af5d2a939a78120e710e6f3cf6e86e87db0443168aaf2b",
         "recupere_le": "2026-08-27"
     })
 }
@@ -228,6 +229,23 @@ fn instantane() -> String {
 
 // ---------------------------------------------------------------- EXP-01 ----
 
+/// Les licences telles que les descripteurs de cache les portent. CHES n'en
+/// publie **aucune** : la nommer « Licence Ouverte » serait la fausse
+/// attribution que REC-07 refuse.
+fn licences() -> BTreeMap<String, String> {
+    [
+        ("Assemblée nationale", "Licence Ouverte v1.0"),
+        (
+            "Chapel Hill Expert Survey",
+            "aucune licence publiée, citation exigée",
+        ),
+        ("Ministère de l'intérieur", "Licence Ouverte v2.0"),
+    ]
+    .into_iter()
+    .map(|(p, l)| (p.to_owned(), l.to_owned()))
+    .collect()
+}
+
 #[test]
 fn trois_marqueurs_trois_echelles_nommees() {
     // EXP-01 [C] — chaque marqueur porte sa famille, son échelle nommée et sa
@@ -276,8 +294,13 @@ fn aucune_comparaison_inter_legislature() {
     // EXP-02 [C] — I18. Aucun champ d'écart, de ratio ni de flèche entre deux
     // législatures, deux dates ou deux instantanés.
     let vue = instantane();
-    let manifeste = construire_manifeste("0.3.0", &[(description(), vue.clone())], &lignes())
-        .expect("manifeste");
+    let manifeste = construire_manifeste(
+        "0.3.0",
+        &[(description(), vue.clone())],
+        &lignes(),
+        &licences(),
+    )
+    .expect("manifeste");
     for artefact in [&vue, &manifeste] {
         let racine: Value = serde_json::from_str(artefact).unwrap();
         assert!(
@@ -297,6 +320,7 @@ fn aucune_comparaison_inter_legislature() {
         "0.3.0",
         &[(description(), vue.clone()), (seconde, vue)],
         &lignes(),
+        &licences(),
     )
     .unwrap();
     let racine: Value = serde_json::from_str(&deux).unwrap();
@@ -419,8 +443,13 @@ fn lexique_interdit_absent_de_lexport() {
     // EXP-05 [C] — I14 et RG-112. Le grep de la definition of done porte sur le
     // diff : un terme introduit par une donnée plutôt que par du code y échappe.
     let vue = instantane();
-    let manifeste =
-        construire_manifeste("0.3.0", &[(description(), vue.clone())], &lignes()).unwrap();
+    let manifeste = construire_manifeste(
+        "0.3.0",
+        &[(description(), vue.clone())],
+        &lignes(),
+        &licences(),
+    )
+    .unwrap();
     let eclats = construire_eclats(&lignes(), std::slice::from_ref(&vue)).unwrap();
 
     // Les termes sont assemblés et non écrits en clair : `scripts/lexique.sh`
@@ -515,8 +544,13 @@ fn schema_publie_et_verifie_a_la_construction() {
         }
     };
     ordre_ecrit(&vue, &attendues("instantane-1", &[]));
-    let manifeste =
-        construire_manifeste("0.3.0", &[(description(), vue.clone())], &lignes()).unwrap();
+    let manifeste = construire_manifeste(
+        "0.3.0",
+        &[(description(), vue.clone())],
+        &lignes(),
+        &licences(),
+    )
+    .unwrap();
     ordre_ecrit(&manifeste, &attendues("manifeste-1", &[]));
 
     // Un artefact qui ne correspond pas au schéma publié échoue bruyamment.
@@ -556,21 +590,21 @@ fn instantane_de_lexport_complet() {
         r#"{"famille":"votes","echelle":"votes_an17_ancre_v1","valeur":-1.0000,"valeur_code":null,"#,
         r#""libelle":"Votes du groupe LFI-NFP","motif_code":null,"motif":null,"#,
         r#""dispersion":{"effectif":73,"iqr":0.0470},"#,
-        r#""preuve":"eeb1f40eb7400df6d5c043235058d9b1660919dffbde9baf80444056208a2399"}]},"#,
+        r#""preuve":"58dddb470ebac0b3da987e46a74a1bf48b0ebfb6945219f1d10ba1eb3f6466e9"}]},"#,
         r#"{"id":"parti.rn","libelle":"Rassemblement national","marqueurs":["#,
         r#"{"famille":"votes","echelle":"votes_an17_ancre_v1","valeur":1.0000,"valeur_code":null,"#,
         r#""libelle":"Votes du groupe RN","motif_code":null,"motif":null,"#,
         r#""dispersion":{"effectif":129,"iqr":0.0520},"#,
-        r#""preuve":"dc892cc62cc092a64325167a81a1a1ced19d66c187cbacd41cb96ded5a640d0e"},"#,
+        r#""preuve":"8fde0f5f78afe28503821f8194a91dca7022105eaaad831bad9b6d4ef8489e2b"},"#,
         r#"{"famille":"experts","echelle":"ches_lrgen_0_10","valeur":8.82,"valeur_code":null,"#,
         r#""libelle":"CHES 2024, lrgen","motif_code":null,"motif":null,"dispersion":null,"#,
-        r#""preuve":"301ba4f72eea71e81779cf2292e4ccf1b8d7925b5083323b49322265de8d5bf2"}]},"#,
+        r#""preuve":"4367cde19edba83604ea4e88b557e1491332af708e929a07e5b2aac349173c2b"}]},"#,
         r#"{"id":"groupe.an17.liot","libelle":"LIOT","marqueurs":["#,
         r#"{"famille":"votes","echelle":"votes_an17_ancre_v1","valeur":null,"valeur_code":null,"#,
         r#""libelle":"Votes du groupe LIOT","motif_code":"sous_seuil_de_publication","#,
         r#""motif":"Dispersion interne au-delà du seuil publié : IQR 0,687 pour un maximum de 0,25.","#,
         r#""dispersion":{"effectif":25,"iqr":0.6870},"#,
-        r#""preuve":"d9cae6ddde51b6ecac6e365fc1bb24e1d97ebcbb7d90eeb8ffe9e6bd8363bcef"}]}],"#,
+        r#""preuve":"32fb76691440af055b9863b258a59c400b00775d7598630c2cdcc1441a192b61"}]}],"#,
         // §4.3 règle 5 — l'univers de `sans_mesure` est le **registre**, pas les
         // seules entités qui portent une ligne : une entité sans aucune ligne
         // n'a aucun marqueur, donc aucun marqueur ne porte de valeur. Le jeu
@@ -612,8 +646,13 @@ fn aucun_orphelin_dans_les_deux_sens() {
     // est référencé par au moins un marqueur.
     let lignes = lignes();
     let vue = instantane();
-    let manifeste =
-        construire_manifeste("0.3.0", &[(description(), vue.clone())], &lignes).unwrap();
+    let manifeste = construire_manifeste(
+        "0.3.0",
+        &[(description(), vue.clone())],
+        &lignes,
+        &licences(),
+    )
+    .unwrap();
     let eclats = construire_eclats(&lignes, std::slice::from_ref(&vue)).unwrap();
 
     let racine: Value = serde_json::from_str(&vue).unwrap();
@@ -654,7 +693,13 @@ fn date_arretee_derivee_et_jamais_saisie() {
     let vue: Value = serde_json::from_str(&instantane()).unwrap();
     assert_eq!(vue["date_arretee"], CALCUL);
     let manifeste: Value = serde_json::from_str(
-        &construire_manifeste("0.3.0", &[(description(), instantane())], &lignes()).unwrap(),
+        &construire_manifeste(
+            "0.3.0",
+            &[(description(), instantane())],
+            &lignes(),
+            &licences(),
+        )
+        .unwrap(),
     )
     .unwrap();
     assert_eq!(manifeste["date_arretee"], CALCUL);
@@ -669,8 +714,13 @@ fn date_arretee_derivee_et_jamais_saisie() {
     let lignes = lignes();
     let eclats = construire_eclats(&lignes, std::slice::from_ref(&vue_texte)).unwrap();
     for saisie in ["manifeste", "instantane"] {
-        let mut manifeste_faux =
-            construire_manifeste("0.3.0", &[(description(), vue_texte.clone())], &lignes).unwrap();
+        let mut manifeste_faux = construire_manifeste(
+            "0.3.0",
+            &[(description(), vue_texte.clone())],
+            &lignes,
+            &licences(),
+        )
+        .unwrap();
         let mut instantane_faux = vue_texte.clone();
         let cible = if saisie == "manifeste" {
             &mut manifeste_faux
@@ -698,7 +748,13 @@ fn date_arretee_derivee_et_jamais_saisie() {
     let mut trop_long: Value = serde_json::from_str(&vue_texte).unwrap();
     trop_long["ancrage"]["note"] = json!("é".repeat(201));
     let refus = verifier_artefacts(
-        &construire_manifeste("0.3.0", &[(description(), vue_texte.clone())], &lignes).unwrap(),
+        &construire_manifeste(
+            "0.3.0",
+            &[(description(), vue_texte.clone())],
+            &lignes,
+            &licences(),
+        )
+        .unwrap(),
         &[trop_long.to_string()],
         &eclats,
         &lignes,
@@ -717,13 +773,39 @@ fn date_arretee_derivee_et_jamais_saisie() {
     // date est la plus récente de leurs `derniere_mise_a_jour`.
     assert_eq!(
         mention,
-        "Assemblée nationale, Chapel Hill Expert Survey — Licence Ouverte v1.0 — données du 2026-08-27"
+        "Assemblée nationale — Licence Ouverte v1.0 ; Chapel Hill Expert Survey — aucune licence \
+         publiée, citation exigée — données du 2026-08-27"
     );
     assert!(
         !mention.contains("Contrepoint"),
         "le registre du projet n'est pas une source amont"
     );
-    assert!(mention.chars().count() <= 200, "I20");
+
+    // REC-07 — chaque producteur porte **sa** licence. La forme précédente
+    // joignait les producteurs par une virgule et suffixait une seule licence :
+    // elle attribuait la Licence Ouverte v1.0 à CHES, qui n'en publie aucune, et
+    // au ministère, dont le fichier est en v2.0. Une égalité de chaîne seule
+    // avait laissé passer ce défaut — d'où la propriété, vérifiée en plus.
+    for (producteur, attendue) in licences() {
+        if !mention.contains(&producteur) {
+            continue;
+        }
+        let apres = &mention[mention.find(&producteur).unwrap() + producteur.len()..];
+        let fragment = apres.split(" ; ").next().unwrap_or(apres);
+        assert!(
+            fragment.contains(&attendue),
+            "REC-07 : « {producteur} » doit porter sa propre licence « {attendue} », \
+             obtenu « {fragment} »"
+        );
+    }
+    assert!(
+        !mention.contains("Chapel Hill Expert Survey — Licence Ouverte"),
+        "REC-07 : CHES ne publie aucune licence — la nommer est une fausse attribution (RG-76)"
+    );
+    assert!(
+        mention.chars().count() <= 200,
+        "I20 : `mention_paternite` n'est pas exceptée du plafond"
+    );
     assert_eq!(
         manifeste["licence"],
         "Licence Ouverte / Open Licence (Etalab)"
@@ -757,8 +839,13 @@ fn chaque_famille_du_manifeste_porte_les_bornes_de_son_echelle() {
     // rendent la moyenne entre familles visuellement dessinable.
     let lignes = lignes();
     let vue = instantane();
-    let manifeste_texte =
-        construire_manifeste("0.3.0", &[(description(), vue.clone())], &lignes).unwrap();
+    let manifeste_texte = construire_manifeste(
+        "0.3.0",
+        &[(description(), vue.clone())],
+        &lignes,
+        &licences(),
+    )
+    .unwrap();
     let manifeste: Value = serde_json::from_str(&manifeste_texte).unwrap();
     let bornes: Vec<(&str, Value, Value, Value)> = manifeste["familles"]
         .as_array()
@@ -815,7 +902,7 @@ fn chaque_famille_du_manifeste_porte_les_bornes_de_son_echelle() {
     divergente["echelle"]["max"] = json!(2.0);
     let mut deux = lignes.clone();
     deux.push(divergente.to_string());
-    let erreur = construire_manifeste("0.3.0", &[(description(), vue)], &deux)
+    let erreur = construire_manifeste("0.3.0", &[(description(), vue)], &deux, &licences())
         .expect_err("deux échelles divergentes pour une famille sont un refus");
     assert!(erreur.contains("divergentes"), "{erreur}");
 }
@@ -891,8 +978,13 @@ fn regle_de_construction_des_bandes() {
 fn aucun_identifiant_dacteur_dans_un_artefact() {
     // I13 — `grep -E '\bPA[0-9]{4,}\b'` sur les artefacts publiés est vide.
     let vue = instantane();
-    let manifeste =
-        construire_manifeste("0.3.0", &[(description(), vue.clone())], &lignes()).unwrap();
+    let manifeste = construire_manifeste(
+        "0.3.0",
+        &[(description(), vue.clone())],
+        &lignes(),
+        &licences(),
+    )
+    .unwrap();
     let eclats = construire_eclats(&lignes(), std::slice::from_ref(&vue)).unwrap();
     for artefact in [&vue, &manifeste].into_iter().chain(eclats.values()) {
         for fenetre in artefact.as_bytes().windows(6) {
@@ -913,8 +1005,13 @@ fn artefact_fautif_refuse_bruyamment() {
     // liste blanche des clés, tous les quatre neutralisés sans conséquence.
     let lignes = lignes();
     let vue = instantane();
-    let manifeste =
-        construire_manifeste("0.3.0", &[(description(), vue.clone())], &lignes).unwrap();
+    let manifeste = construire_manifeste(
+        "0.3.0",
+        &[(description(), vue.clone())],
+        &lignes,
+        &licences(),
+    )
+    .unwrap();
     let eclats = construire_eclats(&lignes, std::slice::from_ref(&vue)).unwrap();
     assert!(
         verifier_artefacts(&manifeste, std::slice::from_ref(&vue), &eclats, &lignes).is_empty()
