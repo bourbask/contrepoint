@@ -217,11 +217,16 @@ jobs:
       # `estimateur`, lignes ≥ 70 % sur le binaire. Le seuil de 90 % est marqué
       # `A VERIFIER` au §17 : mesurer au cycle 5, et si le chiffre est
       # inatteignable c'est le chiffre qui change avec son motif, pas la porte.
+      # La couverture de branches exige `-Z coverage-options=branch`, donc le
+      # compilateur nightly. L'epingler contredirait la reproductibilite que le
+      # projet revendique : nightly est une cible mouvante, et l'ADR 0001 exige
+      # des dependances a construction reproductible. Couverture de lignes sur
+      # stable ; le seuil de branches reste declare et non tenu, dit comme tel.
       - name: couverture
         if: steps.exists.outputs.yes == 'true'
         working-directory: pipeline
         run: |
-          cargo llvm-cov --locked --branch --json --output-path /tmp/couverture.json
+          cargo llvm-cov --locked --json --output-path /tmp/couverture.json
           python3 - <<'PY'
           import json, sys
           d = json.load(open("/tmp/couverture.json"))
