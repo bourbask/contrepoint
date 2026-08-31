@@ -1,0 +1,453 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Contrepoint — le spectre</title>
+<style>
+:root {
+  color-scheme: light dark;
+  --fond: #f2f0ec;
+  --encre: #14161c;
+  --encre-pale: #5d6472;
+  --regle: #a9b0bc;
+  --graphite: #6b7280;
+  --strip: #e2e5ea;
+  --liseré: #f2f0ec;
+  --vide-trait: #9aa2b0;
+  --hachure: #a2aab8;
+  --refus-fond: #e2e5ea;
+  --serif: "Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua", Charter, Georgia, serif;
+  --mono: ui-monospace, "SF Mono", SFMono-Regular, "Cascadia Mono", Menlo, Consolas, "Liberation Mono", monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --fond: #0e1014;
+    --encre: #ecedf1;
+    --encre-pale: #99a1b0;
+    --regle: #4a515f;
+    --graphite: #8a92a0;
+    /* le bandeau reste clair dans les deux themes : plusieurs couleurs
+       d'identite sont des bleus tres sombres, illisibles sur fond noir. */
+    --strip: #c3c8d2;
+    --liseré: #0e1014;
+    --vide-trait: #6f7787;
+    --hachure: #8e95a2;
+    --refus-fond: #1b1f27;
+  }
+}
+* { box-sizing: border-box; }
+html { background: var(--fond); }
+body {
+  margin: 0; background: var(--fond); color: var(--encre);
+  font-family: var(--serif); -webkit-text-size-adjust: 100%;
+}
+.page { max-width: 1240px; margin: 0 auto; padding: 40px 20px 72px; }
+
+.marque { font-size: 13px; letter-spacing: .34em; text-transform: uppercase;
+  font-family: var(--mono); color: var(--encre-pale); margin: 0 0 14px; }
+h1 { font-size: clamp(38px, 6.4vw, 76px); line-height: .98; margin: 0 0 18px;
+  letter-spacing: -.02em; font-weight: 400; }
+h1 em { font-style: italic; }
+.chapeau { font-size: clamp(17px, 2vw, 21px); line-height: 1.5; max-width: 46em;
+  margin: 0 0 8px; color: var(--encre); }
+.chapeau + .chapeau { color: var(--encre-pale); }
+
+.avertissement { margin: 34px 0 0; padding: 18px 20px; border: 2px solid var(--encre);
+  font-size: 17px; line-height: 1.45; max-width: 62em; }
+.avertissement b { font-family: var(--mono); font-size: 13px; letter-spacing: .18em;
+  text-transform: uppercase; display: block; margin-bottom: 6px; }
+
+section { margin-top: 58px; }
+.tete { display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px 18px;
+  border-bottom: 3px solid var(--encre); padding-bottom: 8px; margin-bottom: 6px; }
+.rang { font-family: var(--mono); font-size: 13px; letter-spacing: .2em;
+  color: var(--encre-pale); }
+h2 { font-size: clamp(26px, 3.6vw, 40px); margin: 0; font-weight: 400; letter-spacing: -.01em; }
+.regle-dit { font-family: var(--mono); font-size: 13px; color: var(--encre-pale);
+  margin-left: auto; text-align: right; }
+.sous { font-size: 16px; color: var(--encre-pale); margin: 10px 0 14px; max-width: 58em; line-height: 1.45; }
+
+.cadre { overflow-x: auto; overscroll-behavior-x: contain; }
+.cadre > svg { display: block; width: 100%; min-width: 900px; height: auto; }
+@media (max-width: 940px) { .cadre::after { content: "→ faites défiler la plage";
+  display: block; font-family: var(--mono); font-size: 12px; color: var(--encre-pale);
+  padding: 6px 0; } }
+
+svg text { font-family: var(--serif); fill: var(--encre);
+  paint-order: stroke; stroke: var(--fond); stroke-width: 5px; stroke-linejoin: round; }
+.vide-n, .vide-l { stroke: var(--strip); }
+.grad { stroke-width: 4px; }
+.grad { font-family: var(--mono); font-size: 15px; fill: var(--encre-pale); }
+.nom { font-size: 17px; }
+.val { font-family: var(--mono); font-size: 17px; }
+.pr { font-family: var(--mono); font-size: 12px; fill: var(--encre-pale); }
+.vide-n { font-family: var(--mono); fill: #2c313c; letter-spacing: -.02em; }
+.vide-l { fill: #2c313c; }
+.code { font-family: var(--mono); font-size: 21px; letter-spacing: .1em; }
+.refus-nom { font-size: 23px; }
+.refus-m { font-size: 15px; fill: var(--encre-pale); }
+
+.pied { margin-top: 62px; border-top: 3px solid var(--encre); padding-top: 18px;
+  display: grid; gap: 26px; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
+.pied h3 { font-family: var(--mono); font-size: 12px; letter-spacing: .2em;
+  text-transform: uppercase; margin: 0 0 8px; font-weight: 400; color: var(--encre-pale); }
+.pied p { margin: 0 0 8px; font-size: 15px; line-height: 1.5; }
+.pied code { display: block; margin-top: 4px; }
+.pied code, .empreinte { font-family: var(--mono); font-size: 12px; word-break: break-all;
+  color: var(--encre-pale); }
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <pattern id="hachure" width="11" height="11" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+    <rect width="11" height="11" fill="var(--strip)"/>
+    <line x1="0" y1="0" x2="0" y2="11" stroke="var(--hachure)" stroke-width="4.5"/>
+  </pattern>
+</defs></svg>
+
+<div class="page">
+  <p class="marque">Contrepoint · instantané an17-2026-07-21 · arrêté le 2026-08-27</p>
+  <h1>Trois règles.<br>Dix-huit entités.<br><em>Un grand vide au milieu.</em></h1>
+  <p class="chapeau">La position politique des partis et des groupes de l'Assemblée, mesurée par trois méthodes indépendantes. Chaque barre est une entité posée sur une règle. Rien n'est interprété ici : les barres sont là où les sources les mettent.</p>
+  <p class="chapeau">La forme est faite pour être lue de loin. Les amas et le vide se voient sans qu'un seul chiffre soit nécessaire ; les chiffres et l'empreinte de preuve attendent en dessous, à portée de qui veut refaire le calcul.</p>
+
+  <div class="avertissement">
+    <b>Les trois plages ne se superposent pas</b>
+    Elles ne partagent ni longueur, ni origine, ni pas de graduation, et leurs graduations sont volontairement placées de deux côtés opposés : aucune verticale ne relie une plage à l'autre. Une entité haute sur l'une n'est pas « confirmée » par l'autre. Il n'y a pas de score unique, pas de moyenne, pas de consensus — trois mesures, séparées, à lire séparément.
+  </div>
+
+  <section>
+    <div class="tete">
+      <span class="rang">Famille 1 / 3</span>
+      <h2>Votes nominatifs</h2>
+      <span class="regle-dit">règle <code>votes_an17_ancre_v1</code><br>de −1,00 à +1,00 · 10 entités</span>
+    </div>
+    <p class="sous">Échelle ancrée sur deux groupes de cette législature (groupe.an17.lfi-nfp, groupe.an17.rn) : deux instantanés ne se superposent pas. Graduations <b>sous</b> la plage.</p>
+    <div class="cadre"><svg viewBox="0 0 1200 448" role="img" aria-label="Plage des votes nominatifs, de moins un à plus un, 10 entités posées">
+<rect x="30.0" y="34" width="1140.0" height="178" rx="4" fill="var(--strip)"/>
+<rect x="139.6" y="34" width="545.6" height="178" fill="url(#hachure)"/>
+<rect x="139.6" y="34" width="545.6" height="178" fill="none" stroke="var(--vide-trait)" stroke-width="1.5" stroke-dasharray="7 5"/>
+<text class="vide-n" x="412.4" y="112" text-anchor="middle" font-size="54">1,01</text>
+<text class="vide-l" x="412.4" y="141" text-anchor="middle" font-size="18">sur 2,00 · 50 % de la règle</text>
+<text class="vide-l" x="412.4" y="170" text-anchor="middle" font-size="18">aucune entité mesurée</text>
+<line x1="40.0" y1="212" x2="40.0" y2="221" stroke="var(--regle)" stroke-width="1.5"/>
+<text class="grad" x="40.0" y="238" text-anchor="middle">−1,0</text>
+<line x1="320.0" y1="212" x2="320.0" y2="221" stroke="var(--regle)" stroke-width="1.5"/>
+<text class="grad" x="320.0" y="238" text-anchor="middle">−0,5</text>
+<line x1="600.0" y1="212" x2="600.0" y2="221" stroke="var(--regle)" stroke-width="1.5"/>
+<text class="grad" x="600.0" y="238" text-anchor="middle">0,0</text>
+<line x1="880.0" y1="212" x2="880.0" y2="221" stroke="var(--regle)" stroke-width="1.5"/>
+<text class="grad" x="880.0" y="238" text-anchor="middle">0,5</text>
+<line x1="1160.0" y1="212" x2="1160.0" y2="221" stroke="var(--regle)" stroke-width="1.5"/>
+<text class="grad" x="1160.0" y="238" text-anchor="middle">1,0</text>
+<rect x="30.0" y="34" width="20" height="178" fill="#CC2443" stroke="var(--liseré)" stroke-width="2"/>
+<rect x="41.2" y="34" width="20" height="178" fill="var(--graphite)" stroke="var(--liseré)" stroke-width="2"/>
+<rect x="80.4" y="34" width="20" height="178" fill="var(--graphite)" stroke="var(--liseré)" stroke-width="2"/>
+<rect x="119.6" y="34" width="20" height="178" fill="#E30040" stroke="var(--liseré)" stroke-width="2"/>
+<rect x="685.2" y="34" width="20" height="178" fill="var(--graphite)" stroke="var(--liseré)" stroke-width="2"/>
+<rect x="730.0" y="34" width="20" height="178" fill="var(--graphite)" stroke="var(--liseré)" stroke-width="2"/>
+<rect x="786.0" y="34" width="20" height="178" fill="#0000BA" stroke="var(--liseré)" stroke-width="2"/>
+<rect x="970.8" y="34" width="20" height="178" fill="#034EA2" stroke="var(--liseré)" stroke-width="2"/>
+<rect x="1144.4" y="34" width="20" height="178" fill="#004B8F" stroke="var(--liseré)" stroke-width="2"/>
+<rect x="1150.0" y="34" width="20" height="178" fill="#104E8B" stroke="var(--liseré)" stroke-width="2"/>
+<path d="M40.0 212 L40.0 253 L35.0 253" fill="none" stroke="var(--regle)" stroke-width="1"/>
+<rect x="28.0" y="254" width="7" height="16" fill="#CC2443"/>
+<text class="nom" x="43.0" y="268">La France insoumise</text>
+<text class="val" x="220.3" y="268">−1,00</text>
+<text class="pr" x="285.3" y="267">58dddb47</text>
+<path d="M51.2 212 L51.2 283 L46.2 283" fill="none" stroke="var(--regle)" stroke-width="1"/>
+<rect x="39.2" y="284" width="7" height="16" fill="var(--graphite)"/>
+<text class="nom" x="54.2" y="298">Écologiste et Social</text>
+<text class="val" x="240.2" y="298">−0,98</text>
+<text class="pr" x="305.2" y="297">67708569</text>
+<path d="M90.4 212 L90.4 313 L85.4 313" fill="none" stroke="var(--regle)" stroke-width="1"/>
+<rect x="78.4" y="314" width="7" height="16" fill="var(--graphite)"/>
+<text class="nom" x="93.4" y="328">Gauche Démocrate et Républicaine</text>
+<text class="val" x="383.8" y="328">−0,91</text>
+<text class="pr" x="448.8" y="327">07deacbd</text>
+<path d="M129.6 212 L129.6 343 L124.6 343" fill="none" stroke="var(--regle)" stroke-width="1"/>
+<rect x="117.6" y="344" width="7" height="16" fill="#E30040"/>
+<text class="nom" x="132.6" y="358">Parti socialiste</text>
+<text class="val" x="283.8" y="358">−0,84</text>
+<text class="pr" x="348.8" y="357">bc436703</text>
+<path d="M695.2 212 L695.2 253 L690.2 253" fill="none" stroke="var(--regle)" stroke-width="1"/>
+<rect x="683.2" y="254" width="7" height="16" fill="var(--graphite)"/>
+<text class="nom" x="698.2" y="268">Les Démocrates</text>
+<text class="val" x="832.0" y="268">0,17</text>
+<text class="pr" x="886.8" y="267">41cb1d3a</text>
+<path d="M740.0 212 L740.0 283 L735.0 283" fill="none" stroke="var(--regle)" stroke-width="1"/>
+<rect x="728.0" y="284" width="7" height="16" fill="var(--graphite)"/>
+<text class="nom" x="743.0" y="298">Ensemble pour la République</text>
+<text class="val" x="989.9" y="298">0,25</text>
+<text class="pr" x="1044.7" y="297">a31c29f4</text>
+<path d="M796.0 212 L796.0 313 L791.0 313" fill="none" stroke="var(--regle)" stroke-width="1"/>
+<rect x="784.0" y="314" width="7" height="16" fill="#0000BA"/>
+<text class="nom" x="799.0" y="328">Horizons</text>
+<text class="val" x="880.6" y="328">0,35</text>
+<text class="pr" x="935.4" y="327">10c80ddf</text>
+<path d="M980.8 212 L980.8 343 L927.0 343" fill="none" stroke="var(--regle)" stroke-width="1"/>
+<rect x="920.0" y="344" width="7" height="16" fill="#034EA2"/>
+<text class="nom" x="935.0" y="358">Les Républicains</text>
+<text class="val" x="1086.2" y="358">0,68</text>
+<text class="pr" x="1141.0" y="357">9d6e6b1f</text>
+<path d="M1154.4 212 L1154.4 373 L753.0 373" fill="none" stroke="var(--regle)" stroke-width="1"/>
+<rect x="746.0" y="374" width="7" height="16" fill="#004B8F"/>
+<text class="nom" x="761.0" y="388">Union des droites pour la République</text>
+<text class="val" x="1086.2" y="388">0,99</text>
+<text class="pr" x="1141.0" y="387">53cbb4f6</text>
+<path d="M1160.0 212 L1160.0 403 L874.8 403" fill="none" stroke="var(--regle)" stroke-width="1"/>
+<rect x="867.8" y="404" width="7" height="16" fill="#104E8B"/>
+<text class="nom" x="882.8" y="418">Rassemblement national</text>
+<text class="val" x="1086.2" y="418">1,00</text>
+<text class="pr" x="1141.0" y="417">8fde0f5f</text>
+    </svg></div>
+  </section>
+
+  <section>
+    <div class="tete">
+      <span class="rang">Famille 2 / 3</span>
+      <h2>Enquête d'experts</h2>
+      <span class="regle-dit">règle <code>ches_lrgen_0_10</code><br>de 0,0 à 10,0 · 8 entités</span>
+    </div>
+    <p class="sous">Chapel Hill Expert Survey 2024, dimension <i>lrgen</i>. Plage plus courte, retirée des deux bords, graduations <b>au-dessus</b> : rien ici ne s'aligne sur la plage précédente, et c'est voulu.</p>
+    <div class="cadre"><svg viewBox="0 0 1200 354" role="img" aria-label="Plage de l'enquête d'experts, de zéro à dix, 8 entités posées">
+<rect x="205.0" y="34" width="820.0" height="178" rx="4" fill="var(--strip)"/>
+<rect x="501.0" y="34" width="205.6" height="178" fill="url(#hachure)"/>
+<rect x="501.0" y="34" width="205.6" height="178" fill="none" stroke="var(--vide-trait)" stroke-width="1.5" stroke-dasharray="7 5"/>
+<text class="vide-n" x="603.8" y="112" text-anchor="middle" font-size="36">2,82</text>
+<text class="vide-l" x="603.8" y="133" text-anchor="middle" font-size="13">sur 10,00 · 28 % de la règle</text>
+<text class="vide-l" x="603.8" y="154" text-anchor="middle" font-size="13">aucune entité mesurée</text>
+<line x1="215.0" y1="25" x2="215.0" y2="34" stroke="var(--regle)" stroke-width="1.5"/>
+<text class="grad" x="215.0" y="18" text-anchor="middle">0</text>
+<line x1="375.0" y1="25" x2="375.0" y2="34" stroke="var(--regle)" stroke-width="1.5"/>
+<text class="grad" x="375.0" y="18" text-anchor="middle">2</text>
+<line x1="535.0" y1="25" x2="535.0" y2="34" stroke="var(--regle)" stroke-width="1.5"/>
+<text class="grad" x="535.0" y="18" text-anchor="middle">4</text>
+<line x1="695.0" y1="25" x2="695.0" y2="34" stroke="var(--regle)" stroke-width="1.5"/>
+<text class="grad" x="695.0" y="18" text-anchor="middle">6</text>
+<line x1="855.0" y1="25" x2="855.0" y2="34" stroke="var(--regle)" stroke-width="1.5"/>
+<text class="grad" x="855.0" y="18" text-anchor="middle">8</text>
+<line x1="1015.0" y1="25" x2="1015.0" y2="34" stroke="var(--regle)" stroke-width="1.5"/>
+<text class="grad" x="1015.0" y="18" text-anchor="middle">10</text>
+<rect x="270.6" y="34" width="20" height="178" fill="#CC2443" stroke="var(--liseré)" stroke-width="2"/>
+<rect x="343.4" y="34" width="20" height="178" fill="#E4002B" stroke="var(--liseré)" stroke-width="2"/>
+<rect x="389.0" y="34" width="20" height="178" fill="#4BB166" stroke="var(--liseré)" stroke-width="2"/>
+<rect x="481.0" y="34" width="20" height="178" fill="#E30040" stroke="var(--liseré)" stroke-width="2"/>
+<rect x="706.6" y="34" width="20" height="178" fill="#00205B" stroke="var(--liseré)" stroke-width="2"/>
+<rect x="733.0" y="34" width="20" height="178" fill="#0000BA" stroke="var(--liseré)" stroke-width="2"/>
+<rect x="823.4" y="34" width="20" height="178" fill="#034EA2" stroke="var(--liseré)" stroke-width="2"/>
+<rect x="910.6" y="34" width="20" height="178" fill="#104E8B" stroke="var(--liseré)" stroke-width="2"/>
+<path d="M280.6 212 L280.6 219 L275.6 219" fill="none" stroke="var(--regle)" stroke-width="1"/>
+<rect x="268.6" y="220" width="7" height="16" fill="#CC2443"/>
+<text class="nom" x="283.6" y="234">La France insoumise</text>
+<text class="val" x="460.9" y="234">0,82</text>
+<text class="pr" x="515.7" y="233">77567d84</text>
+<path d="M353.4 212 L353.4 249 L348.4 249" fill="none" stroke="var(--regle)" stroke-width="1"/>
+<rect x="341.4" y="250" width="7" height="16" fill="#E4002B"/>
+<text class="nom" x="356.4" y="264">Parti communiste français</text>
+<text class="val" x="585.9" y="264">1,73</text>
+<text class="pr" x="640.7" y="263">7c520263</text>
+<path d="M399.0 212 L399.0 279 L394.0 279" fill="none" stroke="var(--regle)" stroke-width="1"/>
+<rect x="387.0" y="280" width="7" height="16" fill="#4BB166"/>
+<text class="nom" x="402.0" y="294">Les Écologistes</text>
+<text class="val" x="544.5" y="294">2,30</text>
+<text class="pr" x="599.3" y="293">8e2c90f4</text>
+<path d="M491.0 212 L491.0 309 L486.0 309" fill="none" stroke="var(--regle)" stroke-width="1"/>
+<rect x="479.0" y="310" width="7" height="16" fill="#E30040"/>
+<text class="nom" x="494.0" y="324">Parti socialiste</text>
+<text class="val" x="645.2" y="324">3,45</text>
+<text class="pr" x="700.0" y="323">ce95db7a</text>
+<path d="M716.6 212 L716.6 219 L711.6 219" fill="none" stroke="var(--regle)" stroke-width="1"/>
+<rect x="704.6" y="220" width="7" height="16" fill="#00205B"/>
+<text class="nom" x="719.6" y="234">Renaissance</text>
+<text class="val" x="827.3" y="234">6,27</text>
+<text class="pr" x="882.1" y="233">a28b5b03</text>
+<path d="M743.0 212 L743.0 249 L738.0 249" fill="none" stroke="var(--regle)" stroke-width="1"/>
+<rect x="731.0" y="250" width="7" height="16" fill="#0000BA"/>
+<text class="nom" x="746.0" y="264">Horizons</text>
+<text class="val" x="827.6" y="264">6,60</text>
+<text class="pr" x="882.4" y="263">c89cd0af</text>
+<path d="M833.4 212 L833.4 279 L828.4 279" fill="none" stroke="var(--regle)" stroke-width="1"/>
+<rect x="821.4" y="280" width="7" height="16" fill="#034EA2"/>
+<text class="nom" x="836.4" y="294">Les Républicains</text>
+<text class="val" x="987.6" y="294">7,73</text>
+<text class="pr" x="1042.4" y="293">f1d50006</text>
+<path d="M920.6 212 L920.6 309 L874.8 309" fill="none" stroke="var(--regle)" stroke-width="1"/>
+<rect x="867.8" y="310" width="7" height="16" fill="#104E8B"/>
+<text class="nom" x="882.8" y="324">Rassemblement national</text>
+<text class="val" x="1086.2" y="324">8,82</text>
+<text class="pr" x="1141.0" y="323">4367cde1</text>
+    </svg></div>
+  </section>
+
+  <section>
+    <div class="tete">
+      <span class="rang">Famille 3 / 3</span>
+      <h2>Nuance administrative</h2>
+      <span class="regle-dit">code <code>nuance_leg2024</code><br>sans échelle · 7 entités</span>
+    </div>
+    <p class="sous">Un code, pas une coordonnée. Il n'y a rien à graduer, donc pas de plage et pas d'ordre : ces cartouches sont rangées par ordre alphabétique de code, et leur position sur la page ne veut rien dire.</p>
+    <div class="cadre"><svg viewBox="0 0 1200 164" role="img" aria-label="Codes de nuance administrative, sans échelle et sans ordre">
+<rect x="8" y="24" width="250" height="56" rx="3" fill="none" stroke="var(--regle)" stroke-width="1.5" stroke-dasharray="3 4"/>
+<rect x="8" y="24" width="10" height="56" fill="var(--graphite)"/>
+<text class="code" x="32" y="51">ENS</text>
+<text class="nom" x="32" y="71">Ensemble</text>
+<text class="pr" x="248" y="71" text-anchor="end">450b4c88</text>
+<rect x="270" y="24" width="267" height="56" rx="3" fill="none" stroke="var(--regle)" stroke-width="1.5" stroke-dasharray="3 4"/>
+<rect x="270" y="24" width="10" height="56" fill="#CC2443"/>
+<text class="code" x="294" y="51">FI</text>
+<text class="nom" x="294" y="71">La France insoumise</text>
+<text class="pr" x="527" y="71" text-anchor="end">8acde57e</text>
+<rect x="549.0" y="24" width="250" height="56" rx="3" fill="none" stroke="var(--regle)" stroke-width="1.5" stroke-dasharray="3 4"/>
+<rect x="549.0" y="24" width="10" height="56" fill="#0000BA"/>
+<text class="code" x="573.0" y="51">HOR</text>
+<text class="nom" x="573.0" y="71">Horizons</text>
+<text class="pr" x="789" y="71" text-anchor="end">2b04fcbd</text>
+<rect x="811.0" y="24" width="250" height="56" rx="3" fill="none" stroke="var(--regle)" stroke-width="1.5" stroke-dasharray="3 4"/>
+<rect x="811.0" y="24" width="10" height="56" fill="#034EA2"/>
+<text class="code" x="835.0" y="51">LR</text>
+<text class="nom" x="835.0" y="71">Les Républicains</text>
+<text class="pr" x="1051" y="71" text-anchor="end">8bfeaefa</text>
+<rect x="8" y="98" width="294" height="56" rx="3" fill="none" stroke="var(--regle)" stroke-width="1.5" stroke-dasharray="3 4"/>
+<rect x="8" y="98" width="10" height="56" fill="#104E8B"/>
+<text class="code" x="32" y="125">RN</text>
+<text class="nom" x="32" y="145">Rassemblement national</text>
+<text class="pr" x="292" y="145" text-anchor="end">a2af75c5</text>
+<rect x="314.0" y="98" width="250" height="56" rx="3" fill="none" stroke="var(--regle)" stroke-width="1.5" stroke-dasharray="3 4"/>
+<rect x="314.0" y="98" width="10" height="56" fill="#E30040"/>
+<text class="code" x="338.0" y="125">SOC</text>
+<text class="nom" x="338.0" y="145">Parti socialiste</text>
+<text class="pr" x="554" y="145" text-anchor="end">be278664</text>
+<rect x="576.0" y="98" width="303" height="56" rx="3" fill="none" stroke="var(--regle)" stroke-width="1.5" stroke-dasharray="3 4"/>
+<rect x="576.0" y="98" width="10" height="56" fill="#FB2C59"/>
+<text class="code" x="600.0" y="125">UG</text>
+<text class="nom" x="600.0" y="145">Nouveau Front populaire</text>
+<text class="pr" x="869" y="145" text-anchor="end">bc4e6cb4</text>
+    </svg></div>
+  </section>
+
+  <section>
+    <div class="tete">
+      <span class="rang">Hors plage</span>
+      <h2>Calculé, non publié</h2>
+      <span class="regle-dit">3 entités</span>
+    </div>
+    <p class="sous">Ce ne sont pas des trous. Deux groupes ont bien une position calculée : elle est retenue, parce que la dispersion interne dépasse le seuil que le projet s'est fixé. Le calcul et son motif restent vérifiables, ligne par ligne, par la même empreinte que les autres.</p>
+    <div class="cadre"><svg viewBox="0 0 1200 294" role="img" aria-label="Entités calculées mais non publiées, et entité hors source">
+<rect x="0" y="8" width="1200" height="86" fill="var(--refus-fond)"/>
+<rect x="0" y="8" width="8" height="86" fill="var(--encre)"/>
+<line x1="34" y1="78" x2="132" y2="26" stroke="var(--encre)" stroke-width="7"/>
+<text class="refus-nom" x="168" y="46">LIOT</text>
+<text class="refus-m" x="168" y="72">Dispersion interne au-delà du seuil publié : IQR 0,64 pour un maximum de 0,25.</text>
+<text class="pr" x="1192" y="72" text-anchor="end">32fb7669</text>
+<rect x="0" y="104" width="1200" height="86" fill="var(--refus-fond)"/>
+<rect x="0" y="104" width="8" height="86" fill="var(--encre)"/>
+<line x1="34" y1="174" x2="132" y2="122" stroke="var(--encre)" stroke-width="7"/>
+<text class="refus-nom" x="168" y="142">Non inscrit</text>
+<text class="refus-m" x="168" y="168">Effectif retenu de 9 membres pour un minimum de 10.</text>
+<text class="pr" x="1192" y="168" text-anchor="end">1eec0f35</text>
+<rect x="0" y="200" width="1200" height="86" fill="var(--refus-fond)"/>
+<rect x="0" y="200" width="8" height="86" fill="#FFF100"/>
+<circle cx="83" cy="243" r="26" fill="none" stroke="var(--encre)" stroke-width="6"/>
+<line x1="65" y1="261" x2="101" y2="225" stroke="var(--encre)" stroke-width="6"/>
+<text class="refus-nom" x="168" y="238">Place publique</text>
+<text class="refus-m" x="168" y="264">Hors source — Aucun code propre dans la grille constatée. Aucune mesure dans aucune des trois familles.</text>
+    </svg></div>
+  </section>
+
+  <section>
+    <div class="tete">
+      <span class="rang">Épreuve</span>
+      <h2>La forme à 60 entités</h2>
+      <span class="regle-dit">positions fictives</span>
+    </div>
+    <p class="sous"><b>Aucune donnée ci-dessous</b> : 60 jalons tirés au hasard, pour montrer ce que devient la plage quand le projet s'étendra aux rédactions puis aux personnalités. La plage tient — les amas et le vide se lisent même mieux, parce que la densité devient une texture. Ce qui casse, c'est le peigne d'étiquettes : au-delà d'une vingtaine d'entités, les noms passent dans une liste triée sous la plage, et c'est le survol ou le clic qui relie un nom à son jalon.</p>
+    <div class="cadre"><svg viewBox="0 0 1200 116" role="img" aria-label="Épreuve de charge : 60 jalons fictifs sur la même plage">
+<rect x="30" y="10" width="1140" height="96" rx="4" fill="var(--strip)"/>
+<rect x="39.2" y="10" width="8" height="96" fill="var(--graphite)" stroke="var(--strip)" stroke-width="1"/>
+<rect x="44.9" y="10" width="8" height="96" fill="var(--graphite)" stroke="var(--strip)" stroke-width="1"/>
+<rect x="48.7" y="10" width="8" height="96" fill="var(--graphite)" stroke="var(--strip)" stroke-width="1"/>
+<rect x="55.3" y="10" width="8" height="96" fill="var(--graphite)" stroke="var(--strip)" stroke-width="1"/>
+<rect x="56.0" y="10" width="8" height="96" fill="var(--graphite)" stroke="var(--strip)" stroke-width="1"/>
+<rect x="69.5" y="10" width="8" height="96" fill="var(--graphite)" stroke="var(--strip)" stroke-width="1"/>
+<rect x="75.3" y="10" width="8" height="96" fill="var(--graphite)" stroke="var(--strip)" stroke-width="1"/>
+<rect x="76.5" y="10" width="8" height="96" fill="var(--graphite)" stroke="var(--strip)" stroke-width="1"/>
+<rect x="87.5" y="10" width="8" height="96" fill="var(--graphite)" stroke="var(--strip)" stroke-width="1"/>
+<rect x="100.6" y="10" width="8" height="96" fill="var(--graphite)" stroke="var(--strip)" stroke-width="1"/>
+<rect x="132.3" y="10" width="8" height="96" fill="var(--graphite)" stroke="var(--strip)" stroke-width="1"/>
+<rect x="135.1" y="10" width="8" height="96" fill="var(--graphite)" stroke="var(--strip)" stroke-width="1"/>
+<rect x="144.1" y="10" width="8" height="96" fill="var(--graphite)" stroke="var(--strip)" stroke-width="1"/>
+<rect x="144.9" y="10" width="8" height="96" fill="var(--graphite)" stroke="var(--strip)" stroke-width="1"/>
+<rect x="148.4" y="10" width="8" height="96" fill="var(--graphite)" stroke="var(--strip)" stroke-width="1"/>
+<rect x="155.1" y="10" width="8" height="96" fill="var(--graphite)" stroke="var(--strip)" stroke-width="1"/>
+<rect x="161.0" y="10" width="8" height="96" fill="var(--graphite)" stroke="var(--strip)" stroke-width="1"/>
+<rect x="167.0" y="10" width="8" height="96" fill="var(--graphite)" stroke="var(--strip)" stroke-width="1"/>
+<rect x="170.0" y="10" width="8" height="96" fill="var(--graphite)" stroke="var(--strip)" stroke-width="1"/>
+<rect x="175.2" y="10" width="8" height="96" fill="var(--graphite)" stroke="var(--strip)" stroke-width="1"/>
+<rect x="183.6" y="10" width="8" height="96" fill="var(--graphite)" stroke="var(--strip)" stroke-width="1"/>
+<rect x="204.7" y="10" width="8" height="96" fill="var(--graphite)" stroke="var(--strip)" stroke-width="1"/>
+<rect x="208.3" y="10" width="8" height="96" fill="var(--graphite)" stroke="var(--strip)" stroke-width="1"/>
+<rect x="232.7" y="10" width="8" height="96" fill="var(--graphite)" stroke="var(--strip)" stroke-width="1"/>
+<rect x="241.3" y="10" width="8" height="96" fill="var(--graphite)" stroke="var(--strip)" stroke-width="1"/>
+<rect x="245.0" y="10" width="8" height="96" fill="var(--graphite)" stroke="var(--strip)" stroke-width="1"/>
+<rect x="363.5" y="10" width="8" height="96" fill="var(--graphite)" stroke="var(--strip)" stroke-width="1"/>
+<rect x="464.2" y="10" width="8" height="96" fill="var(--graphite)" stroke="var(--strip)" stroke-width="1"/>
+<rect x="506.0" y="10" width="8" height="96" fill="var(--graphite)" stroke="var(--strip)" stroke-width="1"/>
+<rect x="624.3" y="10" width="8" height="96" fill="var(--graphite)" stroke="var(--strip)" stroke-width="1"/>
+<rect x="640.0" y="10" width="8" height="96" fill="var(--graphite)" stroke="var(--strip)" stroke-width="1"/>
+<rect x="661.4" y="10" width="8" height="96" fill="var(--graphite)" stroke="var(--strip)" stroke-width="1"/>
+<rect x="662.9" y="10" width="8" height="96" fill="var(--graphite)" stroke="var(--strip)" stroke-width="1"/>
+<rect x="735.6" y="10" width="8" height="96" fill="var(--graphite)" stroke="var(--strip)" stroke-width="1"/>
+<rect x="746.2" y="10" width="8" height="96" fill="var(--graphite)" stroke="var(--strip)" stroke-width="1"/>
+<rect x="772.0" y="10" width="8" height="96" fill="var(--graphite)" stroke="var(--strip)" stroke-width="1"/>
+<rect x="777.8" y="10" width="8" height="96" fill="var(--graphite)" stroke="var(--strip)" stroke-width="1"/>
+<rect x="791.7" y="10" width="8" height="96" fill="var(--graphite)" stroke="var(--strip)" stroke-width="1"/>
+<rect x="829.6" y="10" width="8" height="96" fill="var(--graphite)" stroke="var(--strip)" stroke-width="1"/>
+<rect x="835.4" y="10" width="8" height="96" fill="var(--graphite)" stroke="var(--strip)" stroke-width="1"/>
+<rect x="837.0" y="10" width="8" height="96" fill="var(--graphite)" stroke="var(--strip)" stroke-width="1"/>
+<rect x="858.4" y="10" width="8" height="96" fill="var(--graphite)" stroke="var(--strip)" stroke-width="1"/>
+<rect x="867.3" y="10" width="8" height="96" fill="var(--graphite)" stroke="var(--strip)" stroke-width="1"/>
+<rect x="870.8" y="10" width="8" height="96" fill="var(--graphite)" stroke="var(--strip)" stroke-width="1"/>
+<rect x="874.0" y="10" width="8" height="96" fill="var(--graphite)" stroke="var(--strip)" stroke-width="1"/>
+<rect x="889.9" y="10" width="8" height="96" fill="var(--graphite)" stroke="var(--strip)" stroke-width="1"/>
+<rect x="900.2" y="10" width="8" height="96" fill="var(--graphite)" stroke="var(--strip)" stroke-width="1"/>
+<rect x="964.6" y="10" width="8" height="96" fill="var(--graphite)" stroke="var(--strip)" stroke-width="1"/>
+<rect x="976.4" y="10" width="8" height="96" fill="var(--graphite)" stroke="var(--strip)" stroke-width="1"/>
+<rect x="1000.6" y="10" width="8" height="96" fill="var(--graphite)" stroke="var(--strip)" stroke-width="1"/>
+<rect x="1031.7" y="10" width="8" height="96" fill="var(--graphite)" stroke="var(--strip)" stroke-width="1"/>
+<rect x="1071.0" y="10" width="8" height="96" fill="var(--graphite)" stroke="var(--strip)" stroke-width="1"/>
+<rect x="1072.2" y="10" width="8" height="96" fill="var(--graphite)" stroke="var(--strip)" stroke-width="1"/>
+<rect x="1074.4" y="10" width="8" height="96" fill="var(--graphite)" stroke="var(--strip)" stroke-width="1"/>
+<rect x="1074.8" y="10" width="8" height="96" fill="var(--graphite)" stroke="var(--strip)" stroke-width="1"/>
+<rect x="1108.3" y="10" width="8" height="96" fill="var(--graphite)" stroke="var(--strip)" stroke-width="1"/>
+<rect x="1133.7" y="10" width="8" height="96" fill="var(--graphite)" stroke="var(--strip)" stroke-width="1"/>
+<rect x="1145.6" y="10" width="8" height="96" fill="var(--graphite)" stroke="var(--strip)" stroke-width="1"/>
+<rect x="1153.7" y="10" width="8" height="96" fill="var(--graphite)" stroke="var(--strip)" stroke-width="1"/>
+<rect x="1154.8" y="10" width="8" height="96" fill="var(--graphite)" stroke="var(--strip)" stroke-width="1"/>
+    </svg></div>
+  </section>
+
+  <div class="pied">
+    <div>
+      <h3>Ce que chaque barre porte</h3>
+      <p>Nom, valeur, et les huit premiers caractères de l'empreinte de preuve. L'éclat complet se trouve à <code>preuves/&lt;2 premiers caractères hexadécimaux&gt;/&lt;empreinte&gt;.json</code>, un fichier par mesure, 256 éclats.</p>
+    </div>
+    <div>
+      <h3>Instantané</h3>
+      <p><code>instantanes/an17-2026-07-21.json</code></p>
+      <p class="empreinte">sha256 09cb165c80690c73ef2a9395b9d20938489fd8930bbf732ce95f7e698be48e4b<br>8859 octets · 17 bandes · contrat 0.6.0</p>
+    </div>
+    <div>
+      <h3>Sources et licences</h3>
+      <p>Assemblée nationale — Licence Ouverte v1.0 ; Chapel Hill Expert Survey — aucune licence publiée, citation exigée ; Ministère de l'intérieur — Licence Ouverte v2.0 — données du 2026-08-27</p>
+      <p>Publication : Licence Ouverte / Open Licence (Etalab).</p>
+    </div>
+    <div>
+      <h3>Couleurs</h3>
+      <p>Couleur d'identité déclarée par chaque entité, relevée sur Wikidata (propriété P465, CC0 1.0), jamais choisie ici. Une entité sans couleur déclarée reste grise. Aucune teinte n'est indexée sur la valeur mesurée, et aucune ne dit si une mesure est bonne.</p>
+    </div>
+  </div>
+</div>
+</body>
+</html>

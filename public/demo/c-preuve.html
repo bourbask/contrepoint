@@ -1,0 +1,472 @@
+<!doctype html>
+<html lang="fr"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Contrepoint — concept « la preuve visible »</title>
+<style>:root{
+ --papier:#e8eaee; --papier-systeme:#f5f6f8; --papier-creux:#dfe2e8;
+ --encre:#191e2c; --encre-pale:#5c6373; --regle:#b7bec9;
+ --f-votes:#191e2c; --f-experts:#2b5490; --f-nuance:#3f6b3c; --f-aucune:#5c6373;
+ --e1:.4rem; --e2:.8rem; --e3:1.2rem; --e4:1.8rem; --e5:2.8rem; --e6:4rem;
+ --largeur:66rem; --mesure:44rem;
+ --filet:1px solid var(--regle);
+ --serif:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif;
+ --mono:"SFMono-Regular",Menlo,Consolas,"DejaVu Sans Mono",monospace;
+}
+@media (prefers-color-scheme:dark){:root{
+ --papier:#12151b; --papier-systeme:#1a1e27; --papier-creux:#0c0e13;
+ --encre:#e3e7ee; --encre-pale:#939bab; --regle:#39404e;
+ --f-votes:#e3e7ee; --f-experts:#8fb2e4; --f-nuance:#8bbd84; --f-aucune:#939bab;
+}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--papier);color:var(--encre);
+ font-family:var(--serif);font-size:16px;line-height:1.5;
+ -webkit-font-smoothing:antialiased}
+.page{max-width:var(--largeur);margin:0 auto;padding:var(--e5) var(--e3) var(--e6)}
+h2,h3,h4{margin:0;font-weight:500}
+p{margin:0}
+
+/* ---------- en-tête ---------- */
+.entete{border-bottom:2px solid var(--encre);padding-bottom:var(--e3);margin-bottom:var(--e4)}
+.marque{font-size:2rem;font-weight:500;letter-spacing:-.01em}
+.ident{display:flex;flex-wrap:wrap;gap:0 var(--e3);margin-top:var(--e1);
+ font-family:var(--mono);font-size:.75rem;color:var(--encre-pale);text-transform:uppercase;letter-spacing:.05em}
+.these{max-width:var(--mesure);margin-top:var(--e3);font-size:1.0625rem}
+
+/* ---------- clé ---------- */
+.cle{display:grid;grid-template-columns:1fr 1fr;gap:var(--e4);
+ margin-bottom:var(--e5);padding:var(--e3);background:var(--papier-systeme);border:var(--filet)}
+.cle-bloc h2{font-size:.75rem;font-family:var(--mono);text-transform:uppercase;
+ letter-spacing:.08em;color:var(--encre-pale);border-bottom:var(--filet);padding-bottom:var(--e1);margin-bottom:var(--e2)}
+.cle-demo{display:flex;gap:var(--e2);align-items:flex-start;margin-bottom:var(--e2)}
+.legende{font-size:.8125rem;color:var(--encre-pale);max-width:var(--mesure)}
+.cle-fam{list-style:none;margin:0;padding:0;font-size:.8125rem}
+.cle-fam li{display:flex;align-items:center;gap:var(--e2);padding:var(--e1) 0;
+ border-left:2px solid var(--famille);padding-left:var(--e2);margin-bottom:2px}
+.cle-fam .tete{position:static}
+
+/* ---------- sceau ---------- */
+.sceau{color:var(--encre);display:block;flex:none}
+.sceau--mini{flex:none}
+.sceau--grand{width:96px;height:auto}
+.sceau--geant{width:148px;height:auto}
+
+/* ---------- panneaux ---------- */
+.panneau{margin-bottom:var(--e5);border-top:2px solid var(--famille);padding-top:var(--e2)}
+.pan-tete{display:flex;align-items:baseline;justify-content:space-between;
+ gap:var(--e3);flex-wrap:wrap;margin-bottom:var(--e2)}
+.pan-tete h2{font-size:1.125rem}
+.pan-ech{font-family:var(--mono);font-size:.75rem;color:var(--encre-pale)}
+
+.grille{display:grid;grid-template-columns:16.5rem 1fr 6.5rem 4.9rem;
+ gap:0 var(--e2);align-items:center}
+.grille--tete{font-family:var(--mono);font-size:.6875rem;text-transform:uppercase;
+ letter-spacing:.06em;color:var(--encre-pale);border-bottom:var(--filet);padding-bottom:var(--e1)}
+.grille--tete .col-portee{display:flex;justify-content:space-between}
+.ligne{border-bottom:var(--filet);padding:var(--e2) 0}
+.ligne .appareil{grid-column:1/-1;font-family:var(--mono);font-size:.6875rem;
+ color:var(--encre-pale);padding-top:var(--e1);padding-left:0}
+.ent{display:flex;align-items:center;gap:.5rem;font-size:.9375rem;line-height:1.25}
+.past{width:9px;height:9px;flex:none;border-radius:1px;display:block}
+.past--nulle{background:none}
+.col-val{text-align:right;font-family:var(--mono);font-variant-numeric:tabular-nums}
+.col-val b{font-size:1rem;font-weight:500}
+.col-val .np{font-size:.6875rem;font-weight:400;line-height:1.2;display:block;
+ text-transform:uppercase;letter-spacing:.04em;color:var(--encre-pale)}
+.col-sceau{display:flex;justify-content:flex-end}
+
+/* portée */
+.portee{position:relative;height:22px;margin:0 6px}
+.portee::before{content:"";position:absolute;left:0;right:0;top:50%;
+ height:1px;background:var(--regle)}
+.tick{position:absolute;top:4px;width:1px;height:14px;background:var(--regle)}
+.tick--g{left:0}.tick--d{right:0}
+.tete{position:absolute;top:50%;width:10px;height:10px;
+ background:var(--famille,var(--encre));margin-left:-5px;margin-top:-5px}
+.tete--losange{transform:rotate(45deg);width:9px;height:9px;margin-left:-4.5px;margin-top:-4.5px}
+.tete--nul{background:none;border:1.5px solid var(--famille);width:9px;height:9px}
+/* GV-08 : une voix non publiee ne porte ni encre, ni graduation */
+.portee--vide::before{display:none}
+.ligne--np{background:var(--papier-systeme)}
+
+/* nuances */
+.panneau--nuance .legende{margin-bottom:var(--e2)}
+.nuances{list-style:none;margin:0;padding:0;border-top:var(--filet)}
+.nuances li{display:grid;grid-template-columns:16.5rem 1fr 4.9rem;gap:0 var(--e2);
+ align-items:center;padding:var(--e2) 0;border-bottom:var(--filet)}
+.nuances .code{display:flex;align-items:baseline;gap:var(--e2)}
+.nuances .code em{font-style:normal;font-size:.75rem;color:var(--encre-pale);font-family:var(--mono)}
+.nuances .code b{font-family:var(--mono);font-weight:500;border:var(--filet);
+ padding:1px 7px;background:var(--papier-systeme)}
+.nuances .col-sceau,.nuances .sceau{margin-left:auto}
+
+/* absence */
+.absence{border:1px dashed var(--regle);padding:var(--e2) var(--e3);margin-bottom:var(--e5)}
+.absence h2{font-family:var(--mono);font-size:.6875rem;text-transform:uppercase;
+ letter-spacing:.08em;color:var(--encre-pale);margin-bottom:var(--e1)}
+.absence p{font-size:.9375rem;max-width:var(--mesure)}
+.code-motif{font-family:var(--mono);font-size:.75rem;color:var(--encre-pale)}
+
+/* ---------- chaînes ---------- */
+.sec-tete{border-bottom:2px solid var(--encre);padding-bottom:var(--e2);margin-bottom:var(--e4)}
+.sec-tete h2{font-size:1.25rem}
+.chaine{margin-bottom:var(--e4);border:var(--filet);border-left:2px solid var(--famille);
+ background:var(--papier-systeme)}
+.ch-tete{display:flex;align-items:baseline;gap:var(--e2);flex-wrap:wrap;
+ padding:var(--e2) var(--e3);border-bottom:var(--filet)}
+.ch-tete h3{font-size:1.0625rem}
+.ch-tete p{font-family:var(--mono);font-size:.6875rem;color:var(--encre-pale)}
+.ch-etat{margin-left:auto;font-family:var(--mono);font-size:.625rem;text-transform:uppercase;
+ letter-spacing:.08em;border:var(--filet);padding:1px 6px;color:var(--encre-pale)}
+
+.stations{display:grid;grid-template-columns:1.5fr 1.05fr 1.05fr}
+.st{padding:var(--e3);position:relative;min-width:0;display:flex;flex-direction:column}
+.st+.st{border-left:var(--filet)}
+.st-num{position:absolute;top:var(--e2);right:var(--e2);font-family:var(--mono);
+ font-size:.625rem;color:var(--encre-pale);border:var(--filet);border-radius:50%;
+ width:16px;height:16px;line-height:14px;text-align:center}
+.st h4{font-family:var(--mono);font-size:.6875rem;text-transform:uppercase;
+ letter-spacing:.08em;color:var(--encre-pale);margin-bottom:var(--e2)}
+/* la flèche entre deux stations */
+.st+.st::before{content:"";position:absolute;left:-5px;top:var(--e3);
+ width:9px;height:9px;background:var(--papier-systeme);
+ border-right:1px solid var(--encre-pale);border-bottom:1px solid var(--encre-pale);
+ transform:rotate(-45deg)}
+
+.stations--r{grid-template-columns:1.1fr 1.1fr 1fr auto;align-items:center}
+.stations--r .st{padding:var(--e2) var(--e3);display:block}
+.stations--r .st h4{margin-bottom:2px}
+.stations--r p{font-size:.8125rem;color:var(--encre)}
+.stations--r .st--sceau{display:flex;flex-direction:column;gap:2px;align-items:flex-end}
+.stations--r .st--sceau span{white-space:nowrap}
+.stations--r .st--sceau span{font-family:var(--mono);font-size:.625rem;color:var(--encre-pale)}
+.v-repli{font-family:var(--mono);font-weight:500}
+.np{color:var(--encre-pale)}
+
+.entree{padding-bottom:var(--e2);margin-bottom:var(--e2);border-bottom:var(--filet)}
+.entree:last-child{border-bottom:0;margin-bottom:0;padding-bottom:0}
+.en-tete{display:flex;gap:var(--e2);align-items:baseline;flex-wrap:wrap}
+.en-tete b{font-family:var(--mono);font-size:.8125rem;font-weight:500}
+.en-tete span{font-size:.8125rem;color:var(--encre-pale)}
+.url{font-family:var(--mono);font-size:.6875rem;color:var(--encre-pale);
+ word-break:break-all;line-height:1.35;margin:2px 0}
+.en-dates{font-family:var(--mono);font-size:.625rem;color:var(--encre-pale)}
+.cit{font-size:.6875rem;line-height:1.4;color:var(--encre-pale);
+ border-left:2px solid var(--regle);padding-left:var(--e1);margin:var(--e1) 0}
+.emps{display:grid;grid-template-columns:1fr 1fr;gap:var(--e2);margin-top:var(--e2)}
+.emp{min-width:0}
+.emp-lib{display:block;font-family:var(--mono);font-size:.5625rem;text-transform:uppercase;
+ letter-spacing:.06em;color:var(--encre-pale);margin-bottom:2px}
+.emp .sceau{margin-bottom:3px}
+.hex{font-family:var(--mono);font-size:.5625rem;color:var(--encre-pale);
+ word-break:break-all;line-height:1.55;letter-spacing:.02em}
+
+.meth{display:flex;gap:var(--e2);align-items:baseline;flex-wrap:wrap;margin-bottom:var(--e2)}
+.meth b{font-family:var(--mono);font-size:.8125rem;font-weight:500}
+.meth span{font-family:var(--mono);font-size:.6875rem;color:var(--encre-pale)}
+.params{margin:0;display:grid;grid-template-columns:8.5rem 1fr;gap:2px var(--e2);font-size:.6875rem}
+.params dt{font-family:var(--mono);color:var(--encre-pale);overflow-wrap:anywhere}
+.params dd{margin:0;font-family:var(--mono);overflow-wrap:anywhere}
+.logiciel{font-family:var(--mono);font-size:.625rem;color:var(--encre-pale);margin-top:var(--e2)}
+
+.valeur{margin-bottom:var(--e2)}
+.v-grand{display:block;font-family:var(--mono);font-size:1.75rem;font-weight:500;line-height:1.1}
+.v-grand.np{font-size:.9375rem;text-transform:uppercase;letter-spacing:.04em}
+.v-code{border:var(--filet);display:inline-block;padding:0 .4rem}
+.v-ech{display:block;font-family:var(--mono);font-size:.625rem;color:var(--encre-pale);margin-top:2px}
+.obs{font-family:var(--mono);font-size:.625rem;color:var(--encre-pale);margin-top:var(--e2);padding-bottom:var(--e4)}
+.scelle{margin-top:auto;padding-top:var(--e2);border-top:2px solid var(--encre)}
+.scelle-hex{margin-top:var(--e1)}
+.scelle-lib{font-family:var(--mono);font-size:.5625rem;text-transform:uppercase;
+ letter-spacing:.06em;color:var(--encre-pale);margin-top:2px}
+
+/* ---------- pied ---------- */
+.pied{display:grid;grid-template-columns:repeat(2,1fr);gap:var(--e2) var(--e4);
+ border-top:2px solid var(--encre);padding-top:var(--e3);margin-top:var(--e5)}
+.pied div{display:flex;flex-direction:column;gap:2px}
+.pied b{font-family:var(--mono);font-size:.625rem;text-transform:uppercase;
+ letter-spacing:.06em;color:var(--encre-pale);font-weight:400}
+.pied span{font-size:.75rem;line-height:1.4}
+
+@media (max-width:760px){
+ .cle{grid-template-columns:1fr}
+ .pied{grid-template-columns:1fr}
+ .grille{grid-template-columns:1fr 4.6rem;gap:var(--e1) var(--e2)}
+ .grille--tete{display:none}
+ .col-portee{grid-column:1/-1;order:3}
+ .col-val{grid-column:1;order:2;text-align:left}
+ .col-sceau{grid-row:1;grid-column:2;order:0}
+ .ligne .appareil{order:4}
+ .nuances li{grid-template-columns:1fr 4.6rem}
+ .nuances .code{grid-column:1}
+ .stations,.stations--r{grid-template-columns:1fr}
+ .st+.st{border-left:0;border-top:var(--filet)}
+ .st+.st::before{left:var(--e3);top:-5px}
+ .stations--r .st--sceau{align-items:flex-start}
+}
+</style></head><body>
+<div class="page">
+
+<header class="entete">
+  <div class="marque">Contrepoint</div>
+  <div class="ident">
+    <span>instantané an17-2026-07-21</span><span>AN 17ᵉ législature, 2026-07-21</span>
+    <span>arrêté le 2026-08-27</span><span>contrat 0.6.0</span>
+  </div>
+  <p class="these">Chaque valeur publiée est le résultat d'un calcul refait à l'identique depuis une source citée, datée et empreintée. La chaîne de ce calcul se lit en trois stations : entrées, méthode, valeur. Une position non publiée porte la même chaîne, et ses chiffres avec elle.</p>
+</header>
+
+<section class="cle">
+  <div class="cle-bloc">
+    <h2>Le sceau</h2>
+    <div class="cle-demo"><svg class="sceau sceau--geant" width="71" height="31" viewBox="0 0 71 31" role="img" aria-label="Sceau de l'empreinte 58dddb470ebac0b3"><rect x=".5" y=".5" width="70.0" height="30.0" fill="none" stroke="currentColor" stroke-opacity=".4"/><rect x="4" y="24" width="3" height="3" fill="currentColor"/><rect x="8" y="12" width="3" height="3" fill="currentColor"/><rect x="12" y="8" width="3" height="3" fill="currentColor"/><rect x="16" y="8" width="3" height="3" fill="currentColor"/><rect x="20" y="8" width="3" height="3" fill="currentColor"/><rect x="24" y="24" width="3" height="3" fill="currentColor"/><rect x="28" y="20" width="3" height="3" fill="currentColor"/><rect x="32" y="8" width="3" height="3" fill="currentColor"/><rect x="36" y="4" width="3" height="3" fill="currentColor"/><rect x="40" y="12" width="3" height="3" fill="currentColor"/><rect x="44" y="24" width="3" height="3" fill="currentColor"/><rect x="48" y="20" width="3" height="3" fill="currentColor"/><rect x="52" y="4" width="3" height="3" fill="currentColor"/><rect x="56" y="4" width="3" height="3" fill="currentColor"/><rect x="60" y="24" width="3" height="3" fill="currentColor"/><rect x="64" y="16" width="3" height="3" fill="currentColor"/></svg><div><p class="legende">Les 16 premiers caractères de l'empreinte, un caractère par colonne, une case par colonne. Encre constante : la densité ne varie pas.</p></div></div>
+    <p class="legende">Un sceau se reconnaît de l'œil et se recopie du doigt ; les 64 caractères restent écrits sous la chaîne.</p>
+  </div>
+  <div class="cle-bloc">
+    <h2>Les trois familles</h2>
+    <ul class="cle-fam">
+      <li style="--famille:var(--f-votes)"><i class="tete tete--carre"></i>Votes nominatifs — échelle ancrée, −1,00 à 1,00</li>
+      <li style="--famille:var(--f-experts)"><i class="tete tete--losange"></i>Enquête d'experts — CHES lrgen, 0,00 à 10,00</li>
+      <li style="--famille:var(--f-nuance)"><i class="tete tete--nul"></i>Nuance administrative — aucune borne, aucune graduation</li>
+    </ul>
+    <p class="legende">Trois échelles disjointes, jamais alignées ni moyennées. Une pastille d'identité vient de Wikidata P465, licence CC0.</p>
+  </div>
+</section>
+
+<section class="panneau" style="--famille:var(--f-votes)">
+<div class="pan-tete"><h2>Votes nominatifs</h2><p class="pan-ech">votes_an17_ancre_v1 — -1,00 à 1,00</p></div>
+<div class="grille grille--tete" aria-hidden="true"><div>Entité</div><div class="col-portee"><span class="borne-g">-1,00</span><span class="borne-d">1,00</span></div><div class="col-val">Valeur</div><div class="col-sceau">Sceau de preuve</div></div>
+<div class="grille ligne">
+<div class="ent"><span class="past" style="background:#CC2443" aria-hidden="true"></span><span>La France insoumise</span></div>
+<div class="col-portee"><div class="portee"><i class="tick tick--g"></i><i class="tick tick--d"></i><i class="tete tete--carre" style="left:0.0000%"></i></div></div>
+<div class="col-val"><b>-1,00</b></div>
+<div class="col-sceau"><svg class="sceau" width="71" height="31" viewBox="0 0 71 31" role="img" aria-label="Sceau de l'empreinte 58dddb470ebac0b3"><rect x=".5" y=".5" width="70.0" height="30.0" fill="none" stroke="currentColor" stroke-opacity=".4"/><rect x="4" y="24" width="3" height="3" fill="currentColor"/><rect x="8" y="12" width="3" height="3" fill="currentColor"/><rect x="12" y="8" width="3" height="3" fill="currentColor"/><rect x="16" y="8" width="3" height="3" fill="currentColor"/><rect x="20" y="8" width="3" height="3" fill="currentColor"/><rect x="24" y="24" width="3" height="3" fill="currentColor"/><rect x="28" y="20" width="3" height="3" fill="currentColor"/><rect x="32" y="8" width="3" height="3" fill="currentColor"/><rect x="36" y="4" width="3" height="3" fill="currentColor"/><rect x="40" y="12" width="3" height="3" fill="currentColor"/><rect x="44" y="24" width="3" height="3" fill="currentColor"/><rect x="48" y="20" width="3" height="3" fill="currentColor"/><rect x="52" y="4" width="3" height="3" fill="currentColor"/><rect x="56" y="4" width="3" height="3" fill="currentColor"/><rect x="60" y="24" width="3" height="3" fill="currentColor"/><rect x="64" y="16" width="3" height="3" fill="currentColor"/></svg></div>
+<div class="appareil">effectif 71, IQR 0,03 · observation du 2024-10-08 au 2026-07-21</div>
+</div>
+<div class="grille ligne">
+<div class="ent"><span class="past past--nulle" aria-hidden="true"></span><span>Écologiste et Social</span></div>
+<div class="col-portee"><div class="portee"><i class="tick tick--g"></i><i class="tick tick--d"></i><i class="tete tete--carre" style="left:1.0000%"></i></div></div>
+<div class="col-val"><b>-0,98</b></div>
+<div class="col-sceau"><svg class="sceau" width="71" height="31" viewBox="0 0 71 31" role="img" aria-label="Sceau de l'empreinte 67708569db7b3c2b"><rect x=".5" y=".5" width="70.0" height="30.0" fill="none" stroke="currentColor" stroke-opacity=".4"/><rect x="4" y="4" width="3" height="3" fill="currentColor"/><rect x="8" y="8" width="3" height="3" fill="currentColor"/><rect x="12" y="8" width="3" height="3" fill="currentColor"/><rect x="16" y="4" width="3" height="3" fill="currentColor"/><rect x="20" y="12" width="3" height="3" fill="currentColor"/><rect x="24" y="24" width="3" height="3" fill="currentColor"/><rect x="28" y="4" width="3" height="3" fill="currentColor"/><rect x="32" y="16" width="3" height="3" fill="currentColor"/><rect x="36" y="8" width="3" height="3" fill="currentColor"/><rect x="40" y="24" width="3" height="3" fill="currentColor"/><rect x="44" y="8" width="3" height="3" fill="currentColor"/><rect x="48" y="24" width="3" height="3" fill="currentColor"/><rect x="52" y="16" width="3" height="3" fill="currentColor"/><rect x="56" y="4" width="3" height="3" fill="currentColor"/><rect x="60" y="12" width="3" height="3" fill="currentColor"/><rect x="64" y="24" width="3" height="3" fill="currentColor"/></svg></div>
+<div class="appareil">effectif 38, IQR 0,03 · observation du 2024-10-08 au 2026-07-21</div>
+</div>
+<div class="grille ligne">
+<div class="ent"><span class="past past--nulle" aria-hidden="true"></span><span>Gauche Démocrate et Républicaine</span></div>
+<div class="col-portee"><div class="portee"><i class="tick tick--g"></i><i class="tick tick--d"></i><i class="tete tete--carre" style="left:4.5000%"></i></div></div>
+<div class="col-val"><b>-0,91</b></div>
+<div class="col-sceau"><svg class="sceau" width="71" height="31" viewBox="0 0 71 31" role="img" aria-label="Sceau de l'empreinte 07deacbdbe7e6270"><rect x=".5" y=".5" width="70.0" height="30.0" fill="none" stroke="currentColor" stroke-opacity=".4"/><rect x="4" y="4" width="3" height="3" fill="currentColor"/><rect x="8" y="8" width="3" height="3" fill="currentColor"/><rect x="12" y="8" width="3" height="3" fill="currentColor"/><rect x="16" y="12" width="3" height="3" fill="currentColor"/><rect x="20" y="20" width="3" height="3" fill="currentColor"/><rect x="24" y="4" width="3" height="3" fill="currentColor"/><rect x="28" y="24" width="3" height="3" fill="currentColor"/><rect x="32" y="8" width="3" height="3" fill="currentColor"/><rect x="36" y="24" width="3" height="3" fill="currentColor"/><rect x="40" y="12" width="3" height="3" fill="currentColor"/><rect x="44" y="8" width="3" height="3" fill="currentColor"/><rect x="48" y="12" width="3" height="3" fill="currentColor"/><rect x="52" y="4" width="3" height="3" fill="currentColor"/><rect x="56" y="12" width="3" height="3" fill="currentColor"/><rect x="60" y="8" width="3" height="3" fill="currentColor"/><rect x="64" y="4" width="3" height="3" fill="currentColor"/></svg></div>
+<div class="appareil">effectif 17, IQR 0,09 · observation du 2024-10-08 au 2026-07-21</div>
+</div>
+<div class="grille ligne">
+<div class="ent"><span class="past" style="background:#E30040" aria-hidden="true"></span><span>Parti socialiste</span></div>
+<div class="col-portee"><div class="portee"><i class="tick tick--g"></i><i class="tick tick--d"></i><i class="tete tete--carre" style="left:8.0000%"></i></div></div>
+<div class="col-val"><b>-0,84</b></div>
+<div class="col-sceau"><svg class="sceau" width="71" height="31" viewBox="0 0 71 31" role="img" aria-label="Sceau de l'empreinte bc43670379beca48"><rect x=".5" y=".5" width="70.0" height="30.0" fill="none" stroke="currentColor" stroke-opacity=".4"/><rect x="4" y="24" width="3" height="3" fill="currentColor"/><rect x="8" y="4" width="3" height="3" fill="currentColor"/><rect x="12" y="20" width="3" height="3" fill="currentColor"/><rect x="16" y="16" width="3" height="3" fill="currentColor"/><rect x="20" y="4" width="3" height="3" fill="currentColor"/><rect x="24" y="8" width="3" height="3" fill="currentColor"/><rect x="28" y="4" width="3" height="3" fill="currentColor"/><rect x="32" y="16" width="3" height="3" fill="currentColor"/><rect x="36" y="8" width="3" height="3" fill="currentColor"/><rect x="40" y="16" width="3" height="3" fill="currentColor"/><rect x="44" y="24" width="3" height="3" fill="currentColor"/><rect x="48" y="12" width="3" height="3" fill="currentColor"/><rect x="52" y="4" width="3" height="3" fill="currentColor"/><rect x="56" y="20" width="3" height="3" fill="currentColor"/><rect x="60" y="20" width="3" height="3" fill="currentColor"/><rect x="64" y="12" width="3" height="3" fill="currentColor"/></svg></div>
+<div class="appareil">effectif 68, IQR 0,05 · observation du 2024-10-08 au 2026-07-21</div>
+</div>
+<div class="grille ligne">
+<div class="ent"><span class="past past--nulle" aria-hidden="true"></span><span>Les Démocrates</span></div>
+<div class="col-portee"><div class="portee"><i class="tick tick--g"></i><i class="tick tick--d"></i><i class="tete tete--carre" style="left:58.5000%"></i></div></div>
+<div class="col-val"><b>0,17</b></div>
+<div class="col-sceau"><svg class="sceau" width="71" height="31" viewBox="0 0 71 31" role="img" aria-label="Sceau de l'empreinte 41cb1d3a0fc1e679"><rect x=".5" y=".5" width="70.0" height="30.0" fill="none" stroke="currentColor" stroke-opacity=".4"/><rect x="4" y="20" width="3" height="3" fill="currentColor"/><rect x="8" y="8" width="3" height="3" fill="currentColor"/><rect x="12" y="4" width="3" height="3" fill="currentColor"/><rect x="16" y="24" width="3" height="3" fill="currentColor"/><rect x="20" y="8" width="3" height="3" fill="currentColor"/><rect x="24" y="8" width="3" height="3" fill="currentColor"/><rect x="28" y="16" width="3" height="3" fill="currentColor"/><rect x="32" y="20" width="3" height="3" fill="currentColor"/><rect x="36" y="4" width="3" height="3" fill="currentColor"/><rect x="40" y="16" width="3" height="3" fill="currentColor"/><rect x="44" y="4" width="3" height="3" fill="currentColor"/><rect x="48" y="8" width="3" height="3" fill="currentColor"/><rect x="52" y="12" width="3" height="3" fill="currentColor"/><rect x="56" y="4" width="3" height="3" fill="currentColor"/><rect x="60" y="8" width="3" height="3" fill="currentColor"/><rect x="64" y="16" width="3" height="3" fill="currentColor"/></svg></div>
+<div class="appareil">effectif 37, IQR 0,21 · observation du 2024-10-08 au 2026-07-21</div>
+</div>
+<div class="grille ligne">
+<div class="ent"><span class="past past--nulle" aria-hidden="true"></span><span>Ensemble pour la République</span></div>
+<div class="col-portee"><div class="portee"><i class="tick tick--g"></i><i class="tick tick--d"></i><i class="tete tete--carre" style="left:62.5000%"></i></div></div>
+<div class="col-val"><b>0,25</b></div>
+<div class="col-sceau"><svg class="sceau" width="71" height="31" viewBox="0 0 71 31" role="img" aria-label="Sceau de l'empreinte a31c29f49f8fed44"><rect x=".5" y=".5" width="70.0" height="30.0" fill="none" stroke="currentColor" stroke-opacity=".4"/><rect x="4" y="20" width="3" height="3" fill="currentColor"/><rect x="8" y="16" width="3" height="3" fill="currentColor"/><rect x="12" y="8" width="3" height="3" fill="currentColor"/><rect x="16" y="4" width="3" height="3" fill="currentColor"/><rect x="20" y="12" width="3" height="3" fill="currentColor"/><rect x="24" y="16" width="3" height="3" fill="currentColor"/><rect x="28" y="16" width="3" height="3" fill="currentColor"/><rect x="32" y="20" width="3" height="3" fill="currentColor"/><rect x="36" y="16" width="3" height="3" fill="currentColor"/><rect x="40" y="16" width="3" height="3" fill="currentColor"/><rect x="44" y="12" width="3" height="3" fill="currentColor"/><rect x="48" y="16" width="3" height="3" fill="currentColor"/><rect x="52" y="12" width="3" height="3" fill="currentColor"/><rect x="56" y="8" width="3" height="3" fill="currentColor"/><rect x="60" y="20" width="3" height="3" fill="currentColor"/><rect x="64" y="20" width="3" height="3" fill="currentColor"/></svg></div>
+<div class="appareil">effectif 88, IQR 0,21 · observation du 2024-10-08 au 2026-07-21</div>
+</div>
+<div class="grille ligne">
+<div class="ent"><span class="past" style="background:#0000BA" aria-hidden="true"></span><span>Horizons</span></div>
+<div class="col-portee"><div class="portee"><i class="tick tick--g"></i><i class="tick tick--d"></i><i class="tete tete--carre" style="left:67.5000%"></i></div></div>
+<div class="col-val"><b>0,35</b></div>
+<div class="col-sceau"><svg class="sceau" width="71" height="31" viewBox="0 0 71 31" role="img" aria-label="Sceau de l'empreinte 10c80ddf8e859c35"><rect x=".5" y=".5" width="70.0" height="30.0" fill="none" stroke="currentColor" stroke-opacity=".4"/><rect x="4" y="8" width="3" height="3" fill="currentColor"/><rect x="8" y="4" width="3" height="3" fill="currentColor"/><rect x="12" y="4" width="3" height="3" fill="currentColor"/><rect x="16" y="12" width="3" height="3" fill="currentColor"/><rect x="20" y="4" width="3" height="3" fill="currentColor"/><rect x="24" y="8" width="3" height="3" fill="currentColor"/><rect x="28" y="8" width="3" height="3" fill="currentColor"/><rect x="32" y="16" width="3" height="3" fill="currentColor"/><rect x="36" y="12" width="3" height="3" fill="currentColor"/><rect x="40" y="12" width="3" height="3" fill="currentColor"/><rect x="44" y="12" width="3" height="3" fill="currentColor"/><rect x="48" y="24" width="3" height="3" fill="currentColor"/><rect x="52" y="16" width="3" height="3" fill="currentColor"/><rect x="56" y="4" width="3" height="3" fill="currentColor"/><rect x="60" y="16" width="3" height="3" fill="currentColor"/><rect x="64" y="24" width="3" height="3" fill="currentColor"/></svg></div>
+<div class="appareil">effectif 34, IQR 0,19 · observation du 2024-10-08 au 2026-07-21</div>
+</div>
+<div class="grille ligne">
+<div class="ent"><span class="past" style="background:#034EA2" aria-hidden="true"></span><span>Les Républicains</span></div>
+<div class="col-portee"><div class="portee"><i class="tick tick--g"></i><i class="tick tick--d"></i><i class="tete tete--carre" style="left:84.0000%"></i></div></div>
+<div class="col-val"><b>0,68</b></div>
+<div class="col-sceau"><svg class="sceau" width="71" height="31" viewBox="0 0 71 31" role="img" aria-label="Sceau de l'empreinte 9d6e6b1feee5d5f0"><rect x=".5" y=".5" width="70.0" height="30.0" fill="none" stroke="currentColor" stroke-opacity=".4"/><rect x="4" y="16" width="3" height="3" fill="currentColor"/><rect x="8" y="8" width="3" height="3" fill="currentColor"/><rect x="12" y="4" width="3" height="3" fill="currentColor"/><rect x="16" y="12" width="3" height="3" fill="currentColor"/><rect x="20" y="4" width="3" height="3" fill="currentColor"/><rect x="24" y="24" width="3" height="3" fill="currentColor"/><rect x="28" y="8" width="3" height="3" fill="currentColor"/><rect x="32" y="16" width="3" height="3" fill="currentColor"/><rect x="36" y="12" width="3" height="3" fill="currentColor"/><rect x="40" y="12" width="3" height="3" fill="currentColor"/><rect x="44" y="12" width="3" height="3" fill="currentColor"/><rect x="48" y="24" width="3" height="3" fill="currentColor"/><rect x="52" y="8" width="3" height="3" fill="currentColor"/><rect x="56" y="24" width="3" height="3" fill="currentColor"/><rect x="60" y="16" width="3" height="3" fill="currentColor"/><rect x="64" y="4" width="3" height="3" fill="currentColor"/></svg></div>
+<div class="appareil">effectif 46, IQR 0,12 · observation du 2024-10-08 au 2026-07-21</div>
+</div>
+<div class="grille ligne">
+<div class="ent"><span class="past" style="background:#004B8F" aria-hidden="true"></span><span>Union des droites pour la République</span></div>
+<div class="col-portee"><div class="portee"><i class="tick tick--g"></i><i class="tick tick--d"></i><i class="tete tete--carre" style="left:99.5000%"></i></div></div>
+<div class="col-val"><b>0,99</b></div>
+<div class="col-sceau"><svg class="sceau" width="71" height="31" viewBox="0 0 71 31" role="img" aria-label="Sceau de l'empreinte 53cbb4f6d06c9285"><rect x=".5" y=".5" width="70.0" height="30.0" fill="none" stroke="currentColor" stroke-opacity=".4"/><rect x="4" y="24" width="3" height="3" fill="currentColor"/><rect x="8" y="16" width="3" height="3" fill="currentColor"/><rect x="12" y="4" width="3" height="3" fill="currentColor"/><rect x="16" y="24" width="3" height="3" fill="currentColor"/><rect x="20" y="24" width="3" height="3" fill="currentColor"/><rect x="24" y="20" width="3" height="3" fill="currentColor"/><rect x="28" y="16" width="3" height="3" fill="currentColor"/><rect x="32" y="4" width="3" height="3" fill="currentColor"/><rect x="36" y="8" width="3" height="3" fill="currentColor"/><rect x="40" y="4" width="3" height="3" fill="currentColor"/><rect x="44" y="4" width="3" height="3" fill="currentColor"/><rect x="48" y="4" width="3" height="3" fill="currentColor"/><rect x="52" y="16" width="3" height="3" fill="currentColor"/><rect x="56" y="12" width="3" height="3" fill="currentColor"/><rect x="60" y="12" width="3" height="3" fill="currentColor"/><rect x="64" y="24" width="3" height="3" fill="currentColor"/></svg></div>
+<div class="appareil">effectif 17, IQR 0,05 · observation du 2024-10-08 au 2026-07-21</div>
+</div>
+<div class="grille ligne">
+<div class="ent"><span class="past" style="background:#104E8B" aria-hidden="true"></span><span>Rassemblement national</span></div>
+<div class="col-portee"><div class="portee"><i class="tick tick--g"></i><i class="tick tick--d"></i><i class="tete tete--carre" style="left:100.0000%"></i></div></div>
+<div class="col-val"><b>1,00</b></div>
+<div class="col-sceau"><svg class="sceau" width="71" height="31" viewBox="0 0 71 31" role="img" aria-label="Sceau de l'empreinte 8fde0f5f78afe285"><rect x=".5" y=".5" width="70.0" height="30.0" fill="none" stroke="currentColor" stroke-opacity=".4"/><rect x="4" y="12" width="3" height="3" fill="currentColor"/><rect x="8" y="16" width="3" height="3" fill="currentColor"/><rect x="12" y="8" width="3" height="3" fill="currentColor"/><rect x="16" y="12" width="3" height="3" fill="currentColor"/><rect x="20" y="4" width="3" height="3" fill="currentColor"/><rect x="24" y="16" width="3" height="3" fill="currentColor"/><rect x="28" y="24" width="3" height="3" fill="currentColor"/><rect x="32" y="16" width="3" height="3" fill="currentColor"/><rect x="36" y="8" width="3" height="3" fill="currentColor"/><rect x="40" y="12" width="3" height="3" fill="currentColor"/><rect x="44" y="20" width="3" height="3" fill="currentColor"/><rect x="48" y="16" width="3" height="3" fill="currentColor"/><rect x="52" y="12" width="3" height="3" fill="currentColor"/><rect x="56" y="12" width="3" height="3" fill="currentColor"/><rect x="60" y="12" width="3" height="3" fill="currentColor"/><rect x="64" y="24" width="3" height="3" fill="currentColor"/></svg></div>
+<div class="appareil">effectif 121, IQR 0,04 · observation du 2024-10-08 au 2026-07-21</div>
+</div>
+<div class="grille ligne ligne--np">
+<div class="ent"><span class="past past--nulle" aria-hidden="true"></span><span>LIOT</span></div>
+<div class="col-portee"><div class="portee portee--vide"></div></div>
+<div class="col-val"><b class="np">position non publiée</b></div>
+<div class="col-sceau"><svg class="sceau" width="71" height="31" viewBox="0 0 71 31" role="img" aria-label="Sceau de l'empreinte 32fb76691440af05"><rect x=".5" y=".5" width="70.0" height="30.0" fill="none" stroke="currentColor" stroke-opacity=".4"/><rect x="4" y="16" width="3" height="3" fill="currentColor"/><rect x="8" y="12" width="3" height="3" fill="currentColor"/><rect x="12" y="16" width="3" height="3" fill="currentColor"/><rect x="16" y="24" width="3" height="3" fill="currentColor"/><rect x="20" y="8" width="3" height="3" fill="currentColor"/><rect x="24" y="4" width="3" height="3" fill="currentColor"/><rect x="28" y="4" width="3" height="3" fill="currentColor"/><rect x="32" y="16" width="3" height="3" fill="currentColor"/><rect x="36" y="8" width="3" height="3" fill="currentColor"/><rect x="40" y="20" width="3" height="3" fill="currentColor"/><rect x="44" y="20" width="3" height="3" fill="currentColor"/><rect x="48" y="4" width="3" height="3" fill="currentColor"/><rect x="52" y="20" width="3" height="3" fill="currentColor"/><rect x="56" y="16" width="3" height="3" fill="currentColor"/><rect x="60" y="4" width="3" height="3" fill="currentColor"/><rect x="64" y="24" width="3" height="3" fill="currentColor"/></svg></div>
+<div class="appareil">Dispersion interne au-delà du seuil publié : IQR 0,64 pour un maximum de 0,25. · effectif 20, IQR 0,64 · observation du 2024-10-08 au 2026-07-21</div>
+</div>
+<div class="grille ligne ligne--np">
+<div class="ent"><span class="past past--nulle" aria-hidden="true"></span><span>Non inscrit</span></div>
+<div class="col-portee"><div class="portee portee--vide"></div></div>
+<div class="col-val"><b class="np">position non publiée</b></div>
+<div class="col-sceau"><svg class="sceau" width="71" height="31" viewBox="0 0 71 31" role="img" aria-label="Sceau de l'empreinte 1eec0f353c0db885"><rect x=".5" y=".5" width="70.0" height="30.0" fill="none" stroke="currentColor" stroke-opacity=".4"/><rect x="4" y="8" width="3" height="3" fill="currentColor"/><rect x="8" y="12" width="3" height="3" fill="currentColor"/><rect x="12" y="12" width="3" height="3" fill="currentColor"/><rect x="16" y="4" width="3" height="3" fill="currentColor"/><rect x="20" y="4" width="3" height="3" fill="currentColor"/><rect x="24" y="16" width="3" height="3" fill="currentColor"/><rect x="28" y="16" width="3" height="3" fill="currentColor"/><rect x="32" y="24" width="3" height="3" fill="currentColor"/><rect x="36" y="16" width="3" height="3" fill="currentColor"/><rect x="40" y="4" width="3" height="3" fill="currentColor"/><rect x="44" y="4" width="3" height="3" fill="currentColor"/><rect x="48" y="8" width="3" height="3" fill="currentColor"/><rect x="52" y="24" width="3" height="3" fill="currentColor"/><rect x="56" y="12" width="3" height="3" fill="currentColor"/><rect x="60" y="12" width="3" height="3" fill="currentColor"/><rect x="64" y="24" width="3" height="3" fill="currentColor"/></svg></div>
+<div class="appareil">Effectif retenu de 9 membres pour un minimum de 10. · effectif 9, IQR 1,24 · observation du 2024-10-08 au 2026-07-21</div>
+</div>
+</section>
+<section class="panneau" style="--famille:var(--f-experts)">
+<div class="pan-tete"><h2>Enquête d&#x27;experts</h2><p class="pan-ech">ches_lrgen_0_10 — 0,00 à 10,00</p></div>
+<div class="grille grille--tete" aria-hidden="true"><div>Entité</div><div class="col-portee"><span class="borne-g">0,00</span><span class="borne-d">10,00</span></div><div class="col-val">Valeur</div><div class="col-sceau">Sceau de preuve</div></div>
+<div class="grille ligne">
+<div class="ent"><span class="past" style="background:#CC2443" aria-hidden="true"></span><span>La France insoumise</span></div>
+<div class="col-portee"><div class="portee"><i class="tick tick--g"></i><i class="tick tick--d"></i><i class="tete tete--losange" style="left:8.2000%"></i></div></div>
+<div class="col-val"><b>0,82</b></div>
+<div class="col-sceau"><svg class="sceau" width="71" height="31" viewBox="0 0 71 31" role="img" aria-label="Sceau de l'empreinte 77567d84c5622524"><rect x=".5" y=".5" width="70.0" height="30.0" fill="none" stroke="currentColor" stroke-opacity=".4"/><rect x="4" y="8" width="3" height="3" fill="currentColor"/><rect x="8" y="8" width="3" height="3" fill="currentColor"/><rect x="12" y="24" width="3" height="3" fill="currentColor"/><rect x="16" y="4" width="3" height="3" fill="currentColor"/><rect x="20" y="8" width="3" height="3" fill="currentColor"/><rect x="24" y="8" width="3" height="3" fill="currentColor"/><rect x="28" y="12" width="3" height="3" fill="currentColor"/><rect x="32" y="20" width="3" height="3" fill="currentColor"/><rect x="36" y="4" width="3" height="3" fill="currentColor"/><rect x="40" y="24" width="3" height="3" fill="currentColor"/><rect x="44" y="4" width="3" height="3" fill="currentColor"/><rect x="48" y="12" width="3" height="3" fill="currentColor"/><rect x="52" y="12" width="3" height="3" fill="currentColor"/><rect x="56" y="24" width="3" height="3" fill="currentColor"/><rect x="60" y="12" width="3" height="3" fill="currentColor"/><rect x="64" y="20" width="3" height="3" fill="currentColor"/></svg></div>
+<div class="appareil">observation du 2024-01-01 au 2024-12-31</div>
+</div>
+<div class="grille ligne">
+<div class="ent"><span class="past" style="background:#E4002B" aria-hidden="true"></span><span>Parti communiste français</span></div>
+<div class="col-portee"><div class="portee"><i class="tick tick--g"></i><i class="tick tick--d"></i><i class="tete tete--losange" style="left:17.3000%"></i></div></div>
+<div class="col-val"><b>1,73</b></div>
+<div class="col-sceau"><svg class="sceau" width="71" height="31" viewBox="0 0 71 31" role="img" aria-label="Sceau de l'empreinte 7c520263c06baac5"><rect x=".5" y=".5" width="70.0" height="30.0" fill="none" stroke="currentColor" stroke-opacity=".4"/><rect x="4" y="8" width="3" height="3" fill="currentColor"/><rect x="8" y="4" width="3" height="3" fill="currentColor"/><rect x="12" y="24" width="3" height="3" fill="currentColor"/><rect x="16" y="12" width="3" height="3" fill="currentColor"/><rect x="20" y="4" width="3" height="3" fill="currentColor"/><rect x="24" y="12" width="3" height="3" fill="currentColor"/><rect x="28" y="4" width="3" height="3" fill="currentColor"/><rect x="32" y="16" width="3" height="3" fill="currentColor"/><rect x="36" y="4" width="3" height="3" fill="currentColor"/><rect x="40" y="4" width="3" height="3" fill="currentColor"/><rect x="44" y="4" width="3" height="3" fill="currentColor"/><rect x="48" y="24" width="3" height="3" fill="currentColor"/><rect x="52" y="20" width="3" height="3" fill="currentColor"/><rect x="56" y="20" width="3" height="3" fill="currentColor"/><rect x="60" y="4" width="3" height="3" fill="currentColor"/><rect x="64" y="24" width="3" height="3" fill="currentColor"/></svg></div>
+<div class="appareil">observation du 2024-01-01 au 2024-12-31</div>
+</div>
+<div class="grille ligne">
+<div class="ent"><span class="past" style="background:#4BB166" aria-hidden="true"></span><span>Les Écologistes</span></div>
+<div class="col-portee"><div class="portee"><i class="tick tick--g"></i><i class="tick tick--d"></i><i class="tete tete--losange" style="left:23.0000%"></i></div></div>
+<div class="col-val"><b>2,30</b></div>
+<div class="col-sceau"><svg class="sceau" width="71" height="31" viewBox="0 0 71 31" role="img" aria-label="Sceau de l'empreinte 8e2c90f47ffde398"><rect x=".5" y=".5" width="70.0" height="30.0" fill="none" stroke="currentColor" stroke-opacity=".4"/><rect x="4" y="12" width="3" height="3" fill="currentColor"/><rect x="8" y="12" width="3" height="3" fill="currentColor"/><rect x="12" y="12" width="3" height="3" fill="currentColor"/><rect x="16" y="4" width="3" height="3" fill="currentColor"/><rect x="20" y="16" width="3" height="3" fill="currentColor"/><rect x="24" y="4" width="3" height="3" fill="currentColor"/><rect x="28" y="16" width="3" height="3" fill="currentColor"/><rect x="32" y="20" width="3" height="3" fill="currentColor"/><rect x="36" y="8" width="3" height="3" fill="currentColor"/><rect x="40" y="16" width="3" height="3" fill="currentColor"/><rect x="44" y="16" width="3" height="3" fill="currentColor"/><rect x="48" y="8" width="3" height="3" fill="currentColor"/><rect x="52" y="12" width="3" height="3" fill="currentColor"/><rect x="56" y="16" width="3" height="3" fill="currentColor"/><rect x="60" y="16" width="3" height="3" fill="currentColor"/><rect x="64" y="12" width="3" height="3" fill="currentColor"/></svg></div>
+<div class="appareil">observation du 2024-01-01 au 2024-12-31</div>
+</div>
+<div class="grille ligne">
+<div class="ent"><span class="past" style="background:#E30040" aria-hidden="true"></span><span>Parti socialiste</span></div>
+<div class="col-portee"><div class="portee"><i class="tick tick--g"></i><i class="tick tick--d"></i><i class="tete tete--losange" style="left:34.5000%"></i></div></div>
+<div class="col-val"><b>3,45</b></div>
+<div class="col-sceau"><svg class="sceau" width="71" height="31" viewBox="0 0 71 31" role="img" aria-label="Sceau de l'empreinte ce95db7a5b699528"><rect x=".5" y=".5" width="70.0" height="30.0" fill="none" stroke="currentColor" stroke-opacity=".4"/><rect x="4" y="4" width="3" height="3" fill="currentColor"/><rect x="8" y="12" width="3" height="3" fill="currentColor"/><rect x="12" y="16" width="3" height="3" fill="currentColor"/><rect x="16" y="24" width="3" height="3" fill="currentColor"/><rect x="20" y="8" width="3" height="3" fill="currentColor"/><rect x="24" y="24" width="3" height="3" fill="currentColor"/><rect x="28" y="8" width="3" height="3" fill="currentColor"/><rect x="32" y="20" width="3" height="3" fill="currentColor"/><rect x="36" y="24" width="3" height="3" fill="currentColor"/><rect x="40" y="24" width="3" height="3" fill="currentColor"/><rect x="44" y="4" width="3" height="3" fill="currentColor"/><rect x="48" y="16" width="3" height="3" fill="currentColor"/><rect x="52" y="16" width="3" height="3" fill="currentColor"/><rect x="56" y="24" width="3" height="3" fill="currentColor"/><rect x="60" y="12" width="3" height="3" fill="currentColor"/><rect x="64" y="12" width="3" height="3" fill="currentColor"/></svg></div>
+<div class="appareil">observation du 2024-01-01 au 2024-12-31</div>
+</div>
+<div class="grille ligne">
+<div class="ent"><span class="past" style="background:#00205B" aria-hidden="true"></span><span>Renaissance</span></div>
+<div class="col-portee"><div class="portee"><i class="tick tick--g"></i><i class="tick tick--d"></i><i class="tete tete--losange" style="left:62.7000%"></i></div></div>
+<div class="col-val"><b>6,27</b></div>
+<div class="col-sceau"><svg class="sceau" width="71" height="31" viewBox="0 0 71 31" role="img" aria-label="Sceau de l'empreinte a28b5b03d717fe42"><rect x=".5" y=".5" width="70.0" height="30.0" fill="none" stroke="currentColor" stroke-opacity=".4"/><rect x="4" y="20" width="3" height="3" fill="currentColor"/><rect x="8" y="12" width="3" height="3" fill="currentColor"/><rect x="12" y="12" width="3" height="3" fill="currentColor"/><rect x="16" y="24" width="3" height="3" fill="currentColor"/><rect x="20" y="24" width="3" height="3" fill="currentColor"/><rect x="24" y="24" width="3" height="3" fill="currentColor"/><rect x="28" y="4" width="3" height="3" fill="currentColor"/><rect x="32" y="16" width="3" height="3" fill="currentColor"/><rect x="36" y="8" width="3" height="3" fill="currentColor"/><rect x="40" y="8" width="3" height="3" fill="currentColor"/><rect x="44" y="8" width="3" height="3" fill="currentColor"/><rect x="48" y="8" width="3" height="3" fill="currentColor"/><rect x="52" y="16" width="3" height="3" fill="currentColor"/><rect x="56" y="12" width="3" height="3" fill="currentColor"/><rect x="60" y="20" width="3" height="3" fill="currentColor"/><rect x="64" y="12" width="3" height="3" fill="currentColor"/></svg></div>
+<div class="appareil">observation du 2024-01-01 au 2024-12-31</div>
+</div>
+<div class="grille ligne">
+<div class="ent"><span class="past" style="background:#0000BA" aria-hidden="true"></span><span>Horizons</span></div>
+<div class="col-portee"><div class="portee"><i class="tick tick--g"></i><i class="tick tick--d"></i><i class="tete tete--losange" style="left:66.0000%"></i></div></div>
+<div class="col-val"><b>6,60</b></div>
+<div class="col-sceau"><svg class="sceau" width="71" height="31" viewBox="0 0 71 31" role="img" aria-label="Sceau de l'empreinte c89cd0affe1369fd"><rect x=".5" y=".5" width="70.0" height="30.0" fill="none" stroke="currentColor" stroke-opacity=".4"/><rect x="4" y="4" width="3" height="3" fill="currentColor"/><rect x="8" y="12" width="3" height="3" fill="currentColor"/><rect x="12" y="16" width="3" height="3" fill="currentColor"/><rect x="16" y="4" width="3" height="3" fill="currentColor"/><rect x="20" y="8" width="3" height="3" fill="currentColor"/><rect x="24" y="4" width="3" height="3" fill="currentColor"/><rect x="28" y="20" width="3" height="3" fill="currentColor"/><rect x="32" y="16" width="3" height="3" fill="currentColor"/><rect x="36" y="16" width="3" height="3" fill="currentColor"/><rect x="40" y="12" width="3" height="3" fill="currentColor"/><rect x="44" y="8" width="3" height="3" fill="currentColor"/><rect x="48" y="16" width="3" height="3" fill="currentColor"/><rect x="52" y="4" width="3" height="3" fill="currentColor"/><rect x="56" y="16" width="3" height="3" fill="currentColor"/><rect x="60" y="16" width="3" height="3" fill="currentColor"/><rect x="64" y="8" width="3" height="3" fill="currentColor"/></svg></div>
+<div class="appareil">observation du 2024-01-01 au 2024-12-31</div>
+</div>
+<div class="grille ligne">
+<div class="ent"><span class="past" style="background:#034EA2" aria-hidden="true"></span><span>Les Républicains</span></div>
+<div class="col-portee"><div class="portee"><i class="tick tick--g"></i><i class="tick tick--d"></i><i class="tete tete--losange" style="left:77.3000%"></i></div></div>
+<div class="col-val"><b>7,73</b></div>
+<div class="col-sceau"><svg class="sceau" width="71" height="31" viewBox="0 0 71 31" role="img" aria-label="Sceau de l'empreinte f1d50006f315cce7"><rect x=".5" y=".5" width="70.0" height="30.0" fill="none" stroke="currentColor" stroke-opacity=".4"/><rect x="4" y="16" width="3" height="3" fill="currentColor"/><rect x="8" y="8" width="3" height="3" fill="currentColor"/><rect x="12" y="8" width="3" height="3" fill="currentColor"/><rect x="16" y="24" width="3" height="3" fill="currentColor"/><rect x="20" y="4" width="3" height="3" fill="currentColor"/><rect x="24" y="4" width="3" height="3" fill="currentColor"/><rect x="28" y="4" width="3" height="3" fill="currentColor"/><rect x="32" y="4" width="3" height="3" fill="currentColor"/><rect x="36" y="16" width="3" height="3" fill="currentColor"/><rect x="40" y="16" width="3" height="3" fill="currentColor"/><rect x="44" y="8" width="3" height="3" fill="currentColor"/><rect x="48" y="24" width="3" height="3" fill="currentColor"/><rect x="52" y="4" width="3" height="3" fill="currentColor"/><rect x="56" y="4" width="3" height="3" fill="currentColor"/><rect x="60" y="12" width="3" height="3" fill="currentColor"/><rect x="64" y="8" width="3" height="3" fill="currentColor"/></svg></div>
+<div class="appareil">observation du 2024-01-01 au 2024-12-31</div>
+</div>
+<div class="grille ligne">
+<div class="ent"><span class="past" style="background:#104E8B" aria-hidden="true"></span><span>Rassemblement national</span></div>
+<div class="col-portee"><div class="portee"><i class="tick tick--g"></i><i class="tick tick--d"></i><i class="tete tete--losange" style="left:88.2000%"></i></div></div>
+<div class="col-val"><b>8,82</b></div>
+<div class="col-sceau"><svg class="sceau" width="71" height="31" viewBox="0 0 71 31" role="img" aria-label="Sceau de l'empreinte 4367cde19edba836"><rect x=".5" y=".5" width="70.0" height="30.0" fill="none" stroke="currentColor" stroke-opacity=".4"/><rect x="4" y="20" width="3" height="3" fill="currentColor"/><rect x="8" y="16" width="3" height="3" fill="currentColor"/><rect x="12" y="4" width="3" height="3" fill="currentColor"/><rect x="16" y="8" width="3" height="3" fill="currentColor"/><rect x="20" y="4" width="3" height="3" fill="currentColor"/><rect x="24" y="8" width="3" height="3" fill="currentColor"/><rect x="28" y="12" width="3" height="3" fill="currentColor"/><rect x="32" y="8" width="3" height="3" fill="currentColor"/><rect x="36" y="16" width="3" height="3" fill="currentColor"/><rect x="40" y="12" width="3" height="3" fill="currentColor"/><rect x="44" y="8" width="3" height="3" fill="currentColor"/><rect x="48" y="24" width="3" height="3" fill="currentColor"/><rect x="52" y="20" width="3" height="3" fill="currentColor"/><rect x="56" y="12" width="3" height="3" fill="currentColor"/><rect x="60" y="16" width="3" height="3" fill="currentColor"/><rect x="64" y="4" width="3" height="3" fill="currentColor"/></svg></div>
+<div class="appareil">observation du 2024-01-01 au 2024-12-31</div>
+</div>
+</section>
+<section class="panneau panneau--nuance" style="--famille:var(--f-nuance)">
+<div class="pan-tete"><h2>Nuance administrative</h2><p class="pan-ech">nuance_leg2024 — aucune borne déclarée, aucune graduation</p></div>
+<p class="legende">Classification du Ministère de l'intérieur, grille IOMA2415630C du 2024-06-11, second tour des législatives 2024.</p>
+<ul class="nuances">
+<li><div class="ent"><span class="past" style="background:#CC2443" aria-hidden="true"></span><span>La France insoumise</span></div><div class="code"><em>Nuance 2024</em><b>FI</b></div><svg class="sceau" width="71" height="31" viewBox="0 0 71 31" role="img" aria-label="Sceau de l'empreinte 8acde57e44c122da"><rect x=".5" y=".5" width="70.0" height="30.0" fill="none" stroke="currentColor" stroke-opacity=".4"/><rect x="4" y="12" width="3" height="3" fill="currentColor"/><rect x="8" y="20" width="3" height="3" fill="currentColor"/><rect x="12" y="4" width="3" height="3" fill="currentColor"/><rect x="16" y="8" width="3" height="3" fill="currentColor"/><rect x="20" y="12" width="3" height="3" fill="currentColor"/><rect x="24" y="24" width="3" height="3" fill="currentColor"/><rect x="28" y="8" width="3" height="3" fill="currentColor"/><rect x="32" y="12" width="3" height="3" fill="currentColor"/><rect x="36" y="20" width="3" height="3" fill="currentColor"/><rect x="40" y="20" width="3" height="3" fill="currentColor"/><rect x="44" y="4" width="3" height="3" fill="currentColor"/><rect x="48" y="8" width="3" height="3" fill="currentColor"/><rect x="52" y="12" width="3" height="3" fill="currentColor"/><rect x="56" y="12" width="3" height="3" fill="currentColor"/><rect x="60" y="8" width="3" height="3" fill="currentColor"/><rect x="64" y="20" width="3" height="3" fill="currentColor"/></svg></li>
+<li><div class="ent"><span class="past" style="background:#E30040" aria-hidden="true"></span><span>Parti socialiste</span></div><div class="code"><em>Nuance 2024</em><b>SOC</b></div><svg class="sceau" width="71" height="31" viewBox="0 0 71 31" role="img" aria-label="Sceau de l'empreinte be278664683cd655"><rect x=".5" y=".5" width="70.0" height="30.0" fill="none" stroke="currentColor" stroke-opacity=".4"/><rect x="4" y="24" width="3" height="3" fill="currentColor"/><rect x="8" y="12" width="3" height="3" fill="currentColor"/><rect x="12" y="12" width="3" height="3" fill="currentColor"/><rect x="16" y="8" width="3" height="3" fill="currentColor"/><rect x="20" y="12" width="3" height="3" fill="currentColor"/><rect x="24" y="4" width="3" height="3" fill="currentColor"/><rect x="28" y="4" width="3" height="3" fill="currentColor"/><rect x="32" y="20" width="3" height="3" fill="currentColor"/><rect x="36" y="4" width="3" height="3" fill="currentColor"/><rect x="40" y="12" width="3" height="3" fill="currentColor"/><rect x="44" y="16" width="3" height="3" fill="currentColor"/><rect x="48" y="4" width="3" height="3" fill="currentColor"/><rect x="52" y="8" width="3" height="3" fill="currentColor"/><rect x="56" y="4" width="3" height="3" fill="currentColor"/><rect x="60" y="24" width="3" height="3" fill="currentColor"/><rect x="64" y="24" width="3" height="3" fill="currentColor"/></svg></li>
+<li><div class="ent"><span class="past" style="background:#0000BA" aria-hidden="true"></span><span>Horizons</span></div><div class="code"><em>Nuance 2024</em><b>HOR</b></div><svg class="sceau" width="71" height="31" viewBox="0 0 71 31" role="img" aria-label="Sceau de l'empreinte 2b04fcbd5fa617c2"><rect x=".5" y=".5" width="70.0" height="30.0" fill="none" stroke="currentColor" stroke-opacity=".4"/><rect x="4" y="12" width="3" height="3" fill="currentColor"/><rect x="8" y="24" width="3" height="3" fill="currentColor"/><rect x="12" y="4" width="3" height="3" fill="currentColor"/><rect x="16" y="20" width="3" height="3" fill="currentColor"/><rect x="20" y="16" width="3" height="3" fill="currentColor"/><rect x="24" y="4" width="3" height="3" fill="currentColor"/><rect x="28" y="24" width="3" height="3" fill="currentColor"/><rect x="32" y="8" width="3" height="3" fill="currentColor"/><rect x="36" y="24" width="3" height="3" fill="currentColor"/><rect x="40" y="16" width="3" height="3" fill="currentColor"/><rect x="44" y="20" width="3" height="3" fill="currentColor"/><rect x="48" y="4" width="3" height="3" fill="currentColor"/><rect x="52" y="8" width="3" height="3" fill="currentColor"/><rect x="56" y="8" width="3" height="3" fill="currentColor"/><rect x="60" y="4" width="3" height="3" fill="currentColor"/><rect x="64" y="12" width="3" height="3" fill="currentColor"/></svg></li>
+<li><div class="ent"><span class="past" style="background:#034EA2" aria-hidden="true"></span><span>Les Républicains</span></div><div class="code"><em>Nuance 2024</em><b>LR</b></div><svg class="sceau" width="71" height="31" viewBox="0 0 71 31" role="img" aria-label="Sceau de l'empreinte 8bfeaefa4cfcc36a"><rect x=".5" y=".5" width="70.0" height="30.0" fill="none" stroke="currentColor" stroke-opacity=".4"/><rect x="4" y="12" width="3" height="3" fill="currentColor"/><rect x="8" y="24" width="3" height="3" fill="currentColor"/><rect x="12" y="16" width="3" height="3" fill="currentColor"/><rect x="16" y="12" width="3" height="3" fill="currentColor"/><rect x="20" y="20" width="3" height="3" fill="currentColor"/><rect x="24" y="12" width="3" height="3" fill="currentColor"/><rect x="28" y="16" width="3" height="3" fill="currentColor"/><rect x="32" y="20" width="3" height="3" fill="currentColor"/><rect x="36" y="20" width="3" height="3" fill="currentColor"/><rect x="40" y="4" width="3" height="3" fill="currentColor"/><rect x="44" y="16" width="3" height="3" fill="currentColor"/><rect x="48" y="4" width="3" height="3" fill="currentColor"/><rect x="52" y="4" width="3" height="3" fill="currentColor"/><rect x="56" y="16" width="3" height="3" fill="currentColor"/><rect x="60" y="4" width="3" height="3" fill="currentColor"/><rect x="64" y="20" width="3" height="3" fill="currentColor"/></svg></li>
+<li><div class="ent"><span class="past" style="background:#104E8B" aria-hidden="true"></span><span>Rassemblement national</span></div><div class="code"><em>Nuance 2024</em><b>RN</b></div><svg class="sceau" width="71" height="31" viewBox="0 0 71 31" role="img" aria-label="Sceau de l'empreinte a2af75c5b2a12f5c"><rect x=".5" y=".5" width="70.0" height="30.0" fill="none" stroke="currentColor" stroke-opacity=".4"/><rect x="4" y="20" width="3" height="3" fill="currentColor"/><rect x="8" y="12" width="3" height="3" fill="currentColor"/><rect x="12" y="20" width="3" height="3" fill="currentColor"/><rect x="16" y="16" width="3" height="3" fill="currentColor"/><rect x="20" y="8" width="3" height="3" fill="currentColor"/><rect x="24" y="24" width="3" height="3" fill="currentColor"/><rect x="28" y="4" width="3" height="3" fill="currentColor"/><rect x="32" y="24" width="3" height="3" fill="currentColor"/><rect x="36" y="24" width="3" height="3" fill="currentColor"/><rect x="40" y="12" width="3" height="3" fill="currentColor"/><rect x="44" y="20" width="3" height="3" fill="currentColor"/><rect x="48" y="8" width="3" height="3" fill="currentColor"/><rect x="52" y="12" width="3" height="3" fill="currentColor"/><rect x="56" y="16" width="3" height="3" fill="currentColor"/><rect x="60" y="24" width="3" height="3" fill="currentColor"/><rect x="64" y="4" width="3" height="3" fill="currentColor"/></svg></li>
+<li><div class="ent"><span class="past past--nulle" aria-hidden="true"></span><span>Ensemble</span></div><div class="code"><em>Nuance 2024</em><b>ENS</b></div><svg class="sceau" width="71" height="31" viewBox="0 0 71 31" role="img" aria-label="Sceau de l'empreinte 450b4c88644e398f"><rect x=".5" y=".5" width="70.0" height="30.0" fill="none" stroke="currentColor" stroke-opacity=".4"/><rect x="4" y="20" width="3" height="3" fill="currentColor"/><rect x="8" y="24" width="3" height="3" fill="currentColor"/><rect x="12" y="4" width="3" height="3" fill="currentColor"/><rect x="16" y="24" width="3" height="3" fill="currentColor"/><rect x="20" y="20" width="3" height="3" fill="currentColor"/><rect x="24" y="4" width="3" height="3" fill="currentColor"/><rect x="28" y="12" width="3" height="3" fill="currentColor"/><rect x="32" y="12" width="3" height="3" fill="currentColor"/><rect x="36" y="4" width="3" height="3" fill="currentColor"/><rect x="40" y="20" width="3" height="3" fill="currentColor"/><rect x="44" y="20" width="3" height="3" fill="currentColor"/><rect x="48" y="12" width="3" height="3" fill="currentColor"/><rect x="52" y="16" width="3" height="3" fill="currentColor"/><rect x="56" y="16" width="3" height="3" fill="currentColor"/><rect x="60" y="12" width="3" height="3" fill="currentColor"/><rect x="64" y="16" width="3" height="3" fill="currentColor"/></svg></li>
+<li><div class="ent"><span class="past" style="background:#FB2C59" aria-hidden="true"></span><span>Nouveau Front populaire</span></div><div class="code"><em>Nuance 2024</em><b>UG</b></div><svg class="sceau" width="71" height="31" viewBox="0 0 71 31" role="img" aria-label="Sceau de l'empreinte bc4e6cb448438201"><rect x=".5" y=".5" width="70.0" height="30.0" fill="none" stroke="currentColor" stroke-opacity=".4"/><rect x="4" y="24" width="3" height="3" fill="currentColor"/><rect x="8" y="4" width="3" height="3" fill="currentColor"/><rect x="12" y="20" width="3" height="3" fill="currentColor"/><rect x="16" y="12" width="3" height="3" fill="currentColor"/><rect x="20" y="4" width="3" height="3" fill="currentColor"/><rect x="24" y="4" width="3" height="3" fill="currentColor"/><rect x="28" y="24" width="3" height="3" fill="currentColor"/><rect x="32" y="20" width="3" height="3" fill="currentColor"/><rect x="36" y="20" width="3" height="3" fill="currentColor"/><rect x="40" y="12" width="3" height="3" fill="currentColor"/><rect x="44" y="20" width="3" height="3" fill="currentColor"/><rect x="48" y="16" width="3" height="3" fill="currentColor"/><rect x="52" y="12" width="3" height="3" fill="currentColor"/><rect x="56" y="12" width="3" height="3" fill="currentColor"/><rect x="60" y="4" width="3" height="3" fill="currentColor"/><rect x="64" y="8" width="3" height="3" fill="currentColor"/></svg></li>
+</ul></section>
+
+<section class="absence">
+  <h2>Sans mesure</h2>
+  <p><b>Place publique</b> — non mesuré. Aucun code propre dans la grille constatée. <span class="code-motif">hors_source</span></p>
+</section>
+
+<section class="chaines">
+  <div class="sec-tete"><h2>La chaîne d'un calcul</h2>
+  <p class="legende">Une page statique n'a pas d'état ; les deux états sont posés l'un sous l'autre.</p></div>
+  <article class="chaine chaine--depliee" style="--famille:var(--f-votes)">
+<header class="ch-tete"><h3>LIOT</h3><p>Votes nominatifs · calcul du 2026-08-27 · source du 2026-08-27</p><div class="ch-etat">état déplié</div></header>
+<div class="stations">
+<div class="st st--1"><div class="st-num">1</div><h4>Entrées</h4>
+<div class="entree"><div class="en-tete"><b>an_scrutins_17</b><span>Assemblée nationale</span></div><div class="url">https://data.assemblee-nationale.fr/static/openData/repository/17/loi/scrutins/Scrutins.json.zip</div>
+<div class="en-dates">relevé le 2026-08-28 · mise à jour 2026-08-27</div>
+<div class="emps"><div class="emp"><span class="emp-lib">empreinte du fichier</span><svg class="sceau sceau--mini" width="71" height="31" viewBox="0 0 71 31" role="img" aria-label="Sceau de l'empreinte 7bcf6f4ab9f62d14"><rect x=".5" y=".5" width="70.0" height="30.0" fill="none" stroke="currentColor" stroke-opacity=".4"/><rect x="4" y="8" width="3" height="3" fill="currentColor"/><rect x="8" y="24" width="3" height="3" fill="currentColor"/><rect x="12" y="4" width="3" height="3" fill="currentColor"/><rect x="16" y="16" width="3" height="3" fill="currentColor"/><rect x="20" y="4" width="3" height="3" fill="currentColor"/><rect x="24" y="16" width="3" height="3" fill="currentColor"/><rect x="28" y="20" width="3" height="3" fill="currentColor"/><rect x="32" y="20" width="3" height="3" fill="currentColor"/><rect x="36" y="24" width="3" height="3" fill="currentColor"/><rect x="40" y="16" width="3" height="3" fill="currentColor"/><rect x="44" y="16" width="3" height="3" fill="currentColor"/><rect x="48" y="4" width="3" height="3" fill="currentColor"/><rect x="52" y="12" width="3" height="3" fill="currentColor"/><rect x="56" y="8" width="3" height="3" fill="currentColor"/><rect x="60" y="8" width="3" height="3" fill="currentColor"/><rect x="64" y="20" width="3" height="3" fill="currentColor"/></svg><span class="hex">7bcf6f4a b9f62d14 57caeeda d42a5a73 b7a5e50a 879653a1 9b23c02f f62f344b</span></div><div class="emp"><span class="emp-lib">empreinte du contenu</span><svg class="sceau sceau--mini" width="71" height="31" viewBox="0 0 71 31" role="img" aria-label="Sceau de l'empreinte c8457f346220b5b7"><rect x=".5" y=".5" width="70.0" height="30.0" fill="none" stroke="currentColor" stroke-opacity=".4"/><rect x="4" y="4" width="3" height="3" fill="currentColor"/><rect x="8" y="12" width="3" height="3" fill="currentColor"/><rect x="12" y="20" width="3" height="3" fill="currentColor"/><rect x="16" y="24" width="3" height="3" fill="currentColor"/><rect x="20" y="8" width="3" height="3" fill="currentColor"/><rect x="24" y="16" width="3" height="3" fill="currentColor"/><rect x="28" y="16" width="3" height="3" fill="currentColor"/><rect x="32" y="20" width="3" height="3" fill="currentColor"/><rect x="36" y="4" width="3" height="3" fill="currentColor"/><rect x="40" y="12" width="3" height="3" fill="currentColor"/><rect x="44" y="12" width="3" height="3" fill="currentColor"/><rect x="48" y="4" width="3" height="3" fill="currentColor"/><rect x="52" y="24" width="3" height="3" fill="currentColor"/><rect x="56" y="24" width="3" height="3" fill="currentColor"/><rect x="60" y="24" width="3" height="3" fill="currentColor"/><rect x="64" y="8" width="3" height="3" fill="currentColor"/></svg><span class="hex">c8457f34 6220b5b7 fb673bd1 f273ef8c 3296b7ff 2769524b f5024c9d 95c7e65c</span></div></div>
+</div>
+<div class="entree"><div class="en-tete"><b>registre_partis</b><span>Contrepoint</span></div><div class="url">https://raw.githubusercontent.com/bourbask/contrepoint/v0.3.0/data/registre/partis.json</div>
+<div class="en-dates">relevé le 2026-08-27 · mise à jour 2026-08-27</div>
+<div class="emps"><div class="emp"><span class="emp-lib">empreinte du fichier</span><svg class="sceau sceau--mini" width="71" height="31" viewBox="0 0 71 31" role="img" aria-label="Sceau de l'empreinte b7bdb819be8b6773"><rect x=".5" y=".5" width="70.0" height="30.0" fill="none" stroke="currentColor" stroke-opacity=".4"/><rect x="4" y="24" width="3" height="3" fill="currentColor"/><rect x="8" y="8" width="3" height="3" fill="currentColor"/><rect x="12" y="24" width="3" height="3" fill="currentColor"/><rect x="16" y="8" width="3" height="3" fill="currentColor"/><rect x="20" y="24" width="3" height="3" fill="currentColor"/><rect x="24" y="12" width="3" height="3" fill="currentColor"/><rect x="28" y="8" width="3" height="3" fill="currentColor"/><rect x="32" y="16" width="3" height="3" fill="currentColor"/><rect x="36" y="24" width="3" height="3" fill="currentColor"/><rect x="40" y="12" width="3" height="3" fill="currentColor"/><rect x="44" y="12" width="3" height="3" fill="currentColor"/><rect x="48" y="24" width="3" height="3" fill="currentColor"/><rect x="52" y="4" width="3" height="3" fill="currentColor"/><rect x="56" y="8" width="3" height="3" fill="currentColor"/><rect x="60" y="8" width="3" height="3" fill="currentColor"/><rect x="64" y="16" width="3" height="3" fill="currentColor"/></svg><span class="hex">b7bdb819 be8b6773 a8af5d2a 939a7812 0e710e6f 3cf6e86e 87db0443 168aaf2b</span></div><div class="emp"><span class="emp-lib">empreinte du contenu</span><svg class="sceau sceau--mini" width="71" height="31" viewBox="0 0 71 31" role="img" aria-label="Sceau de l'empreinte b7bdb819be8b6773"><rect x=".5" y=".5" width="70.0" height="30.0" fill="none" stroke="currentColor" stroke-opacity=".4"/><rect x="4" y="24" width="3" height="3" fill="currentColor"/><rect x="8" y="8" width="3" height="3" fill="currentColor"/><rect x="12" y="24" width="3" height="3" fill="currentColor"/><rect x="16" y="8" width="3" height="3" fill="currentColor"/><rect x="20" y="24" width="3" height="3" fill="currentColor"/><rect x="24" y="12" width="3" height="3" fill="currentColor"/><rect x="28" y="8" width="3" height="3" fill="currentColor"/><rect x="32" y="16" width="3" height="3" fill="currentColor"/><rect x="36" y="24" width="3" height="3" fill="currentColor"/><rect x="40" y="12" width="3" height="3" fill="currentColor"/><rect x="44" y="12" width="3" height="3" fill="currentColor"/><rect x="48" y="24" width="3" height="3" fill="currentColor"/><rect x="52" y="4" width="3" height="3" fill="currentColor"/><rect x="56" y="8" width="3" height="3" fill="currentColor"/><rect x="60" y="8" width="3" height="3" fill="currentColor"/><rect x="64" y="16" width="3" height="3" fill="currentColor"/></svg><span class="hex">b7bdb819 be8b6773 a8af5d2a 939a7812 0e710e6f 3cf6e86e 87db0443 168aaf2b</span></div></div>
+</div>
+<div class="entree"><div class="en-tete"><b>an_organe</b><span>Assemblée nationale</span></div><div class="url">https://data.assemblee-nationale.fr/static/openData/repository/17/amo/tous_acteurs_mandats_organes_xi_legislature/AMO30_tous_acteurs_tous_mandats_tous_organes_historique.json.zip</div>
+<div class="en-dates">relevé le 2026-08-27 · mise à jour 2026-08-27</div>
+<div class="emps"><div class="emp"><span class="emp-lib">empreinte du fichier</span><svg class="sceau sceau--mini" width="71" height="31" viewBox="0 0 71 31" role="img" aria-label="Sceau de l'empreinte bbecd01274d2bc9f"><rect x=".5" y=".5" width="70.0" height="30.0" fill="none" stroke="currentColor" stroke-opacity=".4"/><rect x="4" y="24" width="3" height="3" fill="currentColor"/><rect x="8" y="24" width="3" height="3" fill="currentColor"/><rect x="12" y="12" width="3" height="3" fill="currentColor"/><rect x="16" y="4" width="3" height="3" fill="currentColor"/><rect x="20" y="8" width="3" height="3" fill="currentColor"/><rect x="24" y="4" width="3" height="3" fill="currentColor"/><rect x="28" y="8" width="3" height="3" fill="currentColor"/><rect x="32" y="12" width="3" height="3" fill="currentColor"/><rect x="36" y="8" width="3" height="3" fill="currentColor"/><rect x="40" y="20" width="3" height="3" fill="currentColor"/><rect x="44" y="8" width="3" height="3" fill="currentColor"/><rect x="48" y="12" width="3" height="3" fill="currentColor"/><rect x="52" y="24" width="3" height="3" fill="currentColor"/><rect x="56" y="4" width="3" height="3" fill="currentColor"/><rect x="60" y="16" width="3" height="3" fill="currentColor"/><rect x="64" y="16" width="3" height="3" fill="currentColor"/></svg><span class="hex">bbecd012 74d2bc9f 46fcaa27 6b068688 62ae7680 131da316 2e35b5cb ef663061</span></div><div class="emp"><span class="emp-lib">empreinte du contenu</span><svg class="sceau sceau--mini" width="71" height="31" viewBox="0 0 71 31" role="img" aria-label="Sceau de l'empreinte 0f49c00a8227d6cb"><rect x=".5" y=".5" width="70.0" height="30.0" fill="none" stroke="currentColor" stroke-opacity=".4"/><rect x="4" y="4" width="3" height="3" fill="currentColor"/><rect x="8" y="16" width="3" height="3" fill="currentColor"/><rect x="12" y="20" width="3" height="3" fill="currentColor"/><rect x="16" y="16" width="3" height="3" fill="currentColor"/><rect x="20" y="4" width="3" height="3" fill="currentColor"/><rect x="24" y="4" width="3" height="3" fill="currentColor"/><rect x="28" y="4" width="3" height="3" fill="currentColor"/><rect x="32" y="20" width="3" height="3" fill="currentColor"/><rect x="36" y="12" width="3" height="3" fill="currentColor"/><rect x="40" y="12" width="3" height="3" fill="currentColor"/><rect x="44" y="12" width="3" height="3" fill="currentColor"/><rect x="48" y="8" width="3" height="3" fill="currentColor"/><rect x="52" y="8" width="3" height="3" fill="currentColor"/><rect x="56" y="4" width="3" height="3" fill="currentColor"/><rect x="60" y="4" width="3" height="3" fill="currentColor"/><rect x="64" y="24" width="3" height="3" fill="currentColor"/></svg><span class="hex">0f49c00a 8227d6cb 8e658d37 4bacfec3 5238fe4e 2dd6305f 7df6ac4f 515c5de6</span></div></div>
+</div>
+</div>
+<div class="st st--2"><div class="st-num">2</div><h4>Méthode</h4>
+<div class="meth"><b>votes_rang1_ancre</b><span>version 1.0.0</span></div>
+<dl class="params">
+<dt>ancre_droite</dt><dd>groupe.an17.rn</dd>
+<dt>ancre_gauche</dt><dd>groupe.an17.lfi-nfp</dd>
+<dt>codage</dt><dd>pour=<wbr>+1;<wbr>contre=<wbr>-1;<wbr>abstention=<wbr>0;<wbr>non_votant=<wbr>manquant;<wbr>absent=<wbr>manquant</dd>
+<dt>filtre_scrutins</dt><dd>minorite_non_vide</dd>
+<dt>iterations_als</dt><dd>300</dd>
+<dt>scrutins_ecartes</dt><dd>455</dd>
+<dt>scrutins_retenus</dt><dd>7979</dd>
+</dl>
+<div class="logiciel">logiciel 0.1.0 · commit non renseigné</div>
+</div>
+<div class="st st--3"><div class="st-num">3</div><h4>Valeur</h4>
+<div class="valeur"><b class="v-grand np">position non publiée</b><span class="v-ech">sous_seuil_de_publication · Dispersion interne au-delà du seuil publié : IQR 0,64 pour un maximum de 0,25.</span></div>
+<dl class="params"><dt>effectif</dt><dd>20</dd><dt>IQR</dt><dd>0,64</dd><dt>écart-type de rééchantillonnage</dt><dd>0,04</dd></dl>
+<div class="obs">observation du 2024-10-08 au 2026-07-21</div>
+<div class="scelle"><svg class="sceau sceau--grand" width="71" height="31" viewBox="0 0 71 31" role="img" aria-label="Sceau de l'empreinte 32fb76691440af05"><rect x=".5" y=".5" width="70.0" height="30.0" fill="none" stroke="currentColor" stroke-opacity=".4"/><rect x="4" y="16" width="3" height="3" fill="currentColor"/><rect x="8" y="12" width="3" height="3" fill="currentColor"/><rect x="12" y="16" width="3" height="3" fill="currentColor"/><rect x="16" y="24" width="3" height="3" fill="currentColor"/><rect x="20" y="8" width="3" height="3" fill="currentColor"/><rect x="24" y="4" width="3" height="3" fill="currentColor"/><rect x="28" y="4" width="3" height="3" fill="currentColor"/><rect x="32" y="16" width="3" height="3" fill="currentColor"/><rect x="36" y="8" width="3" height="3" fill="currentColor"/><rect x="40" y="20" width="3" height="3" fill="currentColor"/><rect x="44" y="20" width="3" height="3" fill="currentColor"/><rect x="48" y="4" width="3" height="3" fill="currentColor"/><rect x="52" y="20" width="3" height="3" fill="currentColor"/><rect x="56" y="16" width="3" height="3" fill="currentColor"/><rect x="60" y="4" width="3" height="3" fill="currentColor"/><rect x="64" y="24" width="3" height="3" fill="currentColor"/></svg><div class="scelle-hex"><span class="hex">32fb76691440af05 5b9863b258a59c40 0b00775d7598630c 2cdcc1441a192b61</span></div><div class="scelle-lib">identifiant de la ligne de preuve</div></div>
+</div></div></article>
+  <article class="chaine chaine--repliee" style="--famille:var(--f-votes)">
+<header class="ch-tete"><h3>Non inscrit</h3><p>Votes nominatifs · calcul du 2026-08-27</p><div class="ch-etat">état replié</div></header>
+<div class="stations stations--r">
+ <div class="st"><div class="st-num">1</div><h4>Entrées</h4><p>3 entrées · Assemblée nationale, Contrepoint · 6 empreintes SHA-256</p></div>
+ <div class="st"><div class="st-num">2</div><h4>Méthode</h4><p><b>votes_rang1_ancre</b> version 1.0.0 · 7 paramètres</p></div>
+ <div class="st"><div class="st-num">3</div><h4>Valeur</h4><p class="v-repli"><span class="np">position non publiée</span></p></div>
+ <div class="st st--sceau"><svg class="sceau sceau--grand" width="71" height="31" viewBox="0 0 71 31" role="img" aria-label="Sceau de l'empreinte 1eec0f353c0db885"><rect x=".5" y=".5" width="70.0" height="30.0" fill="none" stroke="currentColor" stroke-opacity=".4"/><rect x="4" y="8" width="3" height="3" fill="currentColor"/><rect x="8" y="12" width="3" height="3" fill="currentColor"/><rect x="12" y="12" width="3" height="3" fill="currentColor"/><rect x="16" y="4" width="3" height="3" fill="currentColor"/><rect x="20" y="4" width="3" height="3" fill="currentColor"/><rect x="24" y="16" width="3" height="3" fill="currentColor"/><rect x="28" y="16" width="3" height="3" fill="currentColor"/><rect x="32" y="24" width="3" height="3" fill="currentColor"/><rect x="36" y="16" width="3" height="3" fill="currentColor"/><rect x="40" y="4" width="3" height="3" fill="currentColor"/><rect x="44" y="4" width="3" height="3" fill="currentColor"/><rect x="48" y="8" width="3" height="3" fill="currentColor"/><rect x="52" y="24" width="3" height="3" fill="currentColor"/><rect x="56" y="12" width="3" height="3" fill="currentColor"/><rect x="60" y="12" width="3" height="3" fill="currentColor"/><rect x="64" y="24" width="3" height="3" fill="currentColor"/></svg><span>1eec0f353c0db885…</span></div>
+</div></article>
+  <article class="chaine chaine--repliee" style="--famille:var(--f-experts)">
+<header class="ch-tete"><h3>La France insoumise</h3><p>Enquête d&#x27;experts · calcul du 2026-08-27</p><div class="ch-etat">état replié</div></header>
+<div class="stations stations--r">
+ <div class="st"><div class="st-num">1</div><h4>Entrées</h4><p>2 entrées · Chapel Hill Expert Survey, Contrepoint · 4 empreintes SHA-256</p></div>
+ <div class="st"><div class="st-num">2</div><h4>Méthode</h4><p><b>ches_lrgen</b> version 1.0.0 · 3 paramètres</p></div>
+ <div class="st"><div class="st-num">3</div><h4>Valeur</h4><p class="v-repli">0,82</p></div>
+ <div class="st st--sceau"><svg class="sceau sceau--grand" width="71" height="31" viewBox="0 0 71 31" role="img" aria-label="Sceau de l'empreinte 77567d84c5622524"><rect x=".5" y=".5" width="70.0" height="30.0" fill="none" stroke="currentColor" stroke-opacity=".4"/><rect x="4" y="8" width="3" height="3" fill="currentColor"/><rect x="8" y="8" width="3" height="3" fill="currentColor"/><rect x="12" y="24" width="3" height="3" fill="currentColor"/><rect x="16" y="4" width="3" height="3" fill="currentColor"/><rect x="20" y="8" width="3" height="3" fill="currentColor"/><rect x="24" y="8" width="3" height="3" fill="currentColor"/><rect x="28" y="12" width="3" height="3" fill="currentColor"/><rect x="32" y="20" width="3" height="3" fill="currentColor"/><rect x="36" y="4" width="3" height="3" fill="currentColor"/><rect x="40" y="24" width="3" height="3" fill="currentColor"/><rect x="44" y="4" width="3" height="3" fill="currentColor"/><rect x="48" y="12" width="3" height="3" fill="currentColor"/><rect x="52" y="12" width="3" height="3" fill="currentColor"/><rect x="56" y="24" width="3" height="3" fill="currentColor"/><rect x="60" y="12" width="3" height="3" fill="currentColor"/><rect x="64" y="20" width="3" height="3" fill="currentColor"/></svg><span>77567d84c5622524…</span></div>
+</div></article>
+  <article class="chaine chaine--repliee" style="--famille:var(--f-nuance)">
+<header class="ch-tete"><h3>La France insoumise</h3><p>Nuance administrative · calcul du 2026-08-27</p><div class="ch-etat">état replié</div></header>
+<div class="stations stations--r">
+ <div class="st"><div class="st-num">1</div><h4>Entrées</h4><p>2 entrées · Contrepoint, Ministère de l&#x27;intérieur · 4 empreintes SHA-256</p></div>
+ <div class="st"><div class="st-num">2</div><h4>Méthode</h4><p><b>nuance_constatee</b> version 1.0.0 · 3 paramètres</p></div>
+ <div class="st"><div class="st-num">3</div><h4>Valeur</h4><p class="v-repli">FI</p></div>
+ <div class="st st--sceau"><svg class="sceau sceau--grand" width="71" height="31" viewBox="0 0 71 31" role="img" aria-label="Sceau de l'empreinte 8acde57e44c122da"><rect x=".5" y=".5" width="70.0" height="30.0" fill="none" stroke="currentColor" stroke-opacity=".4"/><rect x="4" y="12" width="3" height="3" fill="currentColor"/><rect x="8" y="20" width="3" height="3" fill="currentColor"/><rect x="12" y="4" width="3" height="3" fill="currentColor"/><rect x="16" y="8" width="3" height="3" fill="currentColor"/><rect x="20" y="12" width="3" height="3" fill="currentColor"/><rect x="24" y="24" width="3" height="3" fill="currentColor"/><rect x="28" y="8" width="3" height="3" fill="currentColor"/><rect x="32" y="12" width="3" height="3" fill="currentColor"/><rect x="36" y="20" width="3" height="3" fill="currentColor"/><rect x="40" y="20" width="3" height="3" fill="currentColor"/><rect x="44" y="4" width="3" height="3" fill="currentColor"/><rect x="48" y="8" width="3" height="3" fill="currentColor"/><rect x="52" y="12" width="3" height="3" fill="currentColor"/><rect x="56" y="12" width="3" height="3" fill="currentColor"/><rect x="60" y="8" width="3" height="3" fill="currentColor"/><rect x="64" y="20" width="3" height="3" fill="currentColor"/></svg><span>8acde57e44c122da…</span></div>
+</div></article>
+</section>
+
+<footer class="pied">
+  <div><b>Licence des données</b><span>Licence Ouverte / Open Licence (Etalab)</span></div>
+  <div><b>Mention de paternité</b><span>Assemblée nationale — Licence Ouverte v1.0 ; Chapel Hill Expert Survey — aucune licence publiée, citation exigée ; Ministère de l&#x27;intérieur — Licence Ouverte v2.0 — données du 2026-08-27</span></div>
+  <div><b>Éclats de preuves</b><span>preuves/, 256 éclats, deux premiers caractères hexadécimaux de l&#x27;id</span></div>
+  <div><b>Instantané</b><span>instantanes/an17-2026-07-21.json · 8859 octets · empreinte 09cb165c80690c73…</span></div>
+</footer>
+</div></body></html>

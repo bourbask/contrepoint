@@ -1,0 +1,399 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Contrepoint — concept dense</title>
+<style>
+:root{
+  --bg:#faf9f7; --panel:#ffffff; --ink:#15151a; --ink2:#4a4a52; --mut:#7c7b84;
+  --hair:#e4e1dc; --hair2:#f0eeea; --box:#f6f4f1; --mark:#15151a;
+  --tag:#eae7e1; --hatch:rgba(0,0,0,.055); --focus:#b45309;
+  --railring:rgba(0,0,0,.10);
+}
+@media (prefers-color-scheme:dark){:root{
+  --bg:#0e0e11; --panel:#15151a; --ink:#eeecf2; --ink2:#b9b7c2; --mut:#8b8995;
+  --hair:#282830; --hair2:#1d1d24; --box:#1b1b21; --mark:#eeecf2;
+  --tag:#26262e; --hatch:rgba(255,255,255,.06); --focus:#f0b64d;
+  --railring:rgba(255,255,255,.22);
+}}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{
+  margin:0; background:var(--bg); color:var(--ink);
+  font:14px/1.45 ui-sans-serif,system-ui,"Segoe UI",Helvetica,Arial,sans-serif;
+  font-variant-numeric:tabular-nums;
+}
+.wrap{max-width:1060px;margin:0 auto;padding:22px 14px 64px}
+h1{font-size:19px;margin:0;letter-spacing:-.01em;font-weight:650}
+h2{font-size:13px;margin:0;letter-spacing:.09em;text-transform:uppercase;font-weight:650}
+p{margin:0}
+.mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+.sm{font-size:11.5px;line-height:1.4;color:var(--mut)}
+.xs{font-size:10.5px;line-height:1.35;color:var(--mut);letter-spacing:.02em}
+
+/* ---------- en-tête ---------- */
+header.top{border-bottom:2px solid var(--ink);padding-bottom:10px;margin-bottom:14px}
+.top .kick{font-size:10.5px;letter-spacing:.18em;text-transform:uppercase;color:var(--mut);margin-bottom:4px}
+.top .lede{margin-top:7px;max-width:66ch;color:var(--ink2);font-size:12.5px;line-height:1.5}
+.meta{display:flex;flex-wrap:wrap;gap:4px 16px;margin-top:9px}
+.meta span{font-size:10.5px;color:var(--mut);letter-spacing:.02em}
+.meta b{color:var(--ink2);font-weight:600}
+
+/* ---------- bloc section ---------- */
+section{margin-top:26px}
+.shead{display:flex;flex-wrap:wrap;align-items:baseline;gap:8px 12px;border-bottom:1px solid var(--ink);padding-bottom:6px}
+.shead .n{font-size:11px;color:var(--mut);letter-spacing:.04em}
+.notice{margin-top:8px;padding:7px 10px;border-left:3px solid var(--focus);background:var(--box);font-size:11.5px;color:var(--ink2);line-height:1.45}
+
+/* ---------- barre d'outils ---------- */
+.tools{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0 0}
+.tools input,.tools select{
+  font:inherit;font-size:12px;color:var(--ink);background:var(--panel);
+  border:1px solid var(--hair);border-radius:2px;padding:4px 7px;min-width:0;
+}
+.tools input{flex:1 1 190px}
+.tools input:focus,.tools select:focus{outline:2px solid var(--focus);outline-offset:-1px}
+.cnt{font-size:11px;color:var(--mut);align-self:center;margin-left:auto;white-space:nowrap}
+
+/* ---------- grille ---------- */
+.tbl{--cols:7px minmax(0,1fr) 196px 74px 144px;margin-top:0}
+.tbl.x{--cols:7px minmax(0,1fr) 168px 66px 126px 104px 86px}
+.rule,.row>summary{display:grid;grid-template-columns:var(--cols);gap:0 10px;align-items:center}
+
+/* règle collante */
+.rule{
+  position:sticky;top:0;z-index:3;background:var(--bg);
+  padding:7px 0 5px;border-bottom:1px solid var(--ink);
+}
+.rule .lab{font-size:9.5px;letter-spacing:.11em;text-transform:uppercase;color:var(--mut);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.axis{position:relative;height:30px}
+.axis .an{position:absolute;bottom:5px;font-size:9.5px;color:var(--mut);letter-spacing:.02em;white-space:nowrap}
+.axis .at{position:absolute;bottom:0;width:1px;height:4px;background:var(--hair);transform:translateX(-50%)}
+.axis .at.z{height:7px;background:var(--mut)}
+.axis .nm{position:absolute;top:0;left:0;right:0;font-size:9.5px;letter-spacing:.11em;text-transform:uppercase;color:var(--ink2);border-bottom:1px solid var(--hair);padding-bottom:1px}
+.axis .u{position:absolute;bottom:5px;left:0;font-size:9px;color:var(--mut);letter-spacing:.03em}
+
+/* lignes */
+.list{border-bottom:1px solid var(--hair)}
+.row{border-bottom:1px solid var(--hair2)}
+.row>summary{list-style:none;cursor:pointer;padding:4px 0;min-height:30px}
+.row>summary::-webkit-details-marker{display:none}
+.row:hover{background:var(--hair2)}
+.row[open]{background:var(--box)}
+.row>summary:focus-visible{outline:2px solid var(--focus);outline-offset:-2px}
+.rail{height:16px;width:5px;border-radius:1px;background:var(--hair);align-self:center;
+  box-shadow:inset 0 0 0 1px var(--railring)}
+.nom{min-width:0;font-size:12.5px;line-height:1.25;letter-spacing:-.005em}
+.nom .t{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.nom .s{display:block;font-size:10px;color:var(--mut);letter-spacing:.02em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.demo .nom .t::after{content:"démo";font-size:8.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--mut);border:1px solid var(--hair);border-radius:2px;padding:0 3px;margin-left:6px;vertical-align:1px}
+
+/* pistes : chacune sa boîte, sa largeur, sa marque */
+.trk{position:relative;height:20px;background:var(--box);border-left:1px solid var(--hair);border-right:1px solid var(--hair)}
+.trk .base{position:absolute;left:0;right:0;top:50%;height:1px;background:var(--hair)}
+.trk.f-experts .base{background:none;border-top:1px dotted var(--mut);opacity:.55}
+.trk .zero{position:absolute;top:3px;bottom:3px;width:1px;background:var(--hair);}
+.mk{position:absolute;top:50%;background:var(--mark)}
+/* votes : barre verticale */
+.mk.m-votes{width:2.5px;height:15px;margin-top:-7.5px;margin-left:-1.25px;border-radius:.5px}
+/* experts : disque */
+.mk.m-experts{width:9px;height:9px;margin-top:-4.5px;margin-left:-4.5px;border-radius:50%}
+/* démo : losange */
+.mk.m-audience{width:8px;height:8px;margin-top:-4px;margin-left:-4px;transform:rotate(45deg)}
+/* démo : chevron */
+.mk.m-citations{width:0;height:0;background:none;margin-top:-4px;margin-left:-5px;border-left:5px solid transparent;border-right:5px solid transparent;border-bottom:8px solid var(--mark)}
+/* absence motivée */
+.trk.held{background:repeating-linear-gradient(135deg,var(--hatch) 0 3px,transparent 3px 6px),var(--box)}
+.trk.held .base{border-top:1px dashed var(--mut);background:none;opacity:.6}
+.held .txt{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:9.5px;letter-spacing:.04em;color:var(--ink2);background:var(--panel);width:fit-content;margin:auto;padding:0 5px;border:1px solid var(--hair)}
+/* famille absente du corpus */
+.trk.none{background:none;border-color:transparent}
+.trk.none .base{background:none;border-top:1px solid var(--hair2)}
+.trk.none .txt{position:absolute;left:0;top:50%;transform:translateY(-50%);font-size:10px;color:var(--mut)}
+
+/* nuance : code, sans échelle */
+.chip{justify-self:start;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:10.5px;letter-spacing:.04em;
+  background:var(--tag);border:1px solid var(--hair);border-radius:2px;padding:1px 5px;color:var(--ink2);max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.chip.off{background:none;border-color:transparent;color:var(--mut);padding-left:0}
+
+/* groupes intercalés */
+.grp{display:flex;align-items:center;gap:8px;padding:9px 0 4px;font-size:10px;letter-spacing:.11em;text-transform:uppercase;color:var(--mut)}
+.grp::after{content:"";flex:1;height:1px;background:var(--hair)}
+
+/* panneau preuve */
+.det{padding:1px 0 9px 17px;border-left:1px solid var(--hair);margin-left:1px}
+.pv{display:grid;grid-template-columns:104px minmax(0,1fr);gap:1px 12px;padding:4px 0;border-top:1px dashed var(--hair)}
+.pv dt{font-size:10px;letter-spacing:.09em;text-transform:uppercase;color:var(--mut);padding-top:2px}
+.pv dd{margin:0;font-size:11.5px;color:var(--ink2);min-width:0;overflow-wrap:anywhere}
+.pv dd b{color:var(--ink);font-weight:650}
+.pv .h{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:10.5px;color:var(--mut)}
+.det .cmp{font-size:11px;color:var(--mut);padding-top:6px}
+
+footer{margin-top:34px;border-top:1px solid var(--hair);padding-top:10px}
+
+/* ---------- étroit ---------- */
+@media (max-width:640px){
+  .wrap{padding:16px 11px 48px}
+  .tbl,.tbl.x{--cols:5px minmax(0,1fr)}
+  .rule{padding:6px 0 4px}
+  .rule .axis,.rule .lab.hidem{display:none}
+  .rulem{display:block;position:sticky;top:0;z-index:3;background:var(--bg);
+    padding:5px 0;border-bottom:1px solid var(--ink);font-size:10px;color:var(--ink2);line-height:1.55}
+  .rulem i{font-style:normal;color:var(--mut)}
+  .rulem .g{display:inline-block;vertical-align:-1px;background:var(--mark);margin-right:3px}
+  .rulem .g-votes{width:2.5px;height:11px}
+  .rulem .g-experts{width:8px;height:8px;border-radius:50%}
+  .rulem .g-audience{width:7px;height:7px;transform:rotate(45deg)}
+  .rulem .g-citations{width:0;height:0;background:none;border-left:5px solid transparent;border-right:5px solid transparent;border-bottom:8px solid var(--mark)}
+  .rulem .g-administratif{width:9px;height:9px;background:var(--tag);border:1px solid var(--hair)}
+  .row>summary{grid-template-columns:5px minmax(0,1fr);padding:5px 0;min-height:0}
+  /* grille fixe : une colonne garde la même largeur d'une ligne à l'autre,
+     sinon deux valeurs égales ne tomberaient pas au même endroit */
+  .cells{grid-column:2;display:grid;grid-template-columns:var(--mcols);gap:3px 7px;margin-top:3px;align-items:center}
+  .cells>.trk{height:17px}
+  .cells>.chip{justify-self:start}
+  .tbl{--mcols:minmax(0,1.75fr) 42px minmax(0,1.15fr)}
+  .tbl.x{--mcols:minmax(0,1fr) 40px minmax(0,1fr)}
+  .tbl.x .cells>:nth-child(4){grid-column:1}
+  .tbl.x .cells>:nth-child(5){grid-column:3}
+  .held .txt{font-size:9px;padding:0 3px}
+  .nom .s{display:none}
+  .nom .t{font-size:13px}
+  .cells{margin-top:2px}
+  .pv{grid-template-columns:minmax(0,1fr)}
+  .pv dt{padding-top:5px}
+}
+@media (min-width:641px){ .rulem{display:none} .cells{display:contents} }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="top">
+  <div class="kick">Contrepoint · concept D — dense</div>
+  <h1>Une ligne par entité, une règle par famille.</h1>
+  <p class="lede">Chaque entité tient sur une ligne. Chaque famille de mesure garde <b>sa propre règle</b> :
+  largeur, graduation et forme de marque distinctes, jamais superposables. Rien n'est fusionné, rien n'est moyenné.
+  Déplier une ligne donne la valeur exacte, l'échelle et l'empreinte de preuve.</p>
+  <div class="meta" id="meta"></div>
+</header>
+
+<section>
+  <div class="shead"><h2>Corpus publié</h2><span class="n" id="n1"></span></div>
+  <p class="notice"><b>Données réelles.</b> Les 17 entités de l'instantané AN 17<sup>e</sup> législature, telles que publiées.
+  Deux positions ne sont pas publiées (dispersion au-delà du seuil), une entité n'a aucune mesure : elles restent dans la liste, à leur place.</p>
+  <div class="tools">
+    <input id="q1" type="search" placeholder="Filtrer par nom…" aria-label="Filtrer par nom">
+    <select id="s1" aria-label="Ordre">
+      <option value="nom">Ordre alphabétique</option>
+      <option value="votes" selected>Ordonner par votes nominatifs</option>
+      <option value="experts">Ordonner par enquête d'experts</option>
+      <option value="administratif">Ordonner par nuance</option>
+    </select>
+    <span class="cnt" id="c1"></span>
+  </div>
+  <div class="tbl" id="t1"></div>
+</section>
+
+<section>
+  <div class="shead"><h2>Épreuve d'échelle</h2><span class="n" id="n2"></span></div>
+  <p class="notice"><b>Corpus fabriqué — aucune de ces entités n'existe.</b> 200 rédactions fictives et cinq familles inventées,
+  générées ici pour éprouver la tenue de la forme quand le corpus grandit. Aucune valeur n'est réelle, aucune n'est sourcée.
+  Les deux familles supplémentaires (indice de reprise 0–100, écart de citation −3 à +3) sont là pour montrer qu'une famille de plus
+  s'ajoute comme une règle de plus, sans rien fusionner.</p>
+  <div class="tools">
+    <input id="q2" type="search" placeholder="Filtrer parmi 200 entités fictives…" aria-label="Filtrer">
+    <select id="s2" aria-label="Ordre">
+      <option value="nom">Ordre alphabétique</option>
+      <option value="votes" selected>Ordonner par famille 1 (−1 → +1)</option>
+      <option value="experts">Ordonner par famille 2 (0 → 10)</option>
+      <option value="audience">Ordonner par famille 4 (0 → 100)</option>
+      <option value="citations">Ordonner par famille 5 (−3 → +3)</option>
+    </select>
+    <span class="cnt" id="c2"></span>
+  </div>
+  <div class="tbl x" id="t2"></div>
+  <p class="xs" style="margin-top:8px">Liste complète, sans pagination : 200 lignes à 31 px. La règle reste collée en haut pendant le défilement.</p>
+</section>
+
+<footer>
+  <p class="xs">Aucun score unique, aucune moyenne, aucun axe de fiabilité, aucune personne, aucune catégorie ajoutée.
+  Les couleurs d'identité (rail de gauche) viennent de Wikidata P465, CC0 — présentation seule, aucune valeur n'en dépend.
+  Page autonome : pas de bibliothèque, pas de requête réseau.</p>
+</footer>
+
+</div>
+<script id="donnees" type="application/json">{"manifeste":{"schema":"contrepoint/manifeste/1","contrat":"0.6.0","schemas":["contrepoint/preuve/2","contrepoint/instantane/1","contrepoint/eclat-preuves/1"],"date_arretee":"2026-08-27T00:00:00Z","licence":"Licence Ouverte / Open Licence (Etalab)","mention_paternite":"Assemblée nationale — Licence Ouverte v1.0 ; Chapel Hill Expert Survey — aucune licence publiée, citation exigée ; Ministère de l'intérieur — Licence Ouverte v2.0 — données du 2026-08-27","familles":[{"id":"votes","libelle":"Votes nominatifs","echelle":"votes_an17_ancre_v1","min":-1.0,"max":1.0,"decimales":2},{"id":"experts","libelle":"Enquête d'experts","echelle":"ches_lrgen_0_10","min":0.0,"max":10.0,"decimales":2},{"id":"administratif","libelle":"Nuance administrative","echelle":"nuance_leg2024","min":null,"max":null,"decimales":null}],"instantanes":[{"id":"an17-2026-07-21","chambre":"AN","legislature":"17","date":"2026-07-21","url":"instantanes/an17-2026-07-21.json","empreinte_sha256":"09cb165c80690c73ef2a9395b9d20938489fd8930bbf732ce95f7e698be48e4b","octets":8859,"bandes":17}],"preuves":{"racine":"preuves/","eclats":256,"fonction":"deux premiers caractères hexadécimaux de l'id"}},"instantane":{"schema":"contrepoint/instantane/1","contrat":"0.6.0","id":"an17-2026-07-21","chambre":"AN","legislature":"17","date":"2026-07-21","date_arretee":"2026-08-27T00:00:00Z","ancrage":{"famille":"votes","ancre_gauche":"groupe.an17.lfi-nfp","ancre_droite":"groupe.an17.rn","note":"Échelle ancrée sur deux groupes de cette législature : deux instantanés ne se superposent pas."},"bandes":[{"id":"parti.lfi","libelle":"La France insoumise","marqueurs":[{"famille":"votes","echelle":"votes_an17_ancre_v1","valeur":-1.0,"valeur_code":null,"libelle":"Votes du groupe LFI-NFP","motif_code":null,"motif":null,"dispersion":{"effectif":71,"iqr":0.03},"preuve":"58dddb470ebac0b3da987e46a74a1bf48b0ebfb6945219f1d10ba1eb3f6466e9"},{"famille":"experts","echelle":"ches_lrgen_0_10","valeur":0.82,"valeur_code":null,"libelle":"CHES 2024, lrgen","motif_code":null,"motif":null,"dispersion":null,"preuve":"77567d84c5622524e55bf70355067c8499a3362ca9c924f0f1daef4188ff4547"},{"famille":"administratif","echelle":"nuance_leg2024","valeur":null,"valeur_code":"FI","libelle":"Nuance 2024","motif_code":null,"motif":null,"dispersion":null,"preuve":"8acde57e44c122da290460030a12c5008911f27ac7dec79d819294d79ce40a6d"}]},{"id":"groupe.an17.ecos","libelle":"Écologiste et Social","composition_partielle":[{"entite":"parti.ecologistes","libelle":"Les Écologistes"},{"entite":"parti.pcf","libelle":"Parti communiste français"}],"marqueurs":[{"famille":"votes","echelle":"votes_an17_ancre_v1","valeur":-0.98,"valeur_code":null,"libelle":"Votes du groupe ECOS","motif_code":null,"motif":null,"dispersion":{"effectif":38,"iqr":0.03},"preuve":"67708569db7b3c2bfd37deddede8d889157b2867b9d57bce5757b640db2551fd"}]},{"id":"groupe.an17.gdr","libelle":"Gauche Démocrate et Républicaine","composition_partielle":[{"entite":"parti.pcf","libelle":"Parti communiste français"}],"marqueurs":[{"famille":"votes","echelle":"votes_an17_ancre_v1","valeur":-0.91,"valeur_code":null,"libelle":"Votes du groupe GDR","motif_code":null,"motif":null,"dispersion":{"effectif":17,"iqr":0.09},"preuve":"07deacbdbe7e62700256d0f9deccfdf94ea4e61a82915a9ee843d05601b2d9a5"}]},{"id":"parti.ps","libelle":"Parti socialiste","marqueurs":[{"famille":"votes","echelle":"votes_an17_ancre_v1","valeur":-0.84,"valeur_code":null,"libelle":"Votes du groupe SOC","motif_code":null,"motif":null,"dispersion":{"effectif":68,"iqr":0.05},"preuve":"bc43670379beca4893ae45df9c34ef66cb7ab1ecd16aa04b7e916ea8496c9ecb"},{"famille":"experts","echelle":"ches_lrgen_0_10","valeur":3.45,"valeur_code":null,"libelle":"CHES 2024, lrgen","motif_code":null,"motif":null,"dispersion":null,"preuve":"ce95db7a5b69952844acd7307697a00fd910be65e51dd7257328a225debc200f"},{"famille":"administratif","echelle":"nuance_leg2024","valeur":null,"valeur_code":"SOC","libelle":"Nuance 2024","motif_code":null,"motif":null,"dispersion":null,"preuve":"be278664683cd6553d53264c689ac5c89c064a71763356f0d6e033e9b78aaef3"}]},{"id":"groupe.an17.dem","libelle":"Les Démocrates","marqueurs":[{"famille":"votes","echelle":"votes_an17_ancre_v1","valeur":0.17,"valeur_code":null,"libelle":"Votes du groupe DEM","motif_code":null,"motif":null,"dispersion":{"effectif":37,"iqr":0.21},"preuve":"41cb1d3a0fc1e679f682c9bef35c0650e6be5cc7140b95848a67aa8645f74968"}]},{"id":"groupe.an17.epr","libelle":"Ensemble pour la République","marqueurs":[{"famille":"votes","echelle":"votes_an17_ancre_v1","valeur":0.25,"valeur_code":null,"libelle":"Votes du groupe EPR","motif_code":null,"motif":null,"dispersion":{"effectif":88,"iqr":0.21},"preuve":"a31c29f49f8fed44bd6325d6662b310977d672e4c9821c89ef6ca7bbd693c859"}]},{"id":"parti.horizons","libelle":"Horizons","marqueurs":[{"famille":"votes","echelle":"votes_an17_ancre_v1","valeur":0.35,"valeur_code":null,"libelle":"Votes du groupe HOR","motif_code":null,"motif":null,"dispersion":{"effectif":34,"iqr":0.19},"preuve":"10c80ddf8e859c353fa6d14ba7ed8ffecb15b525a495dcae2cca0310afd8acf0"},{"famille":"experts","echelle":"ches_lrgen_0_10","valeur":6.6,"valeur_code":null,"libelle":"CHES 2024, lrgen","motif_code":null,"motif":null,"dispersion":null,"preuve":"c89cd0affe1369fd330b2c4c294d46869f18eb0e344d6e3c430deaf76ea98b60"},{"famille":"administratif","echelle":"nuance_leg2024","valeur":null,"valeur_code":"HOR","libelle":"Nuance 2024","motif_code":null,"motif":null,"dispersion":null,"preuve":"2b04fcbd5fa617c262fbfd44d250aac91dd572387e1118ed495b7f8a20b1b52b"}]},{"id":"parti.lr","libelle":"Les Républicains","marqueurs":[{"famille":"votes","echelle":"votes_an17_ancre_v1","valeur":0.68,"valeur_code":null,"libelle":"Votes du groupe DR","motif_code":null,"motif":null,"dispersion":{"effectif":46,"iqr":0.12},"preuve":"9d6e6b1feee5d5f0d8784e355ffb92142928273d3402b5b1e43f0d65554f1d69"},{"famille":"experts","echelle":"ches_lrgen_0_10","valeur":7.73,"valeur_code":null,"libelle":"CHES 2024, lrgen","motif_code":null,"motif":null,"dispersion":null,"preuve":"f1d50006f315cce759f37b539e4c91de190403f7fe894c2bda47a5a707ab008e"},{"famille":"administratif","echelle":"nuance_leg2024","valeur":null,"valeur_code":"LR","libelle":"Nuance 2024","motif_code":null,"motif":null,"dispersion":null,"preuve":"8bfeaefa4cfcc36a6ceba41a6fb7bdff6bbbaa5ae2ab7175ba9e02bdc27332f8"}]},{"id":"parti.udr","libelle":"Union des droites pour la République","marqueurs":[{"famille":"votes","echelle":"votes_an17_ancre_v1","valeur":0.99,"valeur_code":null,"libelle":"Votes du groupe UDDPLR","motif_code":null,"motif":null,"dispersion":{"effectif":17,"iqr":0.05},"preuve":"53cbb4f6d06c9285abd6e3efc1423970e234e395cdb2dfa466fc48c0bdc06e8b"}]},{"id":"parti.rn","libelle":"Rassemblement national","marqueurs":[{"famille":"votes","echelle":"votes_an17_ancre_v1","valeur":1.0,"valeur_code":null,"libelle":"Votes du groupe RN","motif_code":null,"motif":null,"dispersion":{"effectif":121,"iqr":0.04},"preuve":"8fde0f5f78afe28503821f8194a91dca7022105eaaad831bad9b6d4ef8489e2b"},{"famille":"experts","echelle":"ches_lrgen_0_10","valeur":8.82,"valeur_code":null,"libelle":"CHES 2024, lrgen","motif_code":null,"motif":null,"dispersion":null,"preuve":"4367cde19edba83604ea4e88b557e1491332af708e929a07e5b2aac349173c2b"},{"famille":"administratif","echelle":"nuance_leg2024","valeur":null,"valeur_code":"RN","libelle":"Nuance 2024","motif_code":null,"motif":null,"dispersion":null,"preuve":"a2af75c5b2a12f5c044a745ab9e69ec7325e9408a44953408356e0cbd0a8fe45"}]},{"id":"coalition.ensemble","libelle":"Ensemble","marqueurs":[{"famille":"administratif","echelle":"nuance_leg2024","valeur":null,"valeur_code":"ENS","libelle":"Nuance 2024","motif_code":null,"motif":null,"dispersion":null,"preuve":"450b4c88644e398f4ae458db4bce99dcd7e9b79b5103004d4fb8cd9927b0e840"}]},{"id":"coalition.nfp","libelle":"Nouveau Front populaire","marqueurs":[{"famille":"administratif","echelle":"nuance_leg2024","valeur":null,"valeur_code":"UG","libelle":"Nuance 2024","motif_code":null,"motif":null,"dispersion":null,"preuve":"bc4e6cb448438201e8723f8a56cb65dbbe0cfbecfa1b0b0bd94932a4653c3f13"}]},{"id":"groupe.an17.liot","libelle":"LIOT","marqueurs":[{"famille":"votes","echelle":"votes_an17_ancre_v1","valeur":null,"valeur_code":null,"libelle":"Votes du groupe LIOT","motif_code":"sous_seuil_de_publication","motif":"Dispersion interne au-delà du seuil publié : IQR 0,64 pour un maximum de 0,25.","dispersion":{"effectif":20,"iqr":0.64},"preuve":"32fb76691440af055b9863b258a59c400b00775d7598630c2cdcc1441a192b61"}]},{"id":"groupe.an17.ni","libelle":"Non inscrit","marqueurs":[{"famille":"votes","echelle":"votes_an17_ancre_v1","valeur":null,"valeur_code":null,"libelle":"Votes du groupe NI","motif_code":"sous_seuil_de_publication","motif":"Effectif retenu de 9 membres pour un minimum de 10.","dispersion":{"effectif":9,"iqr":1.24},"preuve":"1eec0f353c0db885354531b3c8192f069fe82213b2ca65fe16f1899d7a2f0283"}]},{"id":"parti.ecologistes","libelle":"Les Écologistes","marqueurs":[{"famille":"experts","echelle":"ches_lrgen_0_10","valeur":2.3,"valeur_code":null,"libelle":"CHES 2024, lrgen","motif_code":null,"motif":null,"dispersion":null,"preuve":"8e2c90f47ffde39836d78e4e08678d14f22c5c685aab54020e2625b3574a2978"}]},{"id":"parti.pcf","libelle":"Parti communiste français","marqueurs":[{"famille":"experts","echelle":"ches_lrgen_0_10","valeur":1.73,"valeur_code":null,"libelle":"CHES 2024, lrgen","motif_code":null,"motif":null,"dispersion":null,"preuve":"7c520263c06baac5da778630b51c097d6ea6f1c7fa22e66b55242e21be7c1195"}]},{"id":"parti.renaissance","libelle":"Renaissance","marqueurs":[{"famille":"experts","echelle":"ches_lrgen_0_10","valeur":6.27,"valeur_code":null,"libelle":"CHES 2024, lrgen","motif_code":null,"motif":null,"dispersion":null,"preuve":"a28b5b03d717fe421204304af2232e72f0066177d2b2cc15c3e2db5d2a5d3e3d"}]}],"sans_mesure":[{"entite":"parti.place-publique","libelle":"Place publique","motif_code":"hors_source","motif":"Aucun code propre dans la grille constatée."}]},"couleurs":{"schema":"contrepoint/couleurs-identite/1","source":"wikidata","propriete":"P465","licence":"CC0 1.0","note":"Couleur d'identite declaree par la source, jamais choisie ici. Presentation seule : aucune valeur mesuree n'en depend, et ce fichier n'entre pas dans la cle de deduplication du §3.","recupere_le":"2026-08-28","couleurs":[{"entite":"coalition.nfp","wikidata":"Q126487286","srgb":"#FB2C59"},{"entite":"parti.ecologistes","wikidata":"Q613786","srgb":"#4BB166"},{"entite":"parti.horizons","wikidata":"Q108846587","srgb":"#0000BA"},{"entite":"parti.lfi","wikidata":"Q27978402","srgb":"#CC2443"},{"entite":"parti.lr","wikidata":"Q20012759","srgb":"#034EA2"},{"entite":"parti.pcf","wikidata":"Q192821","srgb":"#E4002B"},{"entite":"parti.place-publique","wikidata":"Q58366009","srgb":"#FFF100"},{"entite":"parti.ps","wikidata":"Q170972","srgb":"#E30040"},{"entite":"parti.renaissance","wikidata":"Q23731823","srgb":"#00205B"},{"entite":"parti.rn","wikidata":"Q205150","srgb":"#104E8B"},{"entite":"parti.udr","wikidata":"Q127038760","srgb":"#004B8F"}]}}</script>
+<script>
+"use strict";
+const D = JSON.parse(document.getElementById("donnees").textContent);
+const INST = D.instantane, MAN = D.manifeste;
+const COUL = Object.fromEntries(D.couleurs.couleurs.map(c => [c.entite, c.srgb]));
+
+/* --- familles : chaque règle a sa largeur, ses graduations, sa marque --- */
+const FAM = {
+  votes:      {lib:"Votes nominatifs", court:"Votes", min:-1, max:1, dec:2, ticks:[-1,-0.5,0,0.5,1], lbl:["−1,00","+1,00"], zero:0},
+  experts:    {lib:"Enquête d'experts", court:"Experts", min:0, max:10, dec:2, ticks:[0,2,4,6,8,10], lbl:["0","10"]},
+  administratif:{lib:"Nuance administrative", court:"Nuance", code:true},
+  audience:   {lib:"Indice de reprise (fictif)", court:"Reprise", min:0, max:100, dec:0, ticks:[0,25,50,75,100], lbl:["0","100"]},
+  citations:  {lib:"Écart de citation (fictif)", court:"Citation", min:-3, max:3, dec:1, ticks:[-3,-1.5,0,1.5,3], lbl:["−3","+3"], zero:0}
+};
+const num = (v,d) => v==null ? "—" : v.toFixed(d).replace(".", ",").replace("-", "\u2212");
+const pos = (f,v) => 4 + ((v - FAM[f].min) / (FAM[f].max - FAM[f].min)) * 92;
+const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+
+/* --- normalisation du corpus réel --- */
+function reels(){
+  const out = INST.bandes.map(b => ({
+    id:b.id, nom:b.libelle, coul:COUL[b.id]||null, demo:false,
+    comp:(b.composition_partielle||[]).map(c=>c.libelle),
+    m:Object.fromEntries(b.marqueurs.map(m => [m.famille, m]))
+  }));
+  INST.sans_mesure.forEach(s => out.push({
+    id:s.entite, nom:s.libelle, coul:COUL[s.entite]||null, demo:false, comp:[], m:{},
+    absent:{motif_code:s.motif_code, motif:s.motif}
+  }));
+  return out;
+}
+
+/* --- corpus fabriqué, déterministe --- */
+function fictifs(n){
+  let s = 20260827;
+  const r = () => (s = (s*1103515245 + 12345) & 0x7fffffff) / 0x7fffffff;
+  const T = ["Le Quotidien","La Gazette","Radio","La Revue","L'Hebdomadaire","Le Bulletin","Chaîne","L'Agence","Le Courrier","Le Journal"];
+  const L = ["du Nord","de démonstration","fictive","d'essai","des Deux-Rives","témoin","de contrôle","imaginaire","sans lecteurs","de la Vallée fictive"];
+  const out = [];
+  for (let i=0;i<n;i++){
+    const m = {};
+    const mk = (fam, held) => {
+      const F = FAM[fam];
+      if (held) return {famille:fam, echelle:"démo", valeur:null, motif_code:"sous_seuil_de_publication",
+        motif:"Dispersion interne au-delà du seuil (valeur fabriquée).", dispersion:{effectif:8+Math.floor(r()*40), iqr:+(0.3+r()*0.9).toFixed(2)}, preuve:null};
+      const v = F.min + r()*(F.max - F.min);
+      return {famille:fam, echelle:"démo", valeur:+v.toFixed(F.dec), motif_code:null, dispersion:null, preuve:null};
+    };
+    ["votes","experts","audience","citations"].forEach(f => {
+      const d = r();
+      if (d < 0.14) return;                 // famille non mesurée
+      m[f] = mk(f, d < 0.26);               // absence motivée
+    });
+    if (r() > 0.18) m.administratif = {famille:"administratif", valeur:null,
+      valeur_code:["AAA","BB","CDE","FX","GG2","HZ"][Math.floor(r()*6)], echelle:"démo", preuve:null};
+    out.push({id:"demo."+i, nom:`${T[Math.floor(r()*T.length)]} ${L[Math.floor(r()*L.length)]} n°${String(i+1).padStart(3,"0")}`,
+      coul:null, demo:true, comp:[], m});
+  }
+  return out;
+}
+
+/* --- rendu d'une piste --- */
+function trk(fam, mk){
+  const F = FAM[fam];
+  if (F.code){
+    if (!mk) return `<span class="chip off">—</span>`;
+    return `<span class="chip" title="${esc(F.lib)} · code ${esc(mk.valeur_code)} · sans échelle">${esc(mk.valeur_code)}</span>`;
+  }
+  const cls = `trk f-${fam} w-${fam}`;
+  if (!mk) return `<span class="${cls} none" title="${esc(F.lib)} : pas de mesure dans cette famille"><span class="base"></span><span class="txt">—</span></span>`;
+  if (mk.valeur == null) return `<span class="${cls} held" title="${esc(F.lib)} : mesure non publiée — ${esc(mk.motif||"")}"><span class="base"></span><span class="txt">non publié</span></span>`;
+  const z = F.zero != null ? `<span class="zero" style="left:${pos(fam,F.zero)}%"></span>` : "";
+  return `<span class="${cls}" title="${esc(F.lib)} : ${num(mk.valeur,F.dec)} sur ${F.lbl[0]} → ${F.lbl[1]}">`
+    + `<span class="base"></span>${z}<span class="mk m-${fam}" style="left:${pos(fam,mk.valeur)}%"></span></span>`;
+}
+
+/* --- panneau preuve --- */
+function detail(e, fams){
+  let h = "", vides = [];
+  fams.forEach(f => {
+    const F = FAM[f], mk = e.m[f];
+    if (!mk) { vides.push(F.court); return; }
+    let val;
+    if (F.code) val = `<b>code ${esc(mk.valeur_code)}</b> — nomenclature sans échelle : ni ordre, ni distance.`;
+    else if (mk.valeur == null) val = `<b>non publié</b> — ${esc(mk.motif||"")}`;
+    else val = `<b>${num(mk.valeur,F.dec)}</b> <span class="h">sur ${F.lbl[0]} → ${F.lbl[1]}</span>`;
+    const disp = mk.dispersion ? ` · effectif ${mk.dispersion.effectif}, IQR ${num(mk.dispersion.iqr,2)}` : "";
+    const pr = mk.preuve
+      ? `<span class="h">preuves/${mk.preuve.slice(0,2)}/${mk.preuve.slice(0,16)}…</span>`
+      : `<span class="h">valeur fabriquée — aucune preuve</span>`;
+    h += `<dl class="pv"><dt>${esc(F.court)}</dt><dd>${val}<br><span class="h">${esc(mk.echelle||"")}${esc(disp)}</span><br>${pr}</dd></dl>`;
+  });
+  if (vides.length) h += `<dl class="pv"><dt>Sans mesure</dt><dd>Aucune valeur dans ${vides.length>1?"ces familles":"cette famille"} : ${esc(vides.join(", "))}. Absence de source, non un résultat.</dd></dl>`;
+  if (e.absent) h += `<dl class="pv"><dt>Aucune mesure</dt><dd>${esc(e.absent.motif)} <span class="h">(${esc(e.absent.motif_code)})</span></dd></dl>`;
+  if (e.comp.length) h += `<p class="cmp">Composition partiellement connue : ${esc(e.comp.join(", "))}.</p>`;
+  return `<div class="det">${h}</div>`;
+}
+
+/* --- rendu d'une ligne --- */
+function ligne(e, fams){
+  const rail = e.coul ? `style="background:${esc(e.coul)}"` : "";
+  const sub = e.demo ? "" : `<span class="s">${esc(e.id)}</span>`;
+  return `<details class="row${e.demo?" demo":""}"><summary>`
+    + `<span class="rail" ${rail}></span>`
+    + `<span class="nom"><span class="t">${esc(e.nom)}</span>${sub}</span>`
+    + `<span class="cells">${fams.map(f => trk(f, e.m[f])).join("")}</span>`
+    + `</summary>${detail(e, fams)}</details>`;
+}
+
+/* --- règle collante --- */
+function regle(fams){
+  let h = `<div class="rule"><span></span><span class="lab hidem">Entité</span>`;
+  fams.forEach(f => {
+    const F = FAM[f];
+    if (F.code){ h += `<span class="axis"><span class="nm">${esc(F.court)}</span><span class="u" style="text-align:left">code</span></span>`; return; }
+    const t = F.ticks.map(v => `<span class="at${v===F.zero?" z":""}" style="left:${pos(f,v)}%"></span>`).join("");
+    h += `<span class="axis"><span class="nm">${esc(F.court)}</span>`
+      + `<span class="an" style="left:0">${F.lbl[0]}</span><span class="an" style="right:0">${F.lbl[1]}</span>${t}</span>`;
+  });
+  h += `</div>`;
+  const m = fams.map(f => `<span class="g g-${f}"></span>${esc(FAM[f].court)} <i>${FAM[f].code ? "code" : FAM[f].lbl[0]+" → "+FAM[f].lbl[1]}</i>`).join(" &nbsp; ");
+  return h + `<div class="rulem">${m}</div>`;
+}
+
+/* --- tri : les non publiés en tête, jamais relégués --- */
+function rendre(cible, corpus, fams, q, tri){
+  const f = q.trim().toLowerCase();
+  const vus = f ? corpus.filter(e => e.nom.toLowerCase().includes(f) || e.id.toLowerCase().includes(f)) : corpus.slice();
+  let h = regle(fams), n = vus.length;
+  const nm=(a,b)=>a.nom.localeCompare(b.nom,"fr");
+  const bloc = (titre, arr) => arr.length ? `<div class="grp">${esc(titre)} · ${arr.length}</div><div class="list">${arr.map(e => ligne(e, fams)).join("")}</div>` : "";
+
+  if (tri === "nom" ){
+    vus.sort((a,b) => a.nom.localeCompare(b.nom, "fr"));
+    h += `<div class="list">${vus.map(e => ligne(e, fams)).join("")}</div>`;
+  } else if (FAM[tri].code){
+    const avec = vus.filter(e => e.m[tri]).sort((a,b) => a.m[tri].valeur_code.localeCompare(b.m[tri].valeur_code));
+    h += bloc("Par code de nuance", avec) + bloc("Hors nomenclature", vus.filter(e => !e.m[tri]).sort(nm));
+  } else {
+    const held = vus.filter(e => e.m[tri] && e.m[tri].valeur == null).sort(nm);
+    const abs  = vus.filter(e => !e.m[tri]).sort(nm);
+    const val  = vus.filter(e => e.m[tri] && e.m[tri].valeur != null).sort((a,b) => a.m[tri].valeur - b.m[tri].valeur);
+    h += bloc("Mesuré, non publié — " + FAM[tri].court, held)
+       + bloc(FAM[tri].lib + " · du plus bas au plus haut", val)
+       + bloc("Famille non mesurée pour ces entités", abs);
+  }
+  cible.el.innerHTML = h;
+  cible.cnt.textContent = n + " / " + corpus.length + " lignes";
+}
+
+/* --- montage --- */
+const FR = reels(), FX = fictifs(200);
+const F1 = ["votes","administratif","experts"];
+const F2 = ["votes","administratif","experts","audience","citations"];
+function brancher(el, cnt, q, s, corpus, fams){
+  const c = {el:document.getElementById(el), cnt:document.getElementById(cnt)};
+  const Q = document.getElementById(q), S = document.getElementById(s);
+  const go = () => rendre(c, corpus, fams, Q.value, S.value);
+  Q.addEventListener("input", go); S.addEventListener("change", go); go();
+}
+brancher("t1","c1","q1","s1", FR, F1);
+brancher("t2","c2","q2","s2", FX, F2);
+
+document.getElementById("n1").textContent = "17 bandes publiées + 1 entité sans mesure · 3 familles · " + INST.id;
+document.getElementById("n2").textContent = "200 entités fabriquées · 5 familles";
+document.getElementById("meta").innerHTML =
+  `<span>Contrat <b>${esc(MAN.contrat)}</b></span><span>Arrêté au <b>${esc(MAN.date_arretee.slice(0,10))}</b></span>`
+  + `<span>Instantané <b>${esc(INST.id)}</b></span><span>Ancrage votes : <b>LFI-NFP → RN</b>, propre à cette législature</span>`
+  + `<span>${esc(MAN.licence)}</span>`;
+</script>
+</body>
+</html>

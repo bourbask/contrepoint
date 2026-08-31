@@ -1,0 +1,598 @@
+{
+ "manifeste": {
+  "schema": "contrepoint/manifeste/1",
+  "contrat": "0.6.0",
+  "schemas": [
+   "contrepoint/preuve/2",
+   "contrepoint/instantane/1",
+   "contrepoint/eclat-preuves/1"
+  ],
+  "date_arretee": "2026-08-27T00:00:00Z",
+  "licence": "Licence Ouverte / Open Licence (Etalab)",
+  "mention_paternite": "Assemblée nationale — Licence Ouverte v1.0 ; Chapel Hill Expert Survey — aucune licence publiée, citation exigée ; Ministère de l'intérieur — Licence Ouverte v2.0 — données du 2026-08-27",
+  "familles": [
+   {
+    "id": "votes",
+    "libelle": "Votes nominatifs",
+    "echelle": "votes_an17_ancre_v1",
+    "min": -1.0,
+    "max": 1.0,
+    "decimales": 2
+   },
+   {
+    "id": "experts",
+    "libelle": "Enquête d'experts",
+    "echelle": "ches_lrgen_0_10",
+    "min": 0.0,
+    "max": 10.0,
+    "decimales": 2
+   },
+   {
+    "id": "administratif",
+    "libelle": "Nuance administrative",
+    "echelle": "nuance_leg2024",
+    "min": null,
+    "max": null,
+    "decimales": null
+   }
+  ],
+  "instantanes": [
+   {
+    "id": "an17-2026-07-21",
+    "chambre": "AN",
+    "legislature": "17",
+    "date": "2026-07-21",
+    "url": "instantanes/an17-2026-07-21.json",
+    "empreinte_sha256": "09cb165c80690c73ef2a9395b9d20938489fd8930bbf732ce95f7e698be48e4b",
+    "octets": 8859,
+    "bandes": 17
+   }
+  ],
+  "preuves": {
+   "racine": "preuves/",
+   "eclats": 256,
+   "fonction": "deux premiers caractères hexadécimaux de l'id"
+  }
+ },
+ "instantane": {
+  "schema": "contrepoint/instantane/1",
+  "contrat": "0.6.0",
+  "id": "an17-2026-07-21",
+  "chambre": "AN",
+  "legislature": "17",
+  "date": "2026-07-21",
+  "date_arretee": "2026-08-27T00:00:00Z",
+  "ancrage": {
+   "famille": "votes",
+   "ancre_gauche": "groupe.an17.lfi-nfp",
+   "ancre_droite": "groupe.an17.rn",
+   "note": "Échelle ancrée sur deux groupes de cette législature : deux instantanés ne se superposent pas."
+  },
+  "bandes": [
+   {
+    "id": "parti.lfi",
+    "libelle": "La France insoumise",
+    "marqueurs": [
+     {
+      "famille": "votes",
+      "echelle": "votes_an17_ancre_v1",
+      "valeur": -1.0,
+      "valeur_code": null,
+      "libelle": "Votes du groupe LFI-NFP",
+      "motif_code": null,
+      "motif": null,
+      "dispersion": {
+       "effectif": 71,
+       "iqr": 0.03
+      },
+      "preuve": "58dddb470ebac0b3da987e46a74a1bf48b0ebfb6945219f1d10ba1eb3f6466e9"
+     },
+     {
+      "famille": "experts",
+      "echelle": "ches_lrgen_0_10",
+      "valeur": 0.82,
+      "valeur_code": null,
+      "libelle": "CHES 2024, lrgen",
+      "motif_code": null,
+      "motif": null,
+      "dispersion": null,
+      "preuve": "77567d84c5622524e55bf70355067c8499a3362ca9c924f0f1daef4188ff4547"
+     },
+     {
+      "famille": "administratif",
+      "echelle": "nuance_leg2024",
+      "valeur": null,
+      "valeur_code": "FI",
+      "libelle": "Nuance 2024",
+      "motif_code": null,
+      "motif": null,
+      "dispersion": null,
+      "preuve": "8acde57e44c122da290460030a12c5008911f27ac7dec79d819294d79ce40a6d"
+     }
+    ]
+   },
+   {
+    "id": "groupe.an17.ecos",
+    "libelle": "Écologiste et Social",
+    "composition_partielle": [
+     {
+      "entite": "parti.ecologistes",
+      "libelle": "Les Écologistes"
+     },
+     {
+      "entite": "parti.pcf",
+      "libelle": "Parti communiste français"
+     }
+    ],
+    "marqueurs": [
+     {
+      "famille": "votes",
+      "echelle": "votes_an17_ancre_v1",
+      "valeur": -0.98,
+      "valeur_code": null,
+      "libelle": "Votes du groupe ECOS",
+      "motif_code": null,
+      "motif": null,
+      "dispersion": {
+       "effectif": 38,
+       "iqr": 0.03
+      },
+      "preuve": "67708569db7b3c2bfd37deddede8d889157b2867b9d57bce5757b640db2551fd"
+     }
+    ]
+   },
+   {
+    "id": "groupe.an17.gdr",
+    "libelle": "Gauche Démocrate et Républicaine",
+    "composition_partielle": [
+     {
+      "entite": "parti.pcf",
+      "libelle": "Parti communiste français"
+     }
+    ],
+    "marqueurs": [
+     {
+      "famille": "votes",
+      "echelle": "votes_an17_ancre_v1",
+      "valeur": -0.91,
+      "valeur_code": null,
+      "libelle": "Votes du groupe GDR",
+      "motif_code": null,
+      "motif": null,
+      "dispersion": {
+       "effectif": 17,
+       "iqr": 0.09
+      },
+      "preuve": "07deacbdbe7e62700256d0f9deccfdf94ea4e61a82915a9ee843d05601b2d9a5"
+     }
+    ]
+   },
+   {
+    "id": "parti.ps",
+    "libelle": "Parti socialiste",
+    "marqueurs": [
+     {
+      "famille": "votes",
+      "echelle": "votes_an17_ancre_v1",
+      "valeur": -0.84,
+      "valeur_code": null,
+      "libelle": "Votes du groupe SOC",
+      "motif_code": null,
+      "motif": null,
+      "dispersion": {
+       "effectif": 68,
+       "iqr": 0.05
+      },
+      "preuve": "bc43670379beca4893ae45df9c34ef66cb7ab1ecd16aa04b7e916ea8496c9ecb"
+     },
+     {
+      "famille": "experts",
+      "echelle": "ches_lrgen_0_10",
+      "valeur": 3.45,
+      "valeur_code": null,
+      "libelle": "CHES 2024, lrgen",
+      "motif_code": null,
+      "motif": null,
+      "dispersion": null,
+      "preuve": "ce95db7a5b69952844acd7307697a00fd910be65e51dd7257328a225debc200f"
+     },
+     {
+      "famille": "administratif",
+      "echelle": "nuance_leg2024",
+      "valeur": null,
+      "valeur_code": "SOC",
+      "libelle": "Nuance 2024",
+      "motif_code": null,
+      "motif": null,
+      "dispersion": null,
+      "preuve": "be278664683cd6553d53264c689ac5c89c064a71763356f0d6e033e9b78aaef3"
+     }
+    ]
+   },
+   {
+    "id": "groupe.an17.dem",
+    "libelle": "Les Démocrates",
+    "marqueurs": [
+     {
+      "famille": "votes",
+      "echelle": "votes_an17_ancre_v1",
+      "valeur": 0.17,
+      "valeur_code": null,
+      "libelle": "Votes du groupe DEM",
+      "motif_code": null,
+      "motif": null,
+      "dispersion": {
+       "effectif": 37,
+       "iqr": 0.21
+      },
+      "preuve": "41cb1d3a0fc1e679f682c9bef35c0650e6be5cc7140b95848a67aa8645f74968"
+     }
+    ]
+   },
+   {
+    "id": "groupe.an17.epr",
+    "libelle": "Ensemble pour la République",
+    "marqueurs": [
+     {
+      "famille": "votes",
+      "echelle": "votes_an17_ancre_v1",
+      "valeur": 0.25,
+      "valeur_code": null,
+      "libelle": "Votes du groupe EPR",
+      "motif_code": null,
+      "motif": null,
+      "dispersion": {
+       "effectif": 88,
+       "iqr": 0.21
+      },
+      "preuve": "a31c29f49f8fed44bd6325d6662b310977d672e4c9821c89ef6ca7bbd693c859"
+     }
+    ]
+   },
+   {
+    "id": "parti.horizons",
+    "libelle": "Horizons",
+    "marqueurs": [
+     {
+      "famille": "votes",
+      "echelle": "votes_an17_ancre_v1",
+      "valeur": 0.35,
+      "valeur_code": null,
+      "libelle": "Votes du groupe HOR",
+      "motif_code": null,
+      "motif": null,
+      "dispersion": {
+       "effectif": 34,
+       "iqr": 0.19
+      },
+      "preuve": "10c80ddf8e859c353fa6d14ba7ed8ffecb15b525a495dcae2cca0310afd8acf0"
+     },
+     {
+      "famille": "experts",
+      "echelle": "ches_lrgen_0_10",
+      "valeur": 6.6,
+      "valeur_code": null,
+      "libelle": "CHES 2024, lrgen",
+      "motif_code": null,
+      "motif": null,
+      "dispersion": null,
+      "preuve": "c89cd0affe1369fd330b2c4c294d46869f18eb0e344d6e3c430deaf76ea98b60"
+     },
+     {
+      "famille": "administratif",
+      "echelle": "nuance_leg2024",
+      "valeur": null,
+      "valeur_code": "HOR",
+      "libelle": "Nuance 2024",
+      "motif_code": null,
+      "motif": null,
+      "dispersion": null,
+      "preuve": "2b04fcbd5fa617c262fbfd44d250aac91dd572387e1118ed495b7f8a20b1b52b"
+     }
+    ]
+   },
+   {
+    "id": "parti.lr",
+    "libelle": "Les Républicains",
+    "marqueurs": [
+     {
+      "famille": "votes",
+      "echelle": "votes_an17_ancre_v1",
+      "valeur": 0.68,
+      "valeur_code": null,
+      "libelle": "Votes du groupe DR",
+      "motif_code": null,
+      "motif": null,
+      "dispersion": {
+       "effectif": 46,
+       "iqr": 0.12
+      },
+      "preuve": "9d6e6b1feee5d5f0d8784e355ffb92142928273d3402b5b1e43f0d65554f1d69"
+     },
+     {
+      "famille": "experts",
+      "echelle": "ches_lrgen_0_10",
+      "valeur": 7.73,
+      "valeur_code": null,
+      "libelle": "CHES 2024, lrgen",
+      "motif_code": null,
+      "motif": null,
+      "dispersion": null,
+      "preuve": "f1d50006f315cce759f37b539e4c91de190403f7fe894c2bda47a5a707ab008e"
+     },
+     {
+      "famille": "administratif",
+      "echelle": "nuance_leg2024",
+      "valeur": null,
+      "valeur_code": "LR",
+      "libelle": "Nuance 2024",
+      "motif_code": null,
+      "motif": null,
+      "dispersion": null,
+      "preuve": "8bfeaefa4cfcc36a6ceba41a6fb7bdff6bbbaa5ae2ab7175ba9e02bdc27332f8"
+     }
+    ]
+   },
+   {
+    "id": "parti.udr",
+    "libelle": "Union des droites pour la République",
+    "marqueurs": [
+     {
+      "famille": "votes",
+      "echelle": "votes_an17_ancre_v1",
+      "valeur": 0.99,
+      "valeur_code": null,
+      "libelle": "Votes du groupe UDDPLR",
+      "motif_code": null,
+      "motif": null,
+      "dispersion": {
+       "effectif": 17,
+       "iqr": 0.05
+      },
+      "preuve": "53cbb4f6d06c9285abd6e3efc1423970e234e395cdb2dfa466fc48c0bdc06e8b"
+     }
+    ]
+   },
+   {
+    "id": "parti.rn",
+    "libelle": "Rassemblement national",
+    "marqueurs": [
+     {
+      "famille": "votes",
+      "echelle": "votes_an17_ancre_v1",
+      "valeur": 1.0,
+      "valeur_code": null,
+      "libelle": "Votes du groupe RN",
+      "motif_code": null,
+      "motif": null,
+      "dispersion": {
+       "effectif": 121,
+       "iqr": 0.04
+      },
+      "preuve": "8fde0f5f78afe28503821f8194a91dca7022105eaaad831bad9b6d4ef8489e2b"
+     },
+     {
+      "famille": "experts",
+      "echelle": "ches_lrgen_0_10",
+      "valeur": 8.82,
+      "valeur_code": null,
+      "libelle": "CHES 2024, lrgen",
+      "motif_code": null,
+      "motif": null,
+      "dispersion": null,
+      "preuve": "4367cde19edba83604ea4e88b557e1491332af708e929a07e5b2aac349173c2b"
+     },
+     {
+      "famille": "administratif",
+      "echelle": "nuance_leg2024",
+      "valeur": null,
+      "valeur_code": "RN",
+      "libelle": "Nuance 2024",
+      "motif_code": null,
+      "motif": null,
+      "dispersion": null,
+      "preuve": "a2af75c5b2a12f5c044a745ab9e69ec7325e9408a44953408356e0cbd0a8fe45"
+     }
+    ]
+   },
+   {
+    "id": "coalition.ensemble",
+    "libelle": "Ensemble",
+    "marqueurs": [
+     {
+      "famille": "administratif",
+      "echelle": "nuance_leg2024",
+      "valeur": null,
+      "valeur_code": "ENS",
+      "libelle": "Nuance 2024",
+      "motif_code": null,
+      "motif": null,
+      "dispersion": null,
+      "preuve": "450b4c88644e398f4ae458db4bce99dcd7e9b79b5103004d4fb8cd9927b0e840"
+     }
+    ]
+   },
+   {
+    "id": "coalition.nfp",
+    "libelle": "Nouveau Front populaire",
+    "marqueurs": [
+     {
+      "famille": "administratif",
+      "echelle": "nuance_leg2024",
+      "valeur": null,
+      "valeur_code": "UG",
+      "libelle": "Nuance 2024",
+      "motif_code": null,
+      "motif": null,
+      "dispersion": null,
+      "preuve": "bc4e6cb448438201e8723f8a56cb65dbbe0cfbecfa1b0b0bd94932a4653c3f13"
+     }
+    ]
+   },
+   {
+    "id": "groupe.an17.liot",
+    "libelle": "LIOT",
+    "marqueurs": [
+     {
+      "famille": "votes",
+      "echelle": "votes_an17_ancre_v1",
+      "valeur": null,
+      "valeur_code": null,
+      "libelle": "Votes du groupe LIOT",
+      "motif_code": "sous_seuil_de_publication",
+      "motif": "Dispersion interne au-delà du seuil publié : IQR 0,64 pour un maximum de 0,25.",
+      "dispersion": {
+       "effectif": 20,
+       "iqr": 0.64
+      },
+      "preuve": "32fb76691440af055b9863b258a59c400b00775d7598630c2cdcc1441a192b61"
+     }
+    ]
+   },
+   {
+    "id": "groupe.an17.ni",
+    "libelle": "Non inscrit",
+    "marqueurs": [
+     {
+      "famille": "votes",
+      "echelle": "votes_an17_ancre_v1",
+      "valeur": null,
+      "valeur_code": null,
+      "libelle": "Votes du groupe NI",
+      "motif_code": "sous_seuil_de_publication",
+      "motif": "Effectif retenu de 9 membres pour un minimum de 10.",
+      "dispersion": {
+       "effectif": 9,
+       "iqr": 1.24
+      },
+      "preuve": "1eec0f353c0db885354531b3c8192f069fe82213b2ca65fe16f1899d7a2f0283"
+     }
+    ]
+   },
+   {
+    "id": "parti.ecologistes",
+    "libelle": "Les Écologistes",
+    "marqueurs": [
+     {
+      "famille": "experts",
+      "echelle": "ches_lrgen_0_10",
+      "valeur": 2.3,
+      "valeur_code": null,
+      "libelle": "CHES 2024, lrgen",
+      "motif_code": null,
+      "motif": null,
+      "dispersion": null,
+      "preuve": "8e2c90f47ffde39836d78e4e08678d14f22c5c685aab54020e2625b3574a2978"
+     }
+    ]
+   },
+   {
+    "id": "parti.pcf",
+    "libelle": "Parti communiste français",
+    "marqueurs": [
+     {
+      "famille": "experts",
+      "echelle": "ches_lrgen_0_10",
+      "valeur": 1.73,
+      "valeur_code": null,
+      "libelle": "CHES 2024, lrgen",
+      "motif_code": null,
+      "motif": null,
+      "dispersion": null,
+      "preuve": "7c520263c06baac5da778630b51c097d6ea6f1c7fa22e66b55242e21be7c1195"
+     }
+    ]
+   },
+   {
+    "id": "parti.renaissance",
+    "libelle": "Renaissance",
+    "marqueurs": [
+     {
+      "famille": "experts",
+      "echelle": "ches_lrgen_0_10",
+      "valeur": 6.27,
+      "valeur_code": null,
+      "libelle": "CHES 2024, lrgen",
+      "motif_code": null,
+      "motif": null,
+      "dispersion": null,
+      "preuve": "a28b5b03d717fe421204304af2232e72f0066177d2b2cc15c3e2db5d2a5d3e3d"
+     }
+    ]
+   }
+  ],
+  "sans_mesure": [
+   {
+    "entite": "parti.place-publique",
+    "libelle": "Place publique",
+    "motif_code": "hors_source",
+    "motif": "Aucun code propre dans la grille constatée."
+   }
+  ]
+ },
+ "couleurs": {
+  "schema": "contrepoint/couleurs-identite/1",
+  "source": "wikidata",
+  "propriete": "P465",
+  "licence": "CC0 1.0",
+  "note": "Couleur d'identite declaree par la source, jamais choisie ici. Presentation seule : aucune valeur mesuree n'en depend, et ce fichier n'entre pas dans la cle de deduplication du §3.",
+  "recupere_le": "2026-08-28",
+  "couleurs": [
+   {
+    "entite": "coalition.nfp",
+    "wikidata": "Q126487286",
+    "srgb": "#FB2C59"
+   },
+   {
+    "entite": "parti.ecologistes",
+    "wikidata": "Q613786",
+    "srgb": "#4BB166"
+   },
+   {
+    "entite": "parti.horizons",
+    "wikidata": "Q108846587",
+    "srgb": "#0000BA"
+   },
+   {
+    "entite": "parti.lfi",
+    "wikidata": "Q27978402",
+    "srgb": "#CC2443"
+   },
+   {
+    "entite": "parti.lr",
+    "wikidata": "Q20012759",
+    "srgb": "#034EA2"
+   },
+   {
+    "entite": "parti.pcf",
+    "wikidata": "Q192821",
+    "srgb": "#E4002B"
+   },
+   {
+    "entite": "parti.place-publique",
+    "wikidata": "Q58366009",
+    "srgb": "#FFF100"
+   },
+   {
+    "entite": "parti.ps",
+    "wikidata": "Q170972",
+    "srgb": "#E30040"
+   },
+   {
+    "entite": "parti.renaissance",
+    "wikidata": "Q23731823",
+    "srgb": "#00205B"
+   },
+   {
+    "entite": "parti.rn",
+    "wikidata": "Q205150",
+    "srgb": "#104E8B"
+   },
+   {
+    "entite": "parti.udr",
+    "wikidata": "Q127038760",
+    "srgb": "#004B8F"
+   }
+  ]
+ }
+}

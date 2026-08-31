@@ -10,7 +10,12 @@ set -euo pipefail
 # Axes à pôle dépréciatif : interdits partout, sans exception.
 AXES='fiabilit|credibilit|crédibilit|veracit|véracit|desinformation|désinformation|fake.?news|infox'
 # Qualifications d'organisation plutôt que mesures : interdites dans le produit.
-QUALIF='biais d[eu]s? (media|média|journal|rédaction|redaction)|partial(e|es|ité|ités)?\b|militant|palmar|note globale|extrémit|extremit|extrémis|extremis'
+# `extrémit` a été retiré le 2026-08-31 : il attrapait « extrémités », les bouts
+# d'une ligne, dans un fichier de conception qui décrit une graduation. Rien de
+# politique. `extrémis` couvre extrémisme et extrémiste, les seuls termes visés.
+# Même défaut que `partial` attrapant `PartialEq` : un motif tronqué mord la
+# langue ordinaire, et une porte qui crie faux se fait désactiver.
+QUALIF='biais d[eu]s? (media|média|journal|rédaction|redaction)|partial(e|es|ité|ités)?\b|militant|palmar|note globale|extrémis|extremis'
 # Agrégations qui écrasent les familles de mesure (règle non négociable n°6).
 AGREG='score global|indice de position|consensus des mesures|moyenne des familles'
 

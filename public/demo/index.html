@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>Contrepoint — quatre concepts de présentation</title>
+<style>
+:root{
+  --papier:#e8eaee; --carte:#f5f6f8; --encre:#191e2c; --pale:#5c6373; --regle:#b7bec9;
+  --serif:"Iowan Old Style","Palatino Linotype",Palatino,Charter,Georgia,serif;
+  --mono:ui-monospace,"SF Mono",SFMono-Regular,"Cascadia Mono",Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){:root{
+  --papier:#12151b; --carte:#1a1e27; --encre:#e3e7ee; --pale:#939bab; --regle:#39404e;}}
+*{box-sizing:border-box}
+body{margin:0;padding:2rem 1.25rem 5rem;background:var(--papier);color:var(--encre);
+  font-family:var(--serif);font-size:1rem;line-height:1.55}
+main{max-width:60rem;margin:0 auto}
+h1{font-size:2.1rem;line-height:1.15;margin:0 0 .5rem;font-weight:400}
+.chapeau{color:var(--pale);max-width:44rem;margin:0 0 1.4rem}
+.cadre{border:1px solid var(--regle);background:var(--carte);padding:1rem 1.15rem;margin:0 0 2.4rem}
+.cadre p{margin:.4rem 0}
+.etiq{font-family:var(--mono);font-size:.8125rem;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--pale);margin:0 0 .5rem}
+article{border:1px solid var(--regle);background:var(--carte);padding:1.2rem 1.3rem;margin:0 0 1.5rem}
+article h2{font-size:1.45rem;margin:.1rem 0 .15rem;font-weight:400}
+.pari{font-style:italic;color:var(--pale);margin:0 0 .9rem}
+dl{display:grid;grid-template-columns:9.5rem 1fr;gap:.35rem .9rem;margin:.9rem 0 1rem}
+dt{font-family:var(--mono);font-size:.78rem;letter-spacing:.06em;text-transform:uppercase;
+  color:var(--pale);padding-top:.2rem}
+dd{margin:0}
+a.voir{display:inline-block;font-family:var(--mono);font-size:.875rem;padding:.5rem .9rem;
+  border:1px solid var(--encre);color:var(--encre);text-decoration:none}
+a.voir:hover,a.voir:focus{background:var(--encre);color:var(--papier)}
+footer{margin-top:2.5rem;color:var(--pale);font-size:.9rem;max-width:44rem}
+code{font-family:var(--mono);font-size:.9em}
+</style>
+</head>
+<body>
+<main>
+<p class="etiq">Contrepoint · atelier · 2026-08-31</p>
+<h1>Quatre façons de montrer la même chose</h1>
+<p class="chapeau">Quatre concepts délibérément <strong>incompatibles</strong>, dessinés sur les données
+réellement publiées de l'instantané <code>an17-2026-07-21</code>. Il ne s'agit pas de quatre nuances
+d'une même idée : chacun sacrifie quelque chose que les autres gardent. Le choix porte sur ce
+sacrifice, pas sur le goût.</p>
+
+<div class="cadre">
+  <p class="etiq">Ce qu'aucun ne fait, et pourquoi</p>
+  <p><strong>Aucun ne fusionne les trois familles.</strong> Trois échelles disjointes, trois méthodes.
+  Un score unique serait la seule chose qui rendrait le projet indéfendable.</p>
+  <p><strong>Aucun ne suggère une fiabilité.</strong> Ni couleur chaude/froide, ni opacité, ni taille
+  indexée sur la dispersion. Contrepoint dit <em>où</em>, jamais <em>si c'est bien</em>.</p>
+  <p><strong>Aucun ne montre de personne.</strong> Les mesures portent sur des groupes ; une
+  coordonnée individuelle est l'invariant le plus dur du projet.</p>
+  <p><strong>Aucun ne colore par la valeur.</strong> Les teintes viennent de Wikidata (propriété P465,
+  CC0), déclarées par les entités elles-mêmes. Une rampe indexée sur la position fabriquerait des
+  cases « gauche / droite » qu'aucune mesure ne porte.</p>
+</div>
+
+<article>
+  <p class="etiq">Concept A</p>
+  <h2>Le spectre</h2>
+  <p class="pari">Le sujet n'est pas où sont les partis : c'est le trou entre eux.</p>
+  <dl>
+    <dt>Le geste</dt><dd>Le plus grand intervalle vide de chaque règle devient un bloc hachuré portant
+      sa largeur en chiffres de 54 px. Les entités sont les <em>bords</em> du vide.</dd>
+    <dt>Sa force</dt><dd>Lisible à trois mètres, sans un chiffre. Et le vide fait 50 % d'une règle
+      contre 28 % de l'autre : la non-concordance des échelles devient visible au lieu d'être une note.</dd>
+    <dt>Son coût</dt><dd>On ne peut plus suivre une entité d'une règle à l'autre. Le peigne
+      d'étiquettes casse au-delà d'une vingtaine de noms. Sur mobile, la plage défile horizontalement.</dd>
+    <dt>À l'échelle</dt><dd>Éprouvé à 60 entités fictives : la plage tient, la densité devient une
+      texture de code-barres.</dd>
+  </dl>
+  <a class="voir" href="./a-spectre.html">Voir le concept A</a>
+</article>
+
+<article>
+  <p class="etiq">Concept B</p>
+  <h2>La concordance</h2>
+  <p class="pari">Ne pas montrer où sont les partis, mais pourquoi on peut le croire.</p>
+  <dl>
+    <dt>Le geste</dt><dd>Un graphe de pentes : deux règles dressées côte à côte, un trait par entité
+      mesurée deux fois. Ce qu'il faut chercher, c'est <em>un croisement</em> — il n'y en a aucun.</dd>
+    <dt>Sa force</dt><dd><strong>C'est le seul concept qui puisse être faux.</strong> Un croisement le
+      contredirait à l'œil nu. Et il montre le désaccord : accord parfait sur l'ordre, écarts très
+      différents — le PS est à 8 % d'une graduation et à 34 % de l'autre.</dd>
+    <dt>Son honnêteté</dt><dd>Il énonce sa propre objection : les deux méthodes sont indépendantes par
+      leur <em>protocole</em>, pas par leur <em>objet</em> — les politologues connaissent les votes
+      qu'ils commentent.</dd>
+    <dt>Son coût</dt><dd>Personne ne saura d'un coup d'œil « où est le RN ». Il met en couverture
+      5 entités sur 18. Et il frôle en permanence un axe de fiabilité qu'aucune mesure ne porte,
+      écarté par le texte plus que par la forme.</dd>
+  </dl>
+  <a class="voir" href="./b-concordance.html">Voir le concept B</a>
+</article>
+
+<article>
+  <p class="etiq">Concept C</p>
+  <h2>La preuve au premier plan</h2>
+  <p class="pari">La promesse n'est pas « croyez-nous » mais « vérifiez-nous ». Alors qu'elle se voie.</p>
+  <dl>
+    <dt>Le geste</dt><dd>Une chaîne à trois stations — entrées, méthode, valeur — au même gabarit pour
+      les 27 lignes. Et un <strong>sceau</strong> : les 16 premiers caractères de l'empreinte, une
+      case par colonne, encre constante. On reconnaît une empreinte du regard.</dd>
+    <dt>Sa force</dt><dd>Le refus devient le sommet de la démonstration : LIOT et NI portent
+      <em>exactement</em> la même chaîne que les autres. Rien ne manque en amont, seule la sortie est
+      retenue.</dd>
+    <dt>Un détail qui compte</dt><dd>L'encre du sceau est constante à dessein : une densité qui varie
+      se lit toujours comme une solidité qui varie.</dd>
+    <dt>Son coût</dt><dd>La comparaison. Trois panneaux empilés, jamais alignés. 17 entités prennent
+      1 200 px contre ~600 pour une partition nue.</dd>
+  </dl>
+  <a class="voir" href="./c-preuve.html">Voir le concept C</a>
+</article>
+
+<article>
+  <p class="etiq">Concept D</p>
+  <h2>Dense et extensible</h2>
+  <p class="pari">Conçu pour 200 entités et un téléphone, pas pour 17 sur grand écran.</p>
+  <dl>
+    <dt>Le geste</dt><dd>Une ligne par entité, une règle par famille, chacune avec sa largeur et sa
+      forme de marque. La nuance sans échelle est placée <em>physiquement entre</em> les deux échelles
+      continues, pour casser la lecture en travers.</dd>
+    <dt>Sa force</dt><dd>Il tient sans changer de forme : une famille de plus est une colonne de plus,
+      180 entités de plus sont 180 lignes de plus. Pas de version mobile dégradée. Filtre et tri
+      instantanés, et les tris ouvrent par le bloc « mesuré, non publié » — jamais relégué en bas.</dd>
+    <dt>Son coût</dt><dd>Aucune vue d'ensemble. Pas de silhouette du paysage politique, pas de
+      comparaison entre deux entités éloignées sans trier. Ça reste une liste.</dd>
+    <dt>Sa limite, mesurée</dt><dd>Le mur est le défilement, pas le rendu : au-delà d'environ
+      <strong>600 entités</strong> par liste, parcourir devient impossible.</dd>
+  </dl>
+  <a class="voir" href="./d-dense.html">Voir le concept D</a>
+</article>
+
+<footer>
+  <p>Les valeurs affichées sont celles de l'instantané publié. Les jeux étendus des concepts A et D
+  sont <strong>fabriqués</strong> pour éprouver la tenue à l'échelle, et signalés comme tels partout
+  où ils apparaissent — aucune de ces entités n'existe.</p>
+  <p>Assemblée nationale — Licence Ouverte v1.0 · Chapel Hill Expert Survey 2024 — aucune licence
+  publiée, citation exigée · Ministère de l'intérieur — Licence Ouverte v2.0 · couleurs d'identité :
+  Wikidata P465, CC0.</p>
+</footer>
+</main>
+</body>
+</html>
