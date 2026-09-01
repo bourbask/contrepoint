@@ -3,9 +3,22 @@
 # Appelé par la CI et cité par docs/definition-of-done.md et docs/ton.md,
 # qui ne doivent PAS recopier la liste : trois copies avaient déjà divergé.
 #
-#   ./scripts/lexique.sh code   vérifie l'arbre de code et de données
-#   ./scripts/lexique.sh docs   vérifie la documentation
+#   ./scripts/lexique.sh code       vérifie l'arbre de code et de données
+#   ./scripts/lexique.sh docs       vérifie la documentation
+#   ./scripts/lexique.sh public     T7 sur les chaînes affichées (docs/ton.md §1 bis)
+#   ./scripts/lexique.sh personne   T2 sur le diff, hors chemins du régime public
 set -euo pipefail
+cd "$(dirname "$0")/.."
+
+# Portée du régime public de docs/ton.md §0, déclarée ICI et nulle part ailleurs :
+# le document la cite, il ne la recopie pas. Une seconde copie divergerait, comme
+# les trois copies du lexique avant elle.
+PUBLIC_CHEMINS=(web/src)
+
+# Les fichiers qui ÉNONCENT les règles en citent forcément les termes et les
+# motifs. Déclarés une fois, employés par `docs` et par `personne` : la
+# première version portait la liste deux fois et les deux avaient divergé.
+DEFINISSENT_LA_REGLE=(docs/juridique.md docs/ton.md CHANGELOG.md scripts/lexique.sh)
 
 # Axes à pôle dépréciatif : interdits partout, sans exception.
 AXES='fiabilit|credibilit|crédibilit|veracit|véracit|desinformation|désinformation|fake.?news|infox'
@@ -27,7 +40,9 @@ case "$cible" in
     # juridique.md et ton.md définissent le lexique : ils citent les termes interdits.
     declare -a garde=()
     for f in "${FICHIERS[@]}"; do
-      case "$f" in docs/juridique.md|docs/ton.md|CHANGELOG.md) ;; *) garde+=("$f") ;; esac
+      exempt=0
+      for d in "${DEFINISSENT_LA_REGLE[@]}"; do [ "$f" = "$d" ] && exempt=1; done
+      [ "$exempt" -eq 0 ] && garde+=("$f")
     done
     FICHIERS=("${garde[@]}")
     # RG-91 interdit les axes dépréciatifs dans la documentation aussi.
@@ -36,7 +51,75 @@ case "$cible" in
     # retenu du projet.
     motifs="$AXES|$AGREG"
     ;;
-  *) echo "usage: $0 [code|docs]" >&2; exit 2 ;;
+  public)
+    # T7 en régime public : le `motif_code` reste dans l'artefact, jamais à
+    # l'écran. La couche de rendu est le JSX ; `graphe.ts` porte légitimement le
+    # code, puisque c'est lui qui le traduit.
+    declare -a rendu=()
+    for c in "${PUBLIC_CHEMINS[@]}"; do
+      declare -a ajout=()
+      mapfile -d '' -t ajout < <(git ls-files -z -- "$c/*.tsx")
+      [ "${#ajout[@]}" -gt 0 ] && rendu+=("${ajout[@]}")
+    done
+    if [ "${#rendu[@]}" -eq 0 ]; then
+      echo "lexique (public) : aucune couche de rendu à vérifier"; exit 0
+    fi
+    # La liste des codes est dérivée du schéma, jamais recopiée : elle a déjà
+    # gagné deux valeurs depuis la version 1 du contrat.
+    codes=$(python3 -c 'import json;e=json.load(open("schemas/preuve-2.schema.json"))["properties"]["motif_code"]["enum"];print("|".join(c for c in e if c))')
+    [ -z "$codes" ] && { echo "::error::liste de motif_code vide — le contrôle n'a rien pu affirmer"; exit 1; }
+    fautes=$(grep -nHE -- "['\">]($codes)['\"<]" "${rendu[@]}") || true
+    # Le champ lui-même ne va à l'écran que traduit. Une ligne de rendu qui le
+    # nomme sans appeler la fonction de traduction affiche le code brut.
+    brut=$(grep -nHE -- 'motif_code' "${rendu[@]}" | grep -v 'direAbsence(') || true
+    if [ -n "$fautes$brut" ]; then
+      [ -n "$fautes" ] && printf '%s\n' "$fautes"
+      [ -n "$brut" ]   && printf '%s\n' "$brut"
+      echo "::error::code d'absence à l'écran — docs/ton.md T7 : le motif s'affiche en français"
+      exit 1
+    fi
+    echo "lexique (public) : aucun code d'absence à l'écran sur ${#rendu[@]} fichiers"
+    exit 0
+    ;;
+  personne)
+    # T2. Sur le diff, jamais sur l'arbre : l'arbre porte 130 occurrences, dont
+    # les `on` anglais de LICENSE, des citations, et les lignes de docs/ton.md
+    # qui énoncent la règle. Un contrôle qui crie faux 130 fois se fait
+    # désactiver.
+    #
+    # Les chemins du régime public sont exclus : docs/ton.md §1 bis y autorise
+    # la deuxième personne à l'indicatif, une fois par écran. Le plafond d'une
+    # occurrence par écran n'est pas automatisable — un écran n'est pas un
+    # fichier — et se relit.
+    #
+    # Le contrôle porte sur la prose et le commentaire de code, pas sur les
+    # artefacts. Mesuré sur cinq incréments : `on` attrapait 33 lignes justes —
+    # la clé `on:` de chaque workflow YAML, et le « on » anglais des citations
+    # académiques recopiées dans `public/api/preuves/*.json` et
+    # `data/preuves/positions.jsonl`. Un motif qui signale du texte correct se
+    # resserre ; il ne gagne pas une liste d'exceptions.
+    PERSONNE='nous|notre|nos|vous|votre|vos|on'
+    base="${2:-origin/develop}"
+    declare -a hors=('*.md' '*.rs' '*.ts' '*.tsx' '*.sh')
+    for c in "${PUBLIC_CHEMINS[@]}"; do hors+=(":(exclude)$c"); done
+    for d in "${DEFINISSENT_LA_REGLE[@]}"; do hors+=(":(exclude)$d"); done
+    if ! git rev-parse --verify -q "$base" >/dev/null; then
+      echo "::error::référence de comparaison absente : $base"
+      echo "usage: $0 personne [base]"
+      exit 1
+    fi
+    ajouts=$(git diff -U0 --merge-base "$base" -- "${hors[@]}" | grep -E '^\+' | grep -v '^+++') || true
+    violations=$(printf '%s' "$ajouts" | grep -nwiE -- "$PERSONNE") || true
+    if [ -n "$violations" ]; then
+      echo "$violations"
+      echo "::error::personne grammaticale hors régime public — docs/ton.md T2"
+      echo "Une citation entre guillemets se justifie dans la description de la PR."
+      exit 1
+    fi
+    echo "lexique (personne) : aucune personne grammaticale ajoutée hors ${PUBLIC_CHEMINS[*]}"
+    exit 0
+    ;;
+  *) echo "usage: $0 [code|docs|public|personne]" >&2; exit 2 ;;
 esac
 
 if [ "${#FICHIERS[@]}" -eq 0 ]; then

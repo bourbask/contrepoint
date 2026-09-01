@@ -172,6 +172,10 @@ jobs:
         run: ./scripts/lexique.sh code
       - name: lexique (documentation)
         run: ./scripts/lexique.sh docs
+      # docs/ton.md T7 en régime public : le `motif_code` reste dans
+      # l'artefact. La liste des codes est dérivée du schéma, pas recopiée.
+      - name: lexique (chaînes affichées)
+        run: ./scripts/lexique.sh public
       # Le glossaire est la source : le script le lit, il ne recopie aucune
       # liste. Un glossaire vidé de ses formes interdites rend 2, pas 0 — une
       # porte qui ne lit rien n'affirme rien.

@@ -143,9 +143,9 @@ Abréviations des sources : **ADR0** = [adr/0000-perimetre-brique0.md](adr/0000-
 |---|---|---|
 | RG-90 | Aucun axe, champ, score ou variable, même interne et même sous un nom technique anodin, n'a de pôle dépréciatif. | JUR règle 2, DOD §12 |
 | RG-91 | Les termes proscrits du lexique de JUR n'apparaissent nulle part : code, identifiants, données, chaînes d'interface, documentation. | JUR règle 5, DOD §11 |
-| RG-92 | Aucune chaîne d'interface n'emploie de personne — ni « nous », ni « vous », ni impératif adressé au lecteur. | ADR0 §5 |
+| RG-92 | Aucune chaîne d'interface n'emploie la première personne ni l'impératif adressé au lecteur. La deuxième personne à l'indicatif est admise une fois par écran au plus — ton.md §1 bis, qui porte la règle ; cette ligne la cite et ne la recopie pas. | ADR0 §5, TON §1 bis |
 | RG-93 | Une étiquette d'interface tient en 40 caractères, une légende ou une note contextuelle en 140 caractères et une phrase. | ADR0 §5 |
-| RG-94 | Un écran porte au plus un bloc explicatif, de trois phrases au maximum. | ADR0 §5 |
+| RG-94 | Un bloc explicatif fait trois phrases au maximum. Le plafond porte sur le bloc, non sur l'écran : un écran porte autant de blocs que d'objets à gloser (TON T5, amendée). | ADR0 §5, TON T5 |
 | RG-95 | Un comparatif sans chiffres est proscrit ; la comparaison s'écrit avec les deux valeurs. | ADR0 §5 |
 | RG-96 | La procédure de signalement d'erreur est accessible depuis chaque écran. | JUR règle 4, ROADMAP v0.7 |
 | RG-97 | La couleur n'est jamais le seul porteur d'une information ; chaque marqueur est atteignable au clavier et porte un libellé accessible. | ADR1 §7 |
