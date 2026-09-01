@@ -18,7 +18,7 @@ jobs:
   construire:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
       - id: exists
         run: echo "yes=${{ hashFiles('web/package.json') != '' }}" >> "$GITHUB_OUTPUT"
       - if: steps.exists.outputs.yes == 'true'

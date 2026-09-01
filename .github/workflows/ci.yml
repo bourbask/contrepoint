@@ -17,7 +17,7 @@ jobs:
     name: pipeline (rust)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
       - id: exists
         run: echo "yes=${{ hashFiles('pipeline/Cargo.toml') != '' }}" >> "$GITHUB_OUTPUT"
       - if: steps.exists.outputs.yes == 'true'
@@ -57,7 +57,7 @@ jobs:
     name: front (react/ts)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
       - id: exists
         run: echo "yes=${{ hashFiles('web/package.json') != '' }}" >> "$GITHUB_OUTPUT"
       - if: steps.exists.outputs.yes == 'true'
@@ -100,7 +100,7 @@ jobs:
     name: artefacts et schémas
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
       - uses: actions/setup-node@v7
         with:
           node-version: '22'
@@ -164,7 +164,7 @@ jobs:
     name: garde-fous méthode
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
       # Liste canonique dans scripts/lexique.sh — jamais recopiée ailleurs.
       # docs/juridique.md interdit tout axe à pôle dépréciatif, y compris en
       # interne : un simple nom de champ suffirait à créer la métrique.
@@ -196,7 +196,7 @@ jobs:
     name: portes déclarées
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
       # plan-de-tests.md §15 porte 1 — la liste nominative des invariants.
       - name: identifiants de test déclarés contre suites écrites
         run: ./scripts/portes-de-ci.sh identifiants
@@ -224,7 +224,7 @@ jobs:
     name: couverture et déterminisme (squelette)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
       - id: exists
         run: echo "yes=${{ hashFiles('pipeline/src/main.rs') != '' }}" >> "$GITHUB_OUTPUT"
       - if: steps.exists.outputs.yes == 'true'
