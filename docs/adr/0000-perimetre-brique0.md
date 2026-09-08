@@ -169,7 +169,7 @@ détaillée est dans [docs/ton.md](../ton.md).
 | Dimension | Choix |
 |---|---|
 | Registre | Constat technique. Descriptif, jamais évaluatif, jamais pédagogique |
-| Personne | **Aucune.** Pas de « nous », pas de « vous », pas d'impératif adressé au lecteur. L'interface énonce, elle n'accompagne pas |
+| Personne | **Aucune en régime interne.** Pas de « nous », pas de « on », pas d'impératif adressé au lecteur. Amendé le 2026-09-01 pour le régime public seul ([ton.md](../ton.md) §1 bis) : la deuxième personne à l'indicatif y est admise une fois par écran, parce que l'interdire rendait l'écran illisible sans rien protéger de la mesure. L'interface énonce ; elle peut désormais s'adresser au lecteur une fois, elle ne l'accompagne pas |
 | Temps | Présent pour la méthode. Toute valeur porte sa date explicite |
 | Étiquette | ≤ 40 caractères |
 | Légende, note contextuelle | ≤ 140 caractères, une phrase |

@@ -228,6 +228,10 @@ restent dans `atelier/rendus/preuve.html`, elles ne sont pas dans `site.html`.
    « jamais moyennées » déjà présente deux fois. Reste à dire si « un écran »
    se compte en page ou en fenêtre ; ce n'est pas une question de dessin.
 
+   *Tranché depuis, par ton.md T5 amendée : le plafond de trois phrases porte
+   sur le bloc et non sur l'écran. Les deux blocs de cette page sont conformes,
+   et la question du décompte des écrans tombe.*
+
 2. **La hauteur de la page : 6 720 px à 760 px de large, 9 000 et plus à
    380 px.** Le brief UX visait ~900 px pour la partition seule — c'est tenu
    (les deux panneaux gradués occupent un peu plus de 1 000 px à 760 px de large,

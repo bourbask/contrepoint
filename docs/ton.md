@@ -6,12 +6,35 @@ elle est l'application du registre arbitré en
 [juridique.md](juridique.md). Chaque règle est formulée pour qu'un relecteur
 puisse répondre oui ou non sans discuter.
 
-Portée : toute chaîne visible du produit, tout document de `docs/`, `README.md`,
-`ROADMAP.md`, `CONTRIBUTING.md`, les messages de commit, les descriptions de PR,
-les libellés de données du registre d'entités, les messages d'erreur du
-pipeline. Un message d'erreur est une chaîne visible.
-
 Ce document ne rouvre aucun arbitrage. Il en dérive les contrôles.
+
+## 0. Deux régimes, deux portées
+
+Les huit règles ont été écrites pour de la documentation et appliquées ensuite,
+sans amendement, à des écrans destinés à des visiteurs. Le résultat était
+illisible par conformité : T1 interdisait d'expliquer, T2 interdisait d'adresser
+le lecteur, T5 plafonnait l'explication d'un écran entier à trois phrases, T7 lu
+« avec son identifiant » faisait afficher `hors_source` tel quel. La portée est
+scindée ici ; les règles qui protègent la mesure, elles, ne le sont pas.
+
+**Régime interne.** S'applique à `docs/`, `README.md`, `ROADMAP.md`,
+`CONTRIBUTING.md`, `CHANGELOG.md`, `atelier/`, `schemas/`, aux commentaires de
+code de `pipeline/` et de `scripts/`, aux messages de commit, aux descriptions
+de PR, aux libellés de données du registre d'entités et aux messages d'erreur du
+pipeline. Un message d'erreur du pipeline est lu par un mainteneur : il relève
+de ce régime. Règles applicables : §1 en entier, T2 compris.
+
+**Régime public.** S'applique à toute chaîne affichée à un visiteur, c'est-à-dire
+aux fichiers de `web/src/` et à eux seuls. Un libellé d'artefact n'est pas
+concerné tant qu'il reste dans l'artefact : ce qui est jugé, c'est la chaîne que
+le front met à l'écran. Règles applicables : §1, amendé par §1 bis.
+
+La portée du régime public est déclarée une seule fois, dans
+`scripts/lexique.sh` (`PUBLIC_CHEMINS`). Les chemins nommés ci-dessus valent
+pour la valeur du jour ; la référence fait foi, et le jour où `PUBLIC_CHEMINS`
+gagne une entrée, c'est ce document qui est en retard, jamais le script.
+
+Un chemin qui ne relève d'aucun des deux régimes relève du régime interne.
 
 ---
 
@@ -19,13 +42,13 @@ Ce document ne rouvre aucun arbitrage. Il en dérive les contrôles.
 
 | # | Règle | Comment un relecteur la vérifie |
 |---|---|---|
-| T1 | **Registre : constat technique.** Descriptif, jamais évaluatif, jamais pédagogique, jamais promotionnel. | Aucune phrase ne peut être précédée de « je trouve que » sans devenir fausse. |
-| T2 | **Aucune personne grammaticale.** Ni `nous`, `notre`, `nos`, ni `vous`, `votre`, `vos`, ni `on`, ni impératif adressé au lecteur. | `grep -nwiE 'nous\|notre\|nos\|vous\|votre\|vos\|on'` sur le diff, hors citation entre guillemets. |
+| T1 | **Registre : constat technique.** Descriptif, jamais évaluatif, jamais promotionnel. Expliquer un objet à qui ne le connaît pas est permis dans les deux régimes ; le juger ne l'est pas. | Aucune phrase ne peut être précédée de « je trouve que » sans devenir fausse. |
+| T2 | **Aucune personne grammaticale.** Ni `nous`, `notre`, `nos`, ni `vous`, `votre`, `vos`, ni `on`, ni impératif adressé au lecteur. **Amendée en régime public : voir §1 bis.** | `./scripts/lexique.sh personne` sur le diff — le script porte la liste et exclut les chemins du régime public ; les citations entre guillemets se relisent. |
 | T3 | **Présent pour la méthode et pour la règle. Passé pour la mesure faite.** Aucun futur d'intention. | « Sera fait », « devrait », « pourrait » sont absents ou portent une date et un identifiant d'incrément. |
 | T4 | **Toute valeur porte sa date et son effectif.** Un nombre seul n'existe pas. | Chaque chiffre publié a une date à moins de 140 caractères de lui. |
-| T5 | **Étiquette ≤ 40 caractères. Légende ou note ≤ 140 caractères, une phrase. Un seul bloc explicatif par écran, 3 phrases au plus.** | Compte de caractères ; un point final unique dans une légende. |
+| T5 | **Étiquette ≤ 40 caractères. Légende ou note ≤ 140 caractères, une phrase. Un bloc explicatif fait 3 phrases au plus.** Le plafond porte sur le bloc, non sur l'écran : un écran peut porter autant de blocs que d'objets à gloser. | Compte de caractères ; un point final unique dans une légende ; 3 points au plus par bloc. |
 | T6 | **Comparatif interdit sans les deux chiffres.** « plus à droite que » est proscrit ; « 0,42 contre 0,18 » est retenu. | Tout mot en `plus…que` / `moins…que` / `-er` superlatif est suivi ou précédé de deux valeurs. |
-| T7 | **L'absence est dite avec son code, jamais comblée.** « Non mesuré » et son motif. Jamais `neutre`, `centre`, `n.d.`, `—`, ni case vide muette. | `grep` des quatre formes interdites dans les artefacts publiés (contrats.md I14, EXP-03). |
+| T7 | **L'absence est dite avec son motif en français, jamais comblée.** « Non mesuré », « Position non publiée », et le motif. Jamais `neutre`, `centre`, `n.d.`, `—`, ni case vide muette. Le `motif_code` reste dans l'artefact : il n'est jamais la chaîne affichée. | `grep` des quatre formes interdites dans les artefacts publiés (contrats.md I14, EXP-03) ; `./scripts/lexique.sh public` pour le code affiché. |
 | T8 | **Rien de non vérifié n'est affirmé.** Ce qui n'a pas pu l'être porte `A VERIFIER` et la façon de le vérifier. | Toute affirmation factuelle a une source citée, ou le marqueur. |
 
 ### Proscrit en sus du lexique
@@ -40,6 +63,41 @@ cherche à`), émojis et pictogrammes décoratifs.
 Un verbe d'intention se remplace par l'acte constaté : non pas « un groupe a jugé
 utile de faire compter les présents » mais « un groupe a demandé un scrutin
 public ».
+
+---
+
+## 1 bis. Régime public — ce qui change
+
+S'applique aux fichiers de `web/src/`, et à eux seuls. Ailleurs, §1 s'applique
+tel quel.
+
+Un seul amendement, et il ne porte pas sur la mesure :
+
+**T2 amendée.** La deuxième personne à l'indicatif est autorisée, **une fois par
+écran au plus**. « Cette page ne vous demande pas de la croire » est admise.
+La première personne (`nous`, `notre`, `nos`) reste interdite, `on` reste
+interdit, et **l'impératif adressé au lecteur reste interdit** : pas de
+« cliquez », pas de « regardez », pas de « comparez ». Une deuxième occurrence
+de `vous` sur le même écran est une occurrence de trop.
+
+Contrôle : `./scripts/lexique.sh personne` n'examine pas les chemins du régime
+public, et continue de les examiner partout ailleurs. Le plafond d'une
+occurrence par écran n'est pas automatisable — un écran n'est pas un fichier —
+et se relit. C'est une règle relue, pas une porte.
+
+**Ce qui ne change pas, parce que ce sont les chiffres qui sont en jeu et non le
+style :** T3 (temps), T4 (toute valeur porte sa date et son effectif), T6
+(comparatif interdit sans les deux chiffres), T8 (rien de non vérifié n'est
+affirmé). Le lexique contraint de §2 s'applique intégralement aux deux régimes.
+
+**T7 en régime public.** Le motif est affiché en français — « Position non
+publiée », « Non mesuré » — jamais son `motif_code`. Le code voyage dans
+l'artefact et s'arrête à la fonction qui le traduit. Contrôle :
+`./scripts/lexique.sh public`.
+
+**T1 en régime public.** Expliquer est permis, et c'est le point de l'amendement.
+Ce qui reste interdit est le jugement : une glose dit ce qu'une valeur mesure et
+comment elle a été obtenue, jamais si elle est bonne.
 
 ---
 
@@ -81,25 +139,32 @@ Les six noms de champ `moyenne`, `consolide`, `synthese`, `score_global`,
 
 ## 3. Termes canoniques
 
-Un concept, un nom, partout. La colonne de droite est la seule forme admise.
+Un concept, un nom, partout. La colonne **Forme canonique** est la seule forme
+admise en régime interne, et la seule forme admise partout dans les données, les
+clés et les identifiants.
+
+La colonne **Forme d'écran** est ce que le régime public affiche à sa place. Un
+tiret `—` signifie que le concept n'a pas à paraître à l'écran : s'il doit y
+paraître un jour, la forme d'écran s'écrit ici d'abord. La forme d'écran ne
+remplace jamais la forme canonique dans une clé de données.
 
 ### Objets de mesure
 
-| Concept | Forme canonique |
-|---|---|
-| Les trois familles | **famille de mesure** ; identifiants `votes`, `experts`, `administratif` |
-| Résultat publié | **position**, **positionnement daté** |
-| Axe des scrutins | **axe issu des votes** |
-| Échelle de cet axe | **unités ancrées**, ancre gauche = médiane LFI-NFP = −1, ancre droite = médiane RN = +1 |
-| Étendue de l'échelle publiée | **amplitude ancrée**, 2,0 par construction. C'est la seule amplitude publiable |
-| Étendue de l'axe avant ancrage | **amplitude brute**, propre à un ajustement — 2,6 sur le tableau d'exploration de l'ADR 0001 §1.3. Jamais « amplitude » nu : le mot sans qualificatif a déjà désigné les deux |
-| Enquête d'experts | **CHES**, échelle 0–10, variable `lrgen`, **vague** 2024 (jamais « édition ») |
-| Classification administrative | **nuance administrative**, issue du **nuancier du ministère de l'Intérieur** |
-| Dispersion d'un groupe | **dispersion intra-groupe** = {écart interquartile (IQR), écart-type de rééchantillonnage} |
-| Critère de publication de l'axe | **critère de séparation des axes** (`s2/s1`) |
-| Ce qui autorise la publication d'un groupe | **conditions de publication** — les trois de positionnement.md §6 (IQR, écart-type de rééchantillonnage, effectif). Jamais « seuil de variance expliquée » |
-| Cycle de vie d'un groupe | **créé le …**, **actif du … au …**, **dissous le …**. Jamais « naît », « vit », « meurt » |
-| Brique 1, à venir | **espace de citation** |
+| Concept | Forme canonique | Forme d'écran |
+|---|---|---|
+| Les trois familles | **famille de mesure** ; identifiants `votes`, `experts`, `administratif` | d'où vient la mesure |
+| Résultat publié | **position**, **positionnement daté** | position, au … |
+| Axe des scrutins | **axe issu des votes** | position tirée des scrutins publics |
+| Échelle de cet axe | **unités ancrées**, ancre gauche = médiane LFI-NFP = −1, ancre droite = médiane RN = +1 | unités ancrées : médiane LFI-NFP à −1,00, médiane RN à +1,00 |
+| Étendue de l'échelle publiée | **amplitude ancrée**, 2,0 par construction. C'est la seule amplitude publiable | — |
+| Étendue de l'axe avant ancrage | **amplitude brute**, propre à un ajustement — 2,6 sur le tableau d'exploration de l'ADR 0001 §1.3. Jamais « amplitude » nu : le mot sans qualificatif a déjà désigné les deux | — |
+| Enquête d'experts | **CHES**, échelle 0–10, variable `lrgen`, **vague** 2024 (jamais « édition ») | enquête Chapel Hill, vague 2024 |
+| Classification administrative | **nuance administrative**, issue du **nuancier du ministère de l'Intérieur** | code de nuance du ministère de l'Intérieur |
+| Dispersion d'un groupe | **dispersion intra-groupe** = {écart interquartile (IQR), écart-type de rééchantillonnage} | écart entre les membres du groupe *(avec les deux chiffres)* |
+| Critère de publication de l'axe | **critère de séparation des axes** (`s2/s1`) | — |
+| Ce qui autorise la publication d'un groupe | **conditions de publication** — les trois de positionnement.md §6 (IQR, écart-type de rééchantillonnage, effectif). Jamais « seuil de variance expliquée » | — |
+| Cycle de vie d'un groupe | **créé le …**, **actif du … au …**, **dissous le …**. Jamais « naît », « vit », « meurt » | créé le …, dissous le … |
+| Brique 1, à venir | **espace de citation** | espace de citation |
 
 **Divergence assumée avec les documents fondateurs.** ROADMAP.md v0.2 et
 methode.md §2 écrivent « variance intra-groupe » et « part de variance
@@ -112,51 +177,51 @@ ils le sont par la PR de méthode qui portera le changement
 
 ### Entités
 
-| Concept | Forme canonique |
-|---|---|
-| Personne morale durable | **parti** (`parti.*`) |
-| Alliance électorale datée | **coalition** (`coalition.*`) |
-| Organe d'une chambre pour une législature | **groupe parlementaire** (`groupe.an17.*`) |
-| Sigle d'un groupe | `libelleAbrev` de la source, **en capitales** : NI, AD, DEM, DR, ECOS, EPR, GDR, HOR, LFI-NFP, LIOT, RN, SOC, UDR, UDDPLR |
-| Législature | **XVIIe législature** en prose, `17` en donnée |
+| Concept | Forme canonique | Forme d'écran |
+|---|---|---|
+| Personne morale durable | **parti** (`parti.*`) | parti |
+| Alliance électorale datée | **coalition** (`coalition.*`) | coalition |
+| Organe d'une chambre pour une législature | **groupe parlementaire** (`groupe.an17.*`) | groupe parlementaire |
+| Sigle d'un groupe | `libelleAbrev` de la source, **en capitales** : NI, AD, DEM, DR, ECOS, EPR, GDR, HOR, LFI-NFP, LIOT, RN, SOC, UDR, UDDPLR | le sigle en capitales, le nom complet à côté |
+| Législature | **XVIIe législature** en prose, `17` en donnée | XVIIe législature |
 
 `libelleAbrege` (`Dem`, `EcoS`, `UDR` pour `PO872880`) n'est jamais employé comme
 sigle ni comme clé : il diverge de `libelleAbrev` sur trois groupes.
 
 ### Codage des votes
 
-| Concept | Forme canonique |
-|---|---|
-| Position exprimée | **pour** (+1), **contre** (−1), **abstention** (0) |
-| Empêchement institutionnel | **non-votant**, causes `MG`, `PAN`, `PSE` — **donnée manquante**, jamais une position |
-| Député hors des blocs | **absence** — **donnée manquante** |
-| Cellule écrite / non écrite | **cellule observée** / **cellule absente**. Jamais « valeur manquante imputée », jamais « masque » |
-| Déclaration postérieure au vote | **mise au point de vote** — ingérée, jamais appliquée |
-| Seul filtre de scrutins | **minorité non vide** (`min(pour, contre) ≥ 1`). Ce n'est pas un seuil de participation ; aucun seuil de participation n'existe |
+| Concept | Forme canonique | Forme d'écran |
+|---|---|---|
+| Position exprimée | **pour** (+1), **contre** (−1), **abstention** (0) | pour, contre, abstention |
+| Empêchement institutionnel | **non-votant**, causes `MG`, `PAN`, `PSE` — **donnée manquante**, jamais une position | n'a pas pu voter *(jamais compté comme une position)* |
+| Député hors des blocs | **absence** — **donnée manquante** | — |
+| Cellule écrite / non écrite | **cellule observée** / **cellule absente**. Jamais « valeur manquante imputée », jamais « masque » | — |
+| Déclaration postérieure au vote | **mise au point de vote** — ingérée, jamais appliquée | — |
+| Seul filtre de scrutins | **minorité non vide** (`min(pour, contre) ≥ 1`). Ce n'est pas un seuil de participation ; aucun seuil de participation n'existe | scrutins où au moins un député a voté dans chaque sens |
 
 ### Artefacts
 
-| Concept | Forme canonique |
-|---|---|
-| `data/preuves/positions.jsonl` | **registre de preuves**, une **ligne de preuve** par valeur |
-| `data/registre/partis.json` | **registre d'entités** |
-| `public/api/index.json` | **manifeste** |
-| `public/api/instantanes/<id>.json` | **instantané** |
-| `public/api/preuves/<xx>.json` | **éclat de preuves** |
-| Empreinte d'un fichier | **empreinte SHA-256** |
-| Bornes de temps | **période de validité**, bornes incluses |
-| Contrat versionné | **contrat de sortie** (majeure / mineure / patch, ADR 0000 §6) |
+| Concept | Forme canonique | Forme d'écran |
+|---|---|---|
+| `data/preuves/positions.jsonl` | **registre de preuves**, une **ligne de preuve** par valeur | — |
+| `data/registre/partis.json` | **registre d'entités** | — |
+| `public/api/index.json` | **manifeste** | — |
+| `public/api/instantanes/<id>.json` | **instantané** | — |
+| `public/api/preuves/<xx>.json` | **éclat de preuves** | d'où vient ce chiffre |
+| Empreinte d'un fichier | **empreinte SHA-256** | empreinte SHA-256 |
+| Bornes de temps | **période de validité**, bornes incluses | du … au … |
+| Contrat versionné | **contrat de sortie** (majeure / mineure / patch, ADR 0000 §6) | — |
 
 ### Licence
 
 Deux objets distincts, jamais confondus :
 
-| Objet | Forme canonique |
-|---|---|
-| Amont Assemblée nationale | **Licence Ouverte / Open Licence 1.0**, producteur : Assemblée nationale |
-| Sorties du projet — code | **AGPL-3.0-only** |
-| Sorties du projet — données, registres, documentation | **Licence Ouverte 2.0** (`etalab-2.0`) |
-| Nuancier via data.gouv.fr | **Licence Ouverte 2.0** (`license = lov2`) |
+| Objet | Forme canonique | Forme d'écran |
+|---|---|---|
+| Amont Assemblée nationale | **Licence Ouverte / Open Licence 1.0**, producteur : Assemblée nationale | Licence Ouverte / Open Licence 1.0, Assemblée nationale |
+| Sorties du projet — code | **AGPL-3.0-only** | AGPL-3.0-only |
+| Sorties du projet — données, registres, documentation | **Licence Ouverte 2.0** (`etalab-2.0`) | Licence Ouverte 2.0 |
+| Nuancier via data.gouv.fr | **Licence Ouverte 2.0** (`license = lov2`) | Licence Ouverte 2.0 |
 
 ---
 
@@ -232,7 +297,7 @@ l'effectif et l'écart, sans identifiant ni fonction.
 | Dates | `YYYY-MM-DD` partout, y compris en prose |
 | Pourcentages | espace avant `%` (`23,2 %`) |
 | Intervalles | `[0,10 ; 0,90]` |
-| Législature | `XVIIe` en prose, `17` en donnée |
+| Législature | `XVIIe` en prose, `17` en donnée | XVIIe législature |
 | Octets | `o` pour octet, `Mio` pour mébioctet, `Mo` pour mégaoctet — les trois distingués |
 
 ---
@@ -251,8 +316,16 @@ et §13) :
 ./scripts/lexique.sh docs
 ./scripts/lexique.sh code
 
-# 2. Personne grammaticale
-git diff origin/develop... | grep -nwiE 'nous|notre|nos|vous|votre|vos|on'
+# 1 bis. T7 en régime public — aucun code d'absence à l'écran. La liste des
+#    codes est dérivée de schemas/preuve-2.schema.json, jamais recopiée.
+./scripts/lexique.sh public
+
+# 2. Personne grammaticale (T2). Même raison qu'au contrôle 1 : le motif et la
+#    portée vivent dans le script. Il exclut les chemins du régime public, où
+#    §1 bis autorise la deuxième personne, et n'examine que la prose et le
+#    commentaire de code — `on` attrapait la clé `on:` des workflows et le
+#    « on » anglais des citations académiques des artefacts de preuve.
+./scripts/lexique.sh personne
 
 # 3. Prose de remplissage et adverbes d'intensité
 git diff origin/develop... \
@@ -268,9 +341,10 @@ git diff origin/develop... | grep -inE '"(neutre|centre|n\.d\.|nd)"|non renseign
 git diff origin/develop... | grep -nE '\b(Dem|EcoS|Ecos)\b'
 ```
 
-Le contrôle 1 **est** l'intégration continue : c'est le script qu'elle lance,
-pas une transcription. Les contrôles 4 et 6 sont automatisables à leur tour ; les
-contrôles 2 et 3 produisent des faux positifs sur les citations et se relisent.
+Les contrôles 1 et 1 bis **sont** l'intégration continue : c'est le script
+qu'elle lance, pas une transcription. Les contrôles 4 et 6 sont automatisables à
+leur tour ; le contrôle 2 produit encore des faux positifs sur les citations, et
+le contrôle 3 se relit.
 Un faux positif se justifie dans la description de la PR, il ne se supprime pas
 du grep.
 
@@ -283,6 +357,11 @@ du grep.
 - La forme canonique des fichiers de données : elle vit dans
   [brique0/contrats.md](brique0/contrats.md) §7 et
   [brique0/registre-entites.md](brique0/registre-entites.md) §6 règle V23.
+- Le nombre d'occurrences de `vous` par écran : §1 bis le plafonne à une, et
+  aucun contrôle ne le mesure — un écran n'est pas un fichier. C'est une règle
+  relue, pas une porte, et ce document le dit plutôt que de le laisser croire.
+- Le fait qu'un bloc explicatif explique sans juger (T1 en régime public) :
+  aucun grep ne distingue une glose d'un jugement. Relu, pas contrôlé.
 
 Un désaccord entre ce document et un ADR se règle en faveur de l'ADR, et ce
 document est corrigé dans la même PR.

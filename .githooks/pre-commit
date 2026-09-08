@@ -24,6 +24,7 @@ fi
 
 lancer "lexique (code et données)"   ./scripts/lexique.sh code
 lancer "lexique (documentation)"     ./scripts/lexique.sh docs
+lancer "lexique (chaînes affichées)" ./scripts/lexique.sh public
 lancer "sécurité"                    ./scripts/securite.sh
 # Les mêmes portes qu'en CI, au même verdict. Une porte qui n'existe que dans
 # ci.yml se découvre en échec après le push, c'est-à-dire trop tard.

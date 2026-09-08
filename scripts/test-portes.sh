@@ -108,6 +108,48 @@ else
     "$(case "$r" in echec:*) echo oui ;; *) echo non ;; esac)"
 fi
 
+# ---- POR-04 — la porte de T2 ne s'ouvre pas sur un mot ----------------------
+# Le 2026-09-08, une revue a prouve que le mode `personne` exemptait TOUTE ligne
+# portant un mot de prohibition — « aucun », « jamais », « pas de ». « Aucune
+# donnee personnelle ne vous est demandee », phrase type d'une mention de
+# confidentialite, passait ; la meme privee de son « Aucune » etait refusee.
+# La seule porte de T2 s'ouvrait sur un mot. L'exemption porte desormais sur le
+# pronom CITE, et ces quatre cas la tiennent.
+essai_personne() { # texte -> rc
+  local f=docs/sources.md sauve="$bac/sources.md" r
+  cp "$f" "$sauve"
+  printf '\n%s\n' "$1" >> "$f"
+  ./scripts/lexique.sh personne >/dev/null 2>&1; r=$?
+  cp "$sauve" "$f"
+  echo "$r"
+}
+if [ -f docs/sources.md ]; then
+  verifier POR-04 "une prohibition ne blanchit pas le pronom qui la suit" 1 \
+    "$(essai_personne 'Aucune donnee personnelle ne vous est demandee.')"
+  verifier POR-04 "ni « pas de », ni « jamais »" 1 \
+    "$(essai_personne 'Il n a pas de tri : nous classons par ordre alphabetique.')"
+  verifier POR-04 "un pronom cite entre guillemets reste permis" 0 \
+    "$(essai_personne 'Une regle interdit « nous » et « vous » dans une chaine.')"
+else
+  printf '  ⧗ POR-04 non execute : docs/sources.md absent\n'
+fi
+
+# ---- POR-05 — la porte des codes d'absence lit bien le rendu ----------------
+# Meme revue : le mode `public` exigeait un guillemet colle au code, si bien que
+# `<p>Non mesure : hors_source</p>` passait — le cas meme que T7 vise.
+if [ -f web/src/fixtures/rendu-fige.html ]; then
+  sauve="$bac/rendu-fige.html"
+  cp web/src/fixtures/rendu-fige.html "$sauve"
+  printf '<p>Non mesure : hors_source pour ce groupe</p>' >> web/src/fixtures/rendu-fige.html
+  ./scripts/lexique.sh public >/dev/null 2>&1; r=$?
+  cp "$sauve" web/src/fixtures/rendu-fige.html
+  verifier POR-05 "un code d'absence en texte nu est refuse" 1 "$r"
+  ./scripts/lexique.sh public >/dev/null 2>&1
+  verifier POR-05 "et le rendu intact passe" 0 "$?"
+else
+  printf '  ⧗ POR-05 non execute : aucun rendu fige\n'
+fi
+
 echo
 if [ "$echecs" -ne 0 ]; then
   echo "portes : $echecs invariant(s) en échec"
