@@ -19,13 +19,19 @@ cd "$(dirname "$0")/.."
 PROHIBITION='aucun|jamais|interdit|proscrit|ne (le |la |les )?(sert|fait|fera|produit|publie)|pas de|ni de|hors périmètre|sans axe'
 
 PUBLIC_CHEMINS=(web/src)
-# Même raison que LOT plus bas : la liste complète dépasse ARG_MAX.
-LOT_PUBLIC=400
+# Les deux bouts d'une citation. Une règle doit pouvoir écrire « pas de "nous" »
+# sans se dénoncer elle-même ; c'est le pronom CITÉ qui est exempté, jamais la
+# ligne qui le contient.
+CITE_OUVRANT='[«"`'"'"'][[:space:]]*'
+CITE_FERMANT='[[:space:]]*[»"`'"'"']'
 
 # Les fichiers qui ÉNONCENT les règles en citent forcément les termes et les
 # motifs. Déclarés une fois, employés par `docs` et par `personne` : la
 # première version portait la liste deux fois et les deux avaient divergé.
-DEFINISSENT_LA_REGLE=(docs/juridique.md docs/ton.md CHANGELOG.md scripts/lexique.sh)
+# Les textes qui ÉNONCENT la règle, et la suite qui la met à l'épreuve : tous
+# portent des violations par nécessité. `test-portes.sh` a été ajouté le
+# 2026-09-08, la porte de T2 l'ayant — correctement — signalé dès son écriture.
+DEFINISSENT_LA_REGLE=(docs/juridique.md docs/ton.md CHANGELOG.md scripts/lexique.sh scripts/test-portes.sh)
 
 # Axes à pôle dépréciatif : interdits partout, sans exception.
 AXES='fiabilit|credibilit|crédibilit|veracit|véracit|desinformation|désinformation|fake.?news|infox'
@@ -144,10 +150,15 @@ case "$cible" in
     for d in "${DEFINISSENT_LA_REGLE[@]}"; do exclus+=(":(exclude)$d"); done
     # `grep` rend 1 quand il ne trouve rien : c'est le cas nominal ici. Au-delà
     # de 1, il a échoué, et un échec avalé rendrait la porte verte à tort.
+    # Le statut d'un PIPELINE ne dit rien de sa première commande : `pipefail`
+    # retient la plus à droite qui échoue, et le `grep` final rend 1 sur entrée
+    # vide, ce qui masquait un `git diff` en erreur. Le diff est donc pris seul,
+    # et son statut lu avant tout filtrage.
     ajoutes() {
-      local sortie code=0
-      sortie=$(git diff -U0 --merge-base "$base" -- "$@" | grep -E '^\+' | grep -v '^+++') || code=$?
-      [ "$code" -gt 1 ] && { echo "::error::git diff en erreur (code $code)" >&2; return 2; }
+      local brut sortie code=0
+      brut=$(git diff -U0 --merge-base "$base" -- "$@") || code=$?
+      [ "$code" -ne 0 ] && { echo "::error::git diff en erreur (code $code)" >&2; return 2; }
+      sortie=$(printf '%s' "$brut" | grep -E '^\+' | grep -v '^+++') || true
       printf '%s' "$sortie"
     }
     cherche() {
@@ -155,19 +166,32 @@ case "$cible" in
       # chaîne vide, si bien que passer '' redonnait « i » et le motif restait
       # insensible à la casse.
       local dans="$1" motif="$2" casse="${3-i}" sortie code=0
-      # Une ligne qui ÉNONCE l'interdiction n'est pas une violation : une règle
-      # doit pouvoir écrire « pas de "nous" ». Même motif que le corps
-      # principal, déclaré une seule fois — deux listes recopiées ont déjà
-      # divergé ici.
-      sortie=$(printf '%s' "$dans" | grep -nw${casse}E -- "$motif" | grep -viE -- "$PROHIBITION") || code=$?
+      # L'exemption porte sur le pronom CITÉ, jamais sur la ligne entière.
+      #
+      # `PROHIBITION` du corps principal a été réutilisé ici, et c'était faux :
+      # il exempte l'énoncé d'un TERME DE LEXIQUE, quand T2 porte sur un PRONOM,
+      # qu'aucun « aucun » ne rend licite. Prouvé le 2026-09-08 — « Aucune
+      # donnée personnelle ne vous est demandée », phrase type d'une mention de
+      # confidentialité, passait à rc=0 ; la même privée de son « Aucune » était
+      # refusée. La seule porte de T2 s'ouvrait sur un mot.
+      #
+      # Une règle doit pouvoir écrire « pas de "nous" » : seul le pronom entre
+      # guillemets, chevrons ou accents graves est exempté.
+      sortie=$(printf '%s' "$dans" | grep -nw${casse}E -- "$motif") || code=$?
       [ "$code" -gt 1 ] && { echo "::error::grep en erreur (code $code)" >&2; return 2; }
+      sortie=$(printf '%s' "$sortie" | grep -vE -- "$CITE_OUVRANT($motif)$CITE_FERMANT") || true
       printf '%s' "$sortie"
     }
     # Première personne : partout, sauf le régime public et les textes qui
     # énoncent la règle.
-    v1=$(cherche "$(ajoutes "${exclus[@]}")" "$PREMIERE") || exit 1
+    # `ajoutes` sort de la substitution imbriquée : passé en argument, son code
+    # de retour était jeté, `cherche` recevait une chaîne vide, et la porte
+    # concluait « rien trouvé » sur un `git diff` en erreur.
+    d1=$(ajoutes "${exclus[@]}") || exit 1
+    v1=$(cherche "$d1" "$PREMIERE") || exit 1
     # `on` : seulement là où il ne se confond pas avec la clé YAML ni l'anglais.
-    v2=$(cherche "$(ajoutes '*.md' '*.rs' '*.ts' '*.tsx' '*.sh' "${exclus[@]}")" "$IMPERSONNEL" '') || exit 1
+    d2=$(ajoutes '*.md' '*.rs' '*.ts' '*.tsx' '*.sh' "${exclus[@]}") || exit 1
+    v2=$(cherche "$d2" "$IMPERSONNEL" '') || exit 1
     if [ -n "$v1$v2" ]; then
       [ -n "$v1" ] && printf '%s\n' "$v1"
       [ -n "$v2" ] && printf '%s\n' "$v2"
