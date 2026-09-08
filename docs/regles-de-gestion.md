@@ -143,7 +143,7 @@ Abréviations des sources : **ADR0** = [adr/0000-perimetre-brique0.md](adr/0000-
 |---|---|---|
 | RG-90 | Aucun axe, champ, score ou variable, même interne et même sous un nom technique anodin, n'a de pôle dépréciatif. | JUR règle 2, DOD §12 |
 | RG-91 | Les termes proscrits du lexique de JUR n'apparaissent nulle part : code, identifiants, données, chaînes d'interface, documentation. | JUR règle 5, DOD §11 |
-| RG-92 | Aucune chaîne d'interface n'emploie la première personne ni l'impératif adressé au lecteur. La deuxième personne à l'indicatif est admise une fois par écran au plus — ton.md §1 bis, qui porte la règle ; cette ligne la cite et ne la recopie pas. | ADR0 §5, TON §1 bis |
+| RG-92 | Les personnes grammaticales admises dans une chaîne d'interface sont celles que [ton.md](ton.md) §1 bis autorise, et aucune autre. Cette ligne renvoie et n'énumère pas : une énumération recopiée avait déjà perdu l'interdiction de « on » en chemin. L'ADR 0000 §5 interdisait toute personne ; §1 bis lève la deuxième à l'indicatif, une fois par écran, et l'ADR est amendé en ce sens. | ADR0 §5 amendé, TON §1 bis |
 | RG-93 | Une étiquette d'interface tient en 40 caractères, une légende ou une note contextuelle en 140 caractères et une phrase. | ADR0 §5 |
 | RG-94 | Un bloc explicatif fait trois phrases au maximum. Le plafond porte sur le bloc, non sur l'écran : un écran porte autant de blocs que d'objets à gloser (TON T5, amendée). | ADR0 §5, TON T5 |
 | RG-95 | Un comparatif sans chiffres est proscrit ; la comparaison s'écrit avec les deux valeurs. | ADR0 §5 |

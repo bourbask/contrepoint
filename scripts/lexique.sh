@@ -13,7 +13,14 @@ cd "$(dirname "$0")/.."
 # Portée du régime public de docs/ton.md §0, déclarée ICI et nulle part ailleurs :
 # le document la cite, il ne la recopie pas. Une seconde copie divergerait, comme
 # les trois copies du lexique avant elle.
+# Une ligne qui ÉNONCE l'interdiction n'est pas une violation : la
+# documentation doit pouvoir dire « aucun axe de fiabilité ». On ne retient
+# donc que les occurrences dépourvues de marqueur de prohibition.
+PROHIBITION='aucun|jamais|interdit|proscrit|ne (le |la |les )?(sert|fait|fera|produit|publie)|pas de|ni de|hors périmètre|sans axe'
+
 PUBLIC_CHEMINS=(web/src)
+# Même raison que LOT plus bas : la liste complète dépasse ARG_MAX.
+LOT_PUBLIC=400
 
 # Les fichiers qui ÉNONCENT les règles en citent forcément les termes et les
 # motifs. Déclarés une fois, employés par `docs` et par `personne` : la
@@ -53,32 +60,51 @@ case "$cible" in
     ;;
   public)
     # T7 en régime public : le `motif_code` reste dans l'artefact, jamais à
-    # l'écran. La couche de rendu est le JSX ; `graphe.ts` porte légitimement le
-    # code, puisque c'est lui qui le traduit.
-    declare -a rendu=()
+    # l'écran. Le motif s'affiche en français.
+    #
+    # Ce contrôle vise le RENDU, pas la source. La version du 2026-08-31 grepait
+    # les `.tsx` et laissait passer `<p>Non mesuré : hors_source</p>`, faute
+    # d'un guillemet collé au code — le cas même que T7 vise, prouvé le
+    # 2026-09-01. Élargir le motif sur la source rendait alors huit lignes
+    # justes : déclarations de type de `contrat.ts`, assertions de test, et la
+    # fonction de traduction elle-même. Un motif qui signale du code correct est
+    # un motif à changer, pas une exception à ajouter.
+    #
+    # Le rendu figé est la sortie du composant, telle qu'un visiteur la lit. Un
+    # code qui s'y trouve est à l'écran, sans interprétation possible ; un code
+    # absent n'y est pas. Aucun faux positif n'est possible par construction.
+    declare -a rendus=()
     for c in "${PUBLIC_CHEMINS[@]}"; do
       declare -a ajout=()
-      mapfile -d '' -t ajout < <(git ls-files -z -- "$c/*.tsx")
-      [ "${#ajout[@]}" -gt 0 ] && rendu+=("${ajout[@]}")
+      mapfile -d '' -t ajout < <(git ls-files -z -- "$c/*.html")
+      [ "${#ajout[@]}" -gt 0 ] && rendus+=("${ajout[@]}")
     done
-    if [ "${#rendu[@]}" -eq 0 ]; then
-      echo "lexique (public) : aucune couche de rendu à vérifier"; exit 0
+    if [ "${#rendus[@]}" -eq 0 ]; then
+      echo "::error::aucun rendu figé sous ${PUBLIC_CHEMINS[*]} — le contrôle n'a rien pu affirmer"
+      exit 1
     fi
+    for f in "${rendus[@]}"; do
+      [ -L "$f" ] && { echo "::error::lien symbolique suivi : $f"; exit 1; }
+      [ -f "$f" ] || { echo "::error::fichier indexé mais absent : $f"; exit 1; }
+    done
     # La liste des codes est dérivée du schéma, jamais recopiée : elle a déjà
-    # gagné deux valeurs depuis la version 1 du contrat.
-    codes=$(python3 -c 'import json;e=json.load(open("schemas/preuve-2.schema.json"))["properties"]["motif_code"]["enum"];print("|".join(c for c in e if c))')
+    # gagné deux valeurs depuis la version 1 du contrat. `re.escape` est
+    # indispensable — une valeur portant `)` ou `[` rendrait l'ERE invalide, et
+    # l'échec de grep passait pour un succès.
+    codes=$(python3 -c 'import json,re;e=json.load(open("schemas/preuve-2.schema.json"))["properties"]["motif_code"]["enum"];print("|".join(re.escape(c) for c in e if c))')
     [ -z "$codes" ] && { echo "::error::liste de motif_code vide — le contrôle n'a rien pu affirmer"; exit 1; }
-    fautes=$(grep -nHE -- "['\">]($codes)['\"<]" "${rendu[@]}") || true
-    # Le champ lui-même ne va à l'écran que traduit. Une ligne de rendu qui le
-    # nomme sans appeler la fonction de traduction affiche le code brut.
-    brut=$(grep -nHE -- 'motif_code' "${rendu[@]}" | grep -v 'direAbsence(') || true
-    if [ -n "$fautes$brut" ]; then
-      [ -n "$fautes" ] && printf '%s\n' "$fautes"
-      [ -n "$brut" ]   && printf '%s\n' "$brut"
+    code=0
+    faute=$(grep -nHE -- "\\b($codes)\\b" "${rendus[@]}") || code=$?
+    if [ "$code" -gt 1 ]; then
+      echo "::error::grep en erreur (code $code) — le contrôle public n'a rien pu affirmer"
+      exit 1
+    fi
+    if [ -n "$faute" ]; then
+      printf '%s\n' "$faute"
       echo "::error::code d'absence à l'écran — docs/ton.md T7 : le motif s'affiche en français"
       exit 1
     fi
-    echo "lexique (public) : aucun code d'absence à l'écran sur ${#rendu[@]} fichiers"
+    echo "lexique (public) : aucun code d'absence dans ${#rendus[@]} rendu(s) figé(s)"
     exit 0
     ;;
   personne)
@@ -92,26 +118,59 @@ case "$cible" in
     # occurrence par écran n'est pas automatisable — un écran n'est pas un
     # fichier — et se relit.
     #
-    # Le contrôle porte sur la prose et le commentaire de code, pas sur les
-    # artefacts. Mesuré sur cinq incréments : `on` attrapait 33 lignes justes —
+    # DEUX motifs, deux portées, et c'est délibéré. Le resserrage aux cinq
+    # extensions a été mesuré pour `on` seul : il attrapait 33 lignes justes —
     # la clé `on:` de chaque workflow YAML, et le « on » anglais des citations
-    # académiques recopiées dans `public/api/preuves/*.json` et
-    # `data/preuves/positions.jsonl`. Un motif qui signale du texte correct se
-    # resserre ; il ne gagne pas une liste d'exceptions.
-    PERSONNE='nous|notre|nos|vous|votre|vos|on'
+    # académiques de `public/api/preuves/*.json` et `data/preuves/positions.jsonl`.
+    # L'appliquer aussi à `nous|vous|votre` avait retiré du contrôle les
+    # libellés de `data/registre/*.json`, que docs/ton.md §0 place pourtant en
+    # régime interne — un garde-fou perdu en passant, prouvé le 2026-09-01.
+    # La première personne est donc contrôlée partout hors régime public.
+    PREMIERE='nous|notre|nos|vous|votre|vos'
+    # Sensible à la casse, contrairement à PREMIERE. Le pronom français s'écrit
+    # « on » ou « On » en tête de phrase, jamais « ON ». Sans cette distinction,
+    # toute citation anglaise en capitales fait crier la porte : le codebook du
+    # Chapel Hill dit « GENERAL POSITION ON EUROPEAN INTEGRATION », et mutiler
+    # une citation pour faire taire un motif est le pire des deux maux.
+    IMPERSONNEL='on|On'
     base="${2:-origin/develop}"
-    declare -a hors=('*.md' '*.rs' '*.ts' '*.tsx' '*.sh')
-    for c in "${PUBLIC_CHEMINS[@]}"; do hors+=(":(exclude)$c"); done
-    for d in "${DEFINISSENT_LA_REGLE[@]}"; do hors+=(":(exclude)$d"); done
     if ! git rev-parse --verify -q "$base" >/dev/null; then
       echo "::error::référence de comparaison absente : $base"
       echo "usage: $0 personne [base]"
       exit 1
     fi
-    ajouts=$(git diff -U0 --merge-base "$base" -- "${hors[@]}" | grep -E '^\+' | grep -v '^+++') || true
-    violations=$(printf '%s' "$ajouts" | grep -nwiE -- "$PERSONNE") || true
-    if [ -n "$violations" ]; then
-      echo "$violations"
+    declare -a exclus=()
+    for c in "${PUBLIC_CHEMINS[@]}"; do exclus+=(":(exclude)$c"); done
+    for d in "${DEFINISSENT_LA_REGLE[@]}"; do exclus+=(":(exclude)$d"); done
+    # `grep` rend 1 quand il ne trouve rien : c'est le cas nominal ici. Au-delà
+    # de 1, il a échoué, et un échec avalé rendrait la porte verte à tort.
+    ajoutes() {
+      local sortie code=0
+      sortie=$(git diff -U0 --merge-base "$base" -- "$@" | grep -E '^\+' | grep -v '^+++') || code=$?
+      [ "$code" -gt 1 ] && { echo "::error::git diff en erreur (code $code)" >&2; return 2; }
+      printf '%s' "$sortie"
+    }
+    cherche() {
+      # `${3-i}` et non `${3:-i}` : la seconde forme substitue aussi sur une
+      # chaîne vide, si bien que passer '' redonnait « i » et le motif restait
+      # insensible à la casse.
+      local dans="$1" motif="$2" casse="${3-i}" sortie code=0
+      # Une ligne qui ÉNONCE l'interdiction n'est pas une violation : une règle
+      # doit pouvoir écrire « pas de "nous" ». Même motif que le corps
+      # principal, déclaré une seule fois — deux listes recopiées ont déjà
+      # divergé ici.
+      sortie=$(printf '%s' "$dans" | grep -nw${casse}E -- "$motif" | grep -viE -- "$PROHIBITION") || code=$?
+      [ "$code" -gt 1 ] && { echo "::error::grep en erreur (code $code)" >&2; return 2; }
+      printf '%s' "$sortie"
+    }
+    # Première personne : partout, sauf le régime public et les textes qui
+    # énoncent la règle.
+    v1=$(cherche "$(ajoutes "${exclus[@]}")" "$PREMIERE") || exit 1
+    # `on` : seulement là où il ne se confond pas avec la clé YAML ni l'anglais.
+    v2=$(cherche "$(ajoutes '*.md' '*.rs' '*.ts' '*.tsx' '*.sh' "${exclus[@]}")" "$IMPERSONNEL" '') || exit 1
+    if [ -n "$v1$v2" ]; then
+      [ -n "$v1" ] && printf '%s\n' "$v1"
+      [ -n "$v2" ] && printf '%s\n' "$v2"
       echo "::error::personne grammaticale hors régime public — docs/ton.md T2"
       echo "Une citation entre guillemets se justifie dans la description de la PR."
       exit 1
@@ -139,10 +198,6 @@ for f in "${FICHIERS[@]}"; do
 done
 [ "${#LISIBLES[@]}" -eq 0 ] && { echo "lexique ($cible) : aucun fichier lisible"; exit 0; }
 
-# Une ligne qui ÉNONCE l'interdiction n'est pas une violation : la
-# documentation doit pouvoir dire « aucun axe de fiabilité ». On ne retient
-# donc que les occurrences dépourvues de marqueur de prohibition.
-PROHIBITION='aucun|jamais|interdit|proscrit|ne (le |la |les )?(sert|fait|fera|produit|publie)|pas de|ni de|hors périmètre|sans axe'
 
 # Même défaut que celui trouvé le 2026-08-27 dans une porte de CI puis dans
 # securite.sh : une liste séparée par des sauts de ligne casse sur un nom

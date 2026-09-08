@@ -41,6 +41,7 @@ la PR**. Une case cochée sans sortie montrable ne compte pas.
     ```
     ./scripts/lexique.sh code
     ./scripts/lexique.sh docs
+    ./scripts/lexique.sh public
     ```
 
 12. **Aucun axe, champ ni variable interne à pôle dépréciatif.** Y compris sous un nom technique anodin. La règle vaut en interne, pas seulement à l'affichage.

@@ -30,8 +30,9 @@ concerné tant qu'il reste dans l'artefact : ce qui est jugé, c'est la chaîne 
 le front met à l'écran. Règles applicables : §1, amendé par §1 bis.
 
 La portée du régime public est déclarée une seule fois, dans
-`scripts/lexique.sh` (`PUBLIC_CHEMINS`). Les deux listes ci-dessus la citent ;
-elles ne la recopient pas.
+`scripts/lexique.sh` (`PUBLIC_CHEMINS`). Les chemins nommés ci-dessus valent
+pour la valeur du jour ; la référence fait foi, et le jour où `PUBLIC_CHEMINS`
+gagne une entrée, c'est ce document qui est en retard, jamais le script.
 
 Un chemin qui ne relève d'aucun des deux régimes relève du régime interne.
 
@@ -340,7 +341,7 @@ git diff origin/develop... | grep -inE '"(neutre|centre|n\.d\.|nd)"|non renseign
 git diff origin/develop... | grep -nE '\b(Dem|EcoS|Ecos)\b'
 ```
 
-Les contrôles 1, 1 bis et 2 **sont** l'intégration continue : c'est le script
+Les contrôles 1 et 1 bis **sont** l'intégration continue : c'est le script
 qu'elle lance, pas une transcription. Les contrôles 4 et 6 sont automatisables à
 leur tour ; le contrôle 2 produit encore des faux positifs sur les citations, et
 le contrôle 3 se relit.
