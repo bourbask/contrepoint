@@ -15,13 +15,13 @@
   "dependencies": {
     "d3-scale": "4.0.2",
     "react": "19.2.8",
-    "react-dom": "19.2.8"
+    "react-dom": "19.3.0"
   },
   "devDependencies": {
     "@types/d3-scale": "4.0.9",
     "@types/node": "^22.20.1",
     "@types/react": "19.2.18",
-    "@types/react-dom": "19.2.5",
+    "@types/react-dom": "19.3.0",
     "ajv": "8.20.0",
     "typescript": "7.0.2",
     "vite": "8.2.2",
